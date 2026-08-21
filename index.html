@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saturday Golf — Notifications</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --green-deep:#1F3D2B;
+    --green-mid:#2F5D3F;
+    --green-fair:#4C7A56;
+    --paper:#F7F4EC;
+    --paper-dark:#EFE9D8;
+    --ink:#232922;
+    --ink-soft:#5B6459;
+    --gold:#C99A3E;
+    --gold-soft:#E9D9AF;
+    --line:#D8D1BC;
+    --red:#9A3B34;
+    --white:#FFFFFF;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:28px 20px 80px;}
+
+  header.hero{
+    background:linear-gradient(160deg,var(--green-deep),var(--green-mid));
+    color:var(--paper);
+    border-radius:var(--radius);
+    padding:28px 30px;
+    margin-bottom:22px;
+    position:relative;
+    overflow:hidden;
+  }
+  header.hero::after{
+    content:"";
+    position:absolute;
+    right:-40px;top:-40px;
+    width:180px;height:180px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.08),transparent 70%);
+  }
+  .eyebrow{
+    font-size:12px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--gold-soft);
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:32px;
+    margin:0 0 4px;
+  }
+  .hero-sub{color:#D9E4DC;font-size:14.5px;max-width:60ch;}
+
+  .panel{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:18px;
+  }
+  .panel h2{
+    font-family:'Fraunces',serif;
+    font-size:19px;
+    margin:0 0 4px;
+    color:var(--green-deep);
+  }
+  .panel .hint{font-size:13px;color:var(--ink-soft);margin-bottom:16px;}
+
+  .drop{
+    border:2px dashed var(--line);
+    border-radius:var(--radius);
+    padding:26px;
+    text-align:center;
+    cursor:pointer;
+    transition:.15s;
+    background:var(--paper);
+  }
+  .drop:hover, .drop.drag{border-color:var(--green-fair);background:var(--gold-soft);}
+  .drop input{display:none;}
+  .drop .icon{font-size:26px;margin-bottom:6px;}
+  .drop .main{font-weight:600;font-size:14.5px;}
+  .drop .sub{font-size:12.5px;color:var(--ink-soft);margin-top:2px;}
+
+  .file-badge{
+    display:flex;align-items:center;justify-content:space-between;
+    background:var(--paper);border:1px solid var(--line);border-radius:8px;
+    padding:10px 14px;font-size:13.5px;margin-top:12px;
+  }
+  .file-badge .name{font-weight:600;}
+  .file-badge button{
+    background:none;border:none;color:var(--red);font-size:13px;cursor:pointer;font-weight:600;
+  }
+
+  .tabs{display:flex;gap:8px;margin-bottom:4px;}
+  .tab-btn{
+    flex:1;
+    padding:11px 14px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:var(--paper);
+    color:var(--ink-soft);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .tab-btn.active{
+    background:var(--green-deep);
+    color:var(--white);
+    border-color:var(--green-deep);
+  }
+  .tab-btn:disabled{opacity:.45;cursor:not-allowed;}
+
+  .event-meta{
+    display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px;
+  }
+  .pill{
+    background:var(--paper-dark);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:6px 14px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--green-deep);
+  }
+
+  details.summary-box{margin-top:14px;}
+  details.summary-box summary{
+    cursor:pointer;font-size:13.5px;font-weight:600;color:var(--green-mid);
+    padding:6px 0;
+  }
+  .sum-table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;}
+  .sum-table th,.sum-table td{
+    text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);
+  }
+  .sum-table th{color:var(--ink-soft);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;}
+
+  .scorecard-table{border-collapse:collapse;font-size:12.5px;white-space:nowrap;background:var(--white);}
+  .scorecard-table th,.scorecard-table td{
+    text-align:center;padding:0;border:1px solid var(--line);height:44px;width:38px;
+  }
+  .scorecard-table th{background:var(--paper-dark);color:var(--ink-soft);font-weight:600;font-size:11.5px;}
+  .scorecard-table td.player-name{
+    text-align:left;font-weight:600;color:var(--ink);white-space:nowrap;padding:6px 12px;width:auto;
+    display:flex;align-items:center;gap:8px;height:auto;border-right:2px solid var(--line);
+  }
+  .scorecard-table td.subtotal{font-weight:700;color:var(--ink-soft);background:var(--paper);}
+  .scorecard-table td.skins-total{font-weight:700;color:var(--green-deep);background:var(--gold-soft);font-size:14px;}
+
+  .avatar{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;border-radius:50%;color:#fff;font-size:10.5px;font-weight:700;
+    flex-shrink:0;
+  }
+
+  .cell-inner{position:relative;display:flex;align-items:center;justify-content:center;height:100%;width:100%;}
+  .stroke-dot{position:absolute;top:1px;left:50%;transform:translateX(-50%);font-size:16px;line-height:1;color:var(--ink);font-weight:900;text-shadow:0 0 2px #fff, 0 0 2px #fff;}
+  .stroke-dot-empty{position:absolute;top:1px;font-size:16px;}
+
+  .cell-shape{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:26px;height:26px;font-weight:600;font-size:13px;color:var(--ink);
+    border:1.5px solid transparent;box-sizing:border-box;
+  }
+  .cell-circle{border-radius:50%;}
+  .cell-square{border-radius:5px;}
+  .cell-green{border-color:#3F9142;color:#2F5D3F;}
+  .cell-orange{border-color:var(--gold);color:#9A6A17;background:#FBF0DA;}
+  .cell-red{border-color:var(--red);color:var(--red);}
+  .cell-neutral{border-color:transparent;}
+  .cell-filled.cell-green{background:#3F9142;color:#fff;}
+  .cell-filled.cell-orange{background:var(--gold);color:#fff;}
+  .cell-filled.cell-red{background:var(--red);color:#fff;}
+
+  .skin-badge{
+    position:absolute;top:2px;right:4px;font-size:8.5px;font-weight:700;
+    color:var(--green-deep);background:var(--gold-soft);border-radius:50%;
+    width:12px;height:12px;display:flex;align-items:center;justify-content:center;line-height:1;
+  }
+
+  .ctp-row{display:grid;grid-template-columns:90px 1fr 110px 34px;gap:8px;margin-bottom:8px;align-items:center;}
+  .ctp-row input, .ctp-row select{
+    padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;width:100%;
+  }
+  .ctp-row button{
+    background:var(--paper-dark);border:1px solid var(--line);border-radius:7px;
+    color:var(--red);cursor:pointer;font-weight:700;height:36px;
+  }
+  .add-ctp{
+    background:var(--green-mid);color:white;border:none;border-radius:7px;
+    padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;margin-top:4px;
+  }
+
+  .match-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+  .match-row select{
+    padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13px;font-family:'Inter',sans-serif;
+    flex:1;min-width:120px;
+  }
+  .match-row .vs-label{font-size:12px;font-weight:700;color:var(--ink-soft);padding:0 2px;}
+  .match-side{display:flex;gap:6px;flex:2;min-width:0;}
+  .match-side select{flex:1;min-width:0;}
+  .match-row button{
+    background:var(--paper-dark);border:1px solid var(--line);border-radius:7px;
+    color:var(--red);cursor:pointer;font-weight:700;height:36px;width:34px;flex-shrink:0;
+  }
+  .match-col-headers{
+    display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  }
+  .match-col-headers span:nth-child(1){flex:2;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--red);}
+  .match-col-headers span:nth-child(2){width:20px;}
+  .match-col-headers span:nth-child(3){flex:2;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#2451A4;}
+  .match-col-headers span:nth-child(4){width:34px;}
+
+  .player-card{
+    border:1px solid var(--line);border-radius:var(--radius);
+    padding:16px 18px;margin-bottom:14px;background:var(--white);
+  }
+  .player-card .p-head{
+    display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;
+  }
+  .player-card .p-name{font-weight:700;font-size:15.5px;color:var(--green-deep);font-family:'Fraunces',serif;}
+  .player-card .p-email{font-size:12.5px;color:var(--ink-soft);}
+  .no-email{color:var(--red);font-weight:600;}
+
+  .player-card textarea{
+    width:100%;min-height:170px;border:1px solid var(--line);border-radius:8px;
+    padding:12px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--ink);
+    resize:vertical;background:var(--paper);line-height:1.55;
+  }
+  .p-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .btn{
+    border:none;border-radius:7px;padding:9px 15px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:'Inter',sans-serif;
+  }
+  .btn-primary{background:var(--green-deep);color:white;}
+  .btn-primary:hover{background:var(--green-mid);}
+  .btn-secondary{background:var(--paper-dark);color:var(--ink);border:1px solid var(--line);}
+  .btn-secondary:hover{background:var(--gold-soft);}
+  .btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  .empty-state{
+    text-align:center;padding:30px 10px;color:var(--ink-soft);font-size:14px;
+  }
+  .empty-state .icon{font-size:30px;margin-bottom:8px;}
+
+  .copied-flag{
+    font-size:12px;color:var(--green-mid);font-weight:600;margin-left:4px;
+    opacity:0;transition:opacity .2s;
+  }
+  .copied-flag.show{opacity:1;}
+
+  footer.note{
+    font-size:12px;color:var(--ink-soft);text-align:center;margin-top:26px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Saturday Golf</div>
+    <h1>Player Notifications</h1>
+    <div class="hero-sub">Upload a Squabbit event export to generate tee-time details before the round, or net results and payouts after.</div>
+  </header>
+
+  <div class="panel">
+    <h2>1. Upload event CSV</h2>
+    <div class="hint">Works with either the pre-event planning export or the post-round results export — the tool figures out which one it is.</div>
+    <div class="drop" id="dropZone">
+      <input type="file" id="fileInput" accept=".csv">
+      <div class="icon">⛳</div>
+      <div class="main">Click to choose a file, or drag a CSV here</div>
+      <div class="sub">Exported from Squabbit</div>
+    </div>
+    <div id="fileBadge" style="display:none;" class="file-badge">
+      <span class="name" id="fileName"></span>
+      <button id="clearFile">Remove</button>
+    </div>
+  </div>
+
+  <div class="panel" id="googleConnectionPanel">
+    <h2>Google Sheets Connection</h2>
+    <div class="hint">Paste your Google Apps Script Web App URL once. It will be remembered on this device. Use the Publish button below to send the current event and tee sheet to your Google Sheet.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+      <input type="text" id="googleScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:260px;padding:9px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+      <input type="number" id="publishVersionInput" min="1" step="1" value="1" style="width:90px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;" title="Event version">
+      <button class="btn btn-secondary" id="testGoogleConnectionBtn">Test Connection</button>
+      <button class="btn btn-primary" id="publishGoogleBtn">Publish to Google Sheets</button>
+    </div>
+    <div id="googleConnectionStatus" style="margin-top:10px;font-size:13px;color:var(--ink-soft);"></div>
+  </div>
+
+  <div class="panel" id="dataPanel" style="display:none;">
+    <h2>2. Confirm details</h2>
+    <div class="event-meta" id="eventMeta"></div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab-btn" id="tabPre">Pre-Round Notifications</button>
+      <button class="tab-btn" id="tabPost">Post-Round Results</button>
+    </div>
+
+    <details class="summary-box">
+      <summary>View parsed data (players, teams, tee times)</summary>
+      <table class="sum-table">
+        <thead><tr><th>Player</th><th>Tee</th><th>HCP</th><th>Team</th><th>Tee Time</th></tr></thead>
+        <tbody id="summaryBody"></tbody>
+      </table>
+    </details>
+  </div>
+
+  <div class="panel" id="scoringOptionsPanel" style="display:none;">
+    <h2>Scoring Options</h2>
+    <div class="hint">Applies to all formats — saved per event and included in the pre-round group email.</div>
+
+    <div style="margin-top:14px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Use Net Scores</label>
+      <select id="useNetScoresInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+        <option value="no">No</option>
+        <option value="yes">Yes</option>
+      </select>
+    </div>
+
+    <div id="handicapUsageWrap" style="margin-top:14px;display:none;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Handicap Usage</label>
+      <select id="handicapUsageInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+        <option value="percentage">Percentage of Handicap</option>
+        <option value="lowest">Compare to Lowest</option>
+      </select>
+    </div>
+
+    <div id="handicapPercentageWrap" style="margin-top:14px;display:none;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Percentage of Playing Handicap</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="text" id="handicapPercentageInput" placeholder="90" style="max-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+        <span style="font-size:13px;color:var(--ink-soft);">%</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="teeSheetPanel" style="display:none;">
+    <h2>Tee Sheet</h2>
+    <div class="hint">A quick reference view of tee times, players, tees, and handicaps — separate from the group email, for posting or a quick glance.</div>
+    <div id="teeSheetTableWrap" style="margin-top:14px;overflow-x:auto;"></div>
+    <div style="margin-top:16px;display:flex;align-items:center;gap:10px;">
+      <button class="btn btn-primary" id="teeSheetCopyBtn">Copy as Text</button>
+      <span id="teeSheetCopiedFlag" class="copied-flag">Copied!</span>
+    </div>
+    <textarea id="teeSheetTextarea" style="width:100%;min-height:160px;margin-top:10px;padding:12px;border:1px solid var(--line);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);background:var(--paper);resize:vertical;line-height:1.55;"></textarea>
+  </div>
+
+  <div class="panel" id="skinsScorecardPanel" style="display:none;">
+    <h2>Net Skins Scorecard</h2>
+    <div class="hint">Net score on every hole for every player, with the hole highlighted for whoever won the net skin. This is a reference view only — it isn't included in the copyable group email.</div>
+    <div id="skinsScorecardWrap" style="margin-top:14px;overflow-x:auto;"></div>
+  </div>
+
+  <div class="panel" id="rotationHistoryPanel" style="display:none;">
+    <h2>Rotation History</h2>
+    <div class="hint">Builds up automatically every time you upload an event — tracks who's grouped with whom, tee-time slot rotation, and attendance across the season.</div>
+
+    <details class="summary-box" open>
+      <summary>Attendance</summary>
+      <div id="attendanceWrap" style="margin-top:8px;overflow-x:auto;"></div>
+    </details>
+
+    <details class="summary-box">
+      <summary>Repeat Pairings (same group)</summary>
+      <div id="pairingsWrap" style="margin-top:8px;overflow-x:auto;"></div>
+    </details>
+
+    <details class="summary-box">
+      <summary>Tee-Time Slot Distribution</summary>
+      <div id="slotsWrap" style="margin-top:8px;overflow-x:auto;"></div>
+    </details>
+
+    <div style="margin-top:16px;">
+      <button class="btn btn-secondary" id="resetHistoryBtn">Reset History</button>
+      <span id="historyEventCountLabel" style="font-size:12px;color:var(--ink-soft);margin-left:10px;"></span>
+    </div>
+  </div>
+
+  <div class="panel" id="ctpPanel" style="display:none;">
+    <h2>Payouts & Contests</h2>
+    <div class="hint">Buy-in is pulled from the CSV; payout structure and closest-to-pin are set up manually since Squabbit doesn't export them. This is saved automatically for this event, so it carries over between the pre-round and post-round upload.</div>
+
+    <div style="margin-bottom:18px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Buy-in per player</label>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <input type="text" id="buyInInput" placeholder="$5" style="max-width:120px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+        <span id="potLabel" style="font-size:13px;color:var(--ink-soft);"></span>
+      </div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <label id="placeLabelHeading" style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Payout structure</label>
+      <div id="placeRows"></div>
+      <button class="add-ctp" id="addPlaceRow">+ Add place</button>
+    </div>
+
+    <div>
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Closest to the Pin</label>
+      <div id="ctpRows"></div>
+      <button class="add-ctp" id="addCtpRow">+ Add hole</button>
+    </div>
+
+    <div style="margin-top:18px;">
+      <label id="formatNotesLabel" style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Format Notes</label>
+      <textarea id="formatNotesInput" placeholder="e.g. Best Ball handicap allowance, format-specific rules or reminders" style="width:100%;min-height:70px;padding:9px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;resize:vertical;"></textarea>
+    </div>
+  </div>
+
+  <div class="panel" id="matchPanel" style="display:none;">
+    <h2>Ryder Cup Matches</h2>
+    <div class="hint">Confirm or adjust who's paired against whom. Round 1 auto-fills from tee-time groups (2-man Best Ball); Round 2 singles need to be set manually since a foursome there is really two separate 1v1 matches.</div>
+
+    <div style="margin-top:14px;margin-bottom:18px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px;">Include in email</label>
+      <select id="ryderRoundFilterInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;">
+        <option value="both">Both rounds</option>
+        <option value="1">Round 1 only</option>
+        <option value="2">Round 2 only</option>
+      </select>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px;">Round 1 — 2-Man Best Ball</label>
+      <div class="match-col-headers"><span>Red</span><span></span><span>Blue</span><span></span></div>
+      <div id="round1MatchRows"></div>
+      <button class="add-ctp" id="addRound1Match">+ Add match</button>
+    </div>
+
+    <div style="margin-top:20px;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:8px;">Round 2 — Singles</label>
+      <div class="match-col-headers"><span>Red</span><span></span><span>Blue</span><span></span></div>
+      <div id="round2MatchRows"></div>
+      <button class="add-ctp" id="addRound2Match">+ Add match</button>
+    </div>
+  </div>
+
+  <div id="cardsPanel"></div>
+
+  <footer class="note" id="footerNote" style="display:none;">Review each message, then hit Copy and paste it into your email of choice.</footer>
+
+</div>
+
+<script>
+(function(){
+
+  // ---------- Storage fallback ----------
+  // window.storage is provided automatically inside Claude's environment.
+  // When this file is hosted as a standalone website, that API doesn't exist,
+  // so we transparently fall back to the browser's localStorage with the same
+  // shape (get/set/delete), keeping the "remember my settings" feature working
+  // either way.
+  if(!window.storage){
+    const LS_PREFIX = 'saturdayGolf:';
+    window.storage = {
+      async get(key){
+        const raw = window.localStorage.getItem(LS_PREFIX+key);
+        if(raw===null) throw new Error('Key not found: '+key);
+        return { key, value: raw, shared:false };
+      },
+      async set(key, value){
+        window.localStorage.setItem(LS_PREFIX+key, value);
+        return { key, value, shared:false };
+      },
+      async delete(key){
+        window.localStorage.removeItem(LS_PREFIX+key);
+        return { key, deleted:true, shared:false };
+      },
+      async list(prefix){
+        const keys=[];
+        for(let i=0;i<window.localStorage.length;i++){
+          const k=window.localStorage.key(i);
+          if(k && k.startsWith(LS_PREFIX)){
+            const short=k.slice(LS_PREFIX.length);
+            if(!prefix || short.startsWith(prefix)) keys.push(short);
+          }
+        }
+        return { keys, shared:false };
+      }
+    };
+  }
+
+  // ---------- CSV parsing ----------
+  function splitCSVLine(line){
+    const result=[]; let cur=''; let inQuotes=false;
+    for(let i=0;i<line.length;i++){
+      const ch=line[i];
+      if(ch==='"'){
+        if(inQuotes && line[i+1]==='"'){cur+='"'; i++;}
+        else inQuotes=!inQuotes;
+      } else if(ch===',' && !inQuotes){
+        result.push(cur); cur='';
+      } else cur+=ch;
+    }
+    result.push(cur);
+    return result.map(s=>s.trim());
+  }
+  function parseCSVText(text){
+    const lines=text.split(/\r?\n/).filter((l,idx,arr)=>!(idx===arr.length-1 && l===''));
+    return lines.map(splitCSVLine);
+  }
+  function isBlankRow(row){return row.every(c=>c==='');}
+  function extractHoles(row){
+    // Holes 1-9 are at indices 3-11, Holes 10-18 are at indices 13-21
+    const front = row.slice(3,12);
+    const back = row.slice(13,22);
+    return front.concat(back).map(v=>parseInt(v,10));
+  }
+  function extractNetHoles(row){
+    const front = row.slice(3,12);
+    const back = row.slice(13,22);
+    return front.concat(back).map(v=> v==='E' ? 0 : parseInt(v,10));
+  }
+
+  function parseEvent(text){
+    const rows=parseCSVText(text);
+    let i=0;
+    const data={};
+    while(i<rows.length && isBlankRow(rows[i])) i++;
+    data.eventDateShort=rows[i][0];
+    data.eventDateLong=rows[i][1];
+    i++;
+    while(i<rows.length && rows[i][0]!=='Players') i++;
+    i++; // skip "Players" label row
+    const playersHeaderRow = rows[i]; i++; // header row
+    const colIdx = name => playersHeaderRow.findIndex(h=>(h||'').trim().toLowerCase()===name.toLowerCase());
+    const idxHandicap = colIdx('Handicap');
+    const idxRole = colIdx('Role');
+    const idxEmail = colIdx('Email');
+    const idxPhone = colIdx('Phone');
+    const idxTee = colIdx('Tee');
+    const idxTotalFees = colIdx('Total fees');
+    const idxPaid = colIdx('Paid');
+    const idxWon = colIdx('Won');
+    const idxPaidOut = colIdx('Paid out');
+    const idxOwes = colIdx('Owes');
+    const idxRyderTeam = colIdx('Ryder Cup Team');
+    const idxRegularFillIn = colIdx('Regular/Fill In');
+    const players={}; const playerOrder=[];
+    while(i<rows.length && !isBlankRow(rows[i])){
+      const row=rows[i]; const name=row[0];
+      if(name){
+        players[name]={
+          name,
+          handicap: idxHandicap>=0 ? row[idxHandicap] : row[1],
+          role: idxRole>=0 ? row[idxRole] : row[2],
+          email: idxEmail>=0 ? row[idxEmail] : row[5],
+          phone: idxPhone>=0 ? row[idxPhone] : row[6],
+          tee: idxTee>=0 ? row[idxTee] : row[9],
+          totalFees: idxTotalFees>=0 ? row[idxTotalFees] : row[11],
+          paid: idxPaid>=0 ? row[idxPaid] : row[12],
+          won: idxWon>=0 ? row[idxWon] : row[13],
+          paidOut: idxPaidOut>=0 ? row[idxPaidOut] : row[14],
+          owes: idxOwes>=0 ? row[idxOwes] : row[15],
+          ryderTeam: idxRyderTeam>=0 ? row[idxRyderTeam] : row[17],
+          regularFillIn: idxRegularFillIn>=0 ? row[idxRegularFillIn] : row[18]
+        };
+        playerOrder.push(name);
+      }
+      i++;
+    }
+    data.players=players; data.playerOrder=playerOrder;
+
+    while(i<rows.length && isBlankRow(rows[i])) i++;
+
+    let formatName=null; const teams=[];
+    if(i<rows.length && rows[i][0] && !/^Round\s*\d+/i.test(rows[i][0])){
+      formatName=rows[i][0];
+      i++; // format label row
+      const formatHeaderRow = rows[i]; i++; // header row (Team,Player,Round 1,[Round 2,...]Total OR Player,Round 1,Total)
+      const isTeamLayout = formatHeaderRow[0]==='Team';
+      let totalColIdx = formatHeaderRow.findIndex(h=>/^total$/i.test((h||'').trim()));
+      let round1ColIdx = formatHeaderRow.findIndex(h=>/^round\s*1$/i.test((h||'').trim()));
+      if(round1ColIdx===-1) round1ColIdx = isTeamLayout ? 2 : 1;
+      if(totalColIdx===-1) totalColIdx = isTeamLayout ? 3 : 2;
+      while(i<rows.length && !isBlankRow(rows[i])){
+        const row=rows[i];
+        if(isTeamLayout){
+          if(row[0]){
+            const team={name:row[0], roundScore:row[round1ColIdx], totalScore:row[totalColIdx], members:[]};
+            i++;
+            while(i<rows.length && rows[i][0]==='' && rows[i][1]){
+              team.members.push({name: rows[i][1], roundScore: rows[i][round1ColIdx], totalScore: rows[i][totalColIdx]}); i++;
+            }
+            teams.push(team);
+          } else { i++; }
+        } else {
+          if(row[0]){
+            teams.push({name:row[0], roundScore:row[round1ColIdx], totalScore:row[totalColIdx], members:[]});
+          }
+          i++;
+        }
+      }
+    }
+    data.formatName=formatName; data.teams=teams;
+
+    while(i<rows.length && isBlankRow(rows[i])) i++;
+
+    const groups=[];
+    let currentRound=1;
+    while(i<rows.length){
+      if(isBlankRow(rows[i])){ i++; continue; }
+      if(rows[i][0] && /^Round\s*(\d+)/i.test(rows[i][0])){
+        const m = rows[i][0].match(/^Round\s*(\d+)/i);
+        if(m) currentRound = parseInt(m[1],10);
+        i++; continue;
+      }
+      if(rows[i][0] && rows[i][1] && !isNaN(Date.parse(rows[i][1]))){
+        const course=rows[i][0]; const teeTime=rows[i][1];
+        i++; // course row
+        i++; // header row
+        i++; // S.I. row (skipped)
+        const parRow = rows[i]; i++; // Par row
+        const parHoles = extractHoles(parRow);
+        const totalPar = parseInt(parRow[23],10);
+        const group={course, teeTime, round:currentRound, parHoles, totalPar, players:[]};
+        while(i<rows.length && rows[i][0] && rows[i][0]!==''){
+          const nameRow=rows[i];
+          const grossHoles = extractHoles(nameRow);
+          const grossTotal = parseInt(nameRow[23],10);
+          let playingHandicap='';
+          let netToParHoles=null;
+          if(i+1<rows.length && rows[i+1][0]===''){
+            playingHandicap = rows[i+1][2] || '';
+            netToParHoles = extractNetHoles(rows[i+1]);
+          }
+          group.players.push({name:nameRow[0], tee:nameRow[1], playingHandicap, grossHoles, grossTotal, netToParHoles});
+          i++;
+          if(i<rows.length && rows[i][0]==='') i++;
+        }
+        groups.push(group);
+      } else { i++; }
+    }
+    data.groups=groups;
+    return data;
+  }
+
+  // ---------- helpers ----------
+  function firstName(name){ return name.split(' ')[0]; }
+  function parseMoney(str){
+    if(!str) return 0;
+    const neg = /^\(.*\)$/.test(str.trim());
+    const num = parseFloat(str.replace(/[^0-9.]/g,'')) || 0;
+    return neg ? -num : num;
+  }
+  function formatNetScore(val){
+    if(val===undefined || val===null || val==='') return 'even';
+    const n = parseInt(val,10);
+    if(isNaN(n) || n===0) return 'even par';
+    return n<0 ? `${Math.abs(n)} under par` : `${n} over par`;
+  }
+  function formatSignedScore(val){
+    if(val===undefined || val===null || val==='') return 'E';
+    const n = parseInt(val,10);
+    if(isNaN(n) || n===0) return 'E';
+    return n>0 ? `+${n}` : `${n}`;
+  }
+  function parseHandicapAdjusted(raw){
+    if(raw===undefined || raw===null || raw==='') return NaN;
+    const trimmed = String(raw).trim();
+    const isPlus = trimmed.charAt(0)==='+';
+    const n = parseInt(trimmed.replace(/^\+/,''), 10);
+    if(isNaN(n)) return NaN;
+    return isPlus ? -n : n;
+  }
+  function formatDollar(n){
+    const rounded = Math.round(n*100)/100;
+    return Number.isInteger(rounded) ? `${rounded}` : rounded.toFixed(2);
+  }
+  const QUOTA_RULES_TEXT = 'Your Quota is 36 minus your playing handicap.   Bogey = 1, Par = 2, Birdie = 4, Eagle = 8, Albatros = 16';
+
+  function findPlayerRoundData(name, roundNum){
+    for(const g of (eventData.groups||[])){
+      if(g.round!==roundNum) continue;
+      const p = g.players.find(pl=>pl.name===name);
+      if(p) return p;
+    }
+    return null;
+  }
+  function playerRoundsPlayed(name){
+    const rounds = new Set();
+    (eventData.groups||[]).forEach(g=>{ if(g.players.some(p=>p.name===name)) rounds.add(g.round); });
+    return rounds.size;
+  }
+
+  function computeMatchResultForPairing(redNames, blueNames, roundNum){
+    const redPlayers = redNames.filter(Boolean).map(n=>findPlayerRoundData(n, roundNum)).filter(Boolean);
+    const bluePlayers = blueNames.filter(Boolean).map(n=>findPlayerRoundData(n, roundNum)).filter(Boolean);
+    if(!redPlayers.length || !bluePlayers.length) return null;
+
+    let diff=0; // positive => red leading
+    let decidedAt=null, decidedMargin=0;
+    for(let h=0; h<18 && decidedAt===null; h++){
+      const rVals = redPlayers.map(p=>p.netToParHoles ? p.netToParHoles[h] : NaN).filter(v=>!isNaN(v));
+      const bVals = bluePlayers.map(p=>p.netToParHoles ? p.netToParHoles[h] : NaN).filter(v=>!isNaN(v));
+      if(!rVals.length || !bVals.length) continue;
+      const rBest = Math.min(...rVals);
+      const bBest = Math.min(...bVals);
+      if(rBest < bBest) diff++;
+      else if(bBest < rBest) diff--;
+      const holesPlayed = h+1;
+      const holesRemaining = 18 - holesPlayed;
+      if(Math.abs(diff) > holesRemaining){
+        decidedAt = holesPlayed;
+        decidedMargin = Math.abs(diff);
+      }
+    }
+
+    let resultText;
+    if(decidedAt!==null){
+      const remaining = 18 - decidedAt;
+      const winnerLabel = diff>0 ? 'Red' : 'Blue';
+      resultText = remaining>0 ? `Team ${winnerLabel} wins ${decidedMargin}&${remaining}` : `Team ${winnerLabel} wins ${decidedMargin} up`;
+    } else if(diff===0){
+      resultText = 'Match halved (AS)';
+    } else {
+      const winnerLabel = diff>0 ? 'Red' : 'Blue';
+      resultText = `Team ${winnerLabel} wins ${Math.abs(diff)} up`;
+    }
+
+    return {
+      redLabel: `Red: ${redNames.filter(Boolean).join(' & ')}`,
+      blueLabel: `Blue: ${blueNames.filter(Boolean).join(' & ')}`,
+      resultText
+    };
+  }
+
+  function copyTextToClipboard(text, sourceTextarea){
+    return new Promise((resolve, reject)=>{
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(resolve).catch(()=>{
+          fallbackCopy(text, sourceTextarea, resolve, reject);
+        });
+      } else {
+        fallbackCopy(text, sourceTextarea, resolve, reject);
+      }
+    });
+  }
+
+  function fallbackCopy(text, sourceTextarea, resolve, reject){
+    try{
+      const ta = sourceTextarea || document.createElement('textarea');
+      const isTemp = !sourceTextarea;
+      if(isTemp){
+        ta.value=text;
+        ta.style.position='fixed'; ta.style.left='-9999px'; ta.style.top='0';
+        document.body.appendChild(ta);
+      }
+      ta.focus();
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      const ok = document.execCommand('copy');
+      if(isTemp) document.body.removeChild(ta);
+      ok ? resolve() : reject();
+    }catch(err){ reject(); }
+  }
+
+  function formatTeeTime(raw){
+    try{
+      const d=new Date(raw);
+      if(isNaN(d.getTime())) return raw;
+      return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    }catch(e){ return raw; }
+  }
+
+  function buildLookups(data){
+    const playerTeam={}; const playerGroup={};
+    (data.teams||[]).forEach(t=>{ t.members.forEach(m=>{ playerTeam[m.name]=t; }); });
+    (data.groups||[]).forEach(g=>{ g.players.forEach(p=>{ playerGroup[p.name]=g; }); });
+    return {playerTeam, playerGroup};
+  }
+
+  // ---------- state ----------
+  let eventData=null;
+  let lookups=null;
+  let mode=null; // 'pre' | 'post'
+  let ctpEntries=[]; // {id, hole, winner, payout}
+  let ctpIdCounter=0;
+  let placePayouts=[]; // {id, place, amount}
+  let placeIdCounter=0;
+  let buyInValue='';
+  let formatNotes='';
+  let matchPairings={1:[], 2:[]}; // { roundNum: [{id, red:[names], blue:[names]}] }
+  let matchIdCounter=0;
+  let ryderRoundFilter='both'; // 'both' | '1' | '2'
+  let useNetScores='no'; // 'yes' | 'no'
+  let handicapUsage='percentage'; // 'percentage' | 'lowest'
+  let handicapPercentage='';
+  let currentStorageKey=null;
+  let saveTimer=null;
+
+  const GOOGLE_SCRIPT_URL_KEY = 'googleAppsScriptUrl';
+  const GOOGLE_VERSION_KEY = 'googlePublishVersion';
+
+  function sanitizeKey(str){
+    return String(str||'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'event';
+  }
+
+  function schedulePayoutSave(){
+    if(!currentStorageKey) return;
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(()=>{
+      const payload={buyInValue, placePayouts, ctpEntries, formatNotes, matchPairings, ryderRoundFilter, useNetScores, handicapUsage, handicapPercentage};
+      try{
+        window.storage.set(currentStorageKey, JSON.stringify(payload), false).catch(()=>{});
+      }catch(err){ /* storage unavailable, fail silently */ }
+    }, 400);
+  }
+
+  async function loadPayoutData(key){
+    try{
+      const res = await window.storage.get(key, false);
+      if(res && res.value) return JSON.parse(res.value);
+    }catch(err){ /* no saved data yet, or storage unavailable */ }
+    return null;
+  }
+
+  const dropZone=document.getElementById('dropZone');
+  const fileInput=document.getElementById('fileInput');
+  const fileBadge=document.getElementById('fileBadge');
+  const fileNameEl=document.getElementById('fileName');
+  const clearFileBtn=document.getElementById('clearFile');
+  const dataPanel=document.getElementById('dataPanel');
+  const eventMeta=document.getElementById('eventMeta');
+  const summaryBody=document.getElementById('summaryBody');
+  const tabPre=document.getElementById('tabPre');
+  const tabPost=document.getElementById('tabPost');
+  const teeSheetPanel=document.getElementById('teeSheetPanel');
+  const teeSheetTableWrap=document.getElementById('teeSheetTableWrap');
+  const teeSheetTextarea=document.getElementById('teeSheetTextarea');
+  const teeSheetCopyBtn=document.getElementById('teeSheetCopyBtn');
+  const teeSheetCopiedFlag=document.getElementById('teeSheetCopiedFlag');
+  const skinsScorecardPanel=document.getElementById('skinsScorecardPanel');
+  const skinsScorecardWrap=document.getElementById('skinsScorecardWrap');
+  const rotationHistoryPanel=document.getElementById('rotationHistoryPanel');
+  const attendanceWrap=document.getElementById('attendanceWrap');
+  const pairingsWrap=document.getElementById('pairingsWrap');
+  const slotsWrap=document.getElementById('slotsWrap');
+  const resetHistoryBtn=document.getElementById('resetHistoryBtn');
+  const historyEventCountLabel=document.getElementById('historyEventCountLabel');
+  const ctpPanel=document.getElementById('ctpPanel');
+  const ctpRowsEl=document.getElementById('ctpRows');
+  const addCtpRowBtn=document.getElementById('addCtpRow');
+  const buyInInput=document.getElementById('buyInInput');
+  const potLabel=document.getElementById('potLabel');
+  const placeRowsEl=document.getElementById('placeRows');
+  const addPlaceRowBtn=document.getElementById('addPlaceRow');
+  const placeLabelHeading=document.getElementById('placeLabelHeading');
+  const formatNotesLabel=document.getElementById('formatNotesLabel');
+  const formatNotesInput=document.getElementById('formatNotesInput');
+  const matchPanel=document.getElementById('matchPanel');
+  const round1MatchRowsEl=document.getElementById('round1MatchRows');
+  const round2MatchRowsEl=document.getElementById('round2MatchRows');
+  const addRound1MatchBtn=document.getElementById('addRound1Match');
+  const addRound2MatchBtn=document.getElementById('addRound2Match');
+  const ryderRoundFilterInput=document.getElementById('ryderRoundFilterInput');
+  const scoringOptionsPanel=document.getElementById('scoringOptionsPanel');
+  const useNetScoresInput=document.getElementById('useNetScoresInput');
+  const handicapUsageWrap=document.getElementById('handicapUsageWrap');
+  const handicapUsageInput=document.getElementById('handicapUsageInput');
+  const handicapPercentageWrap=document.getElementById('handicapPercentageWrap');
+  const handicapPercentageInput=document.getElementById('handicapPercentageInput');
+  const cardsPanel=document.getElementById('cardsPanel');
+  const footerNote=document.getElementById('footerNote');
+  const googleScriptUrlInput=document.getElementById('googleScriptUrlInput');
+  const publishVersionInput=document.getElementById('publishVersionInput');
+  const testGoogleConnectionBtn=document.getElementById('testGoogleConnectionBtn');
+  const publishGoogleBtn=document.getElementById('publishGoogleBtn');
+  const googleConnectionStatus=document.getElementById('googleConnectionStatus');
+
+  function setGoogleStatus(message, isError=false){
+    googleConnectionStatus.textContent = message;
+    googleConnectionStatus.style.color = isError ? 'var(--red)' : 'var(--green-mid)';
+  }
+
+  function saveGoogleConnectionSettings(){
+    const url = googleScriptUrlInput.value.trim();
+    const version = parseInt(publishVersionInput.value,10) || 1;
+    try{
+      window.localStorage.setItem(GOOGLE_SCRIPT_URL_KEY, url);
+      window.localStorage.setItem(GOOGLE_VERSION_KEY, String(version));
+    }catch(err){ /* local storage unavailable */ }
+    return {url, version};
+  }
+
+  function loadGoogleConnectionSettings(){
+    try{
+      const url = window.localStorage.getItem(GOOGLE_SCRIPT_URL_KEY) || '';
+      const version = window.localStorage.getItem(GOOGLE_VERSION_KEY) || '1';
+      googleScriptUrlInput.value = url;
+      publishVersionInput.value = version;
+    }catch(err){ /* local storage unavailable */ }
+  }
+
+  function getGoogleScriptUrl(){
+    const url = googleScriptUrlInput.value.trim();
+    if(!url) throw new Error('Paste your Google Apps Script Web App URL first.');
+    if(!/^https:\/\/script\.google\.com\/macros\/s\/[^\s]+\/exec(?:\?.*)?$/.test(url)){
+      throw new Error('That does not look like the Google Apps Script Web App URL ending in /exec.');
+    }
+    return url;
+  }
+
+  async function postToGoogle(data){
+    const url = getGoogleScriptUrl();
+    saveGoogleConnectionSettings();
+
+    // Use text/plain to avoid a browser CORS preflight. Apps Script still receives
+    // the body as e.postData.contents and our doPost() parses the JSON normally.
+    const response = await fetch(url, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(data),
+      redirect:'follow'
+    });
+
+    const text = await response.text();
+    let result;
+    try{ result = JSON.parse(text); }
+    catch(err){ throw new Error('Google returned an unexpected response: ' + text.slice(0,200)); }
+    if(!result.success) throw new Error(result.error || 'Google Apps Script rejected the request.');
+    return result;
+  }
+
+  function getGoogleEventId(){
+    const firstGroup = (eventData.groups||[])[0];
+    const raw = firstGroup ? firstGroup.teeTime : eventData.eventDateLong;
+    const d = new Date(raw);
+    if(!isNaN(d.getTime())){
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,'0');
+      const day = String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${day}`;
+    }
+    return String(eventData.eventDateShort || eventData.eventDateLong || '').trim();
+  }
+
+  function getGoogleEventDate(){
+    const firstGroup = (eventData.groups||[])[0];
+    const raw = firstGroup ? firstGroup.teeTime : eventData.eventDateLong;
+    const d = new Date(raw);
+    if(!isNaN(d.getTime())) return d.toLocaleDateString('en-US');
+    return eventData.eventDateLong || '';
+  }
+
+  function buildGoogleEventPayload(version){
+    const firstGroup = (eventData.groups||[])[0];
+    return {
+      type:'event',
+      eventId:getGoogleEventId(),
+      eventName:eventData.eventDateLong,
+      eventDate:getGoogleEventDate(),
+      course:firstGroup ? (firstGroup.course || '') : '',
+      status: mode==='post' ? 'COMPLETED' : 'PRELIMINARY',
+      version:version,
+      resultsAvailable: mode==='post' ? 'Yes' : 'No'
+    };
+  }
+
+  function buildGoogleTeeSheetPayload(version){
+    const rows=[];
+    (eventData.groups||[]).forEach(group=>{
+      group.players.forEach(player=>{
+        const p = eventData.players[player.name] || {};
+        const team = lookups && lookups.playerTeam[player.name] ? lookups.playerTeam[player.name].name : '';
+        rows.push({
+          date:formatTeeDate(group.teeTime),
+          teeTime:formatTeeTime(group.teeTime),
+          group:rows.length ? '' : '',
+          player:player.name,
+          tee:player.tee || p.tee || '',
+          handicapIndex:p.handicap || '',
+          playingHandicap:player.playingHandicap || '',
+          team:team
+        });
+      });
+    });
+
+    // Rebuild the group number cleanly after flattening.
+    let rowIndex=0;
+    (eventData.groups||[]).forEach((group, groupIndex)=>{
+      group.players.forEach(player=>{
+        rows[rowIndex].group = groupIndex + 1;
+        rowIndex++;
+      });
+    });
+
+    return {
+      type:'teeSheetBatch',
+      eventId:getGoogleEventId(),
+      version:version,
+      rows:rows
+    };
+  }
+
+  function buildGoogleResultsPayload(version){
+    // The Post-Round Group Email is the authoritative player-facing
+    // results information. Publish that exact content to Google Sheets
+    // so the Results tab and Google Site stay aligned with the HTML app.
+    const emailText = generateGroupPostEmail();
+    const lines = (emailText && typeof emailText === 'object' && 'body' in emailText)
+      ? String(emailText.body || '').split(/\r?\n/)
+      : String(emailText || '').split(/\r?\n/);
+
+    const rows = lines.map((line, index) => ({
+      section: 'Post-Round Group Email',
+      item: String(index + 1),
+      value: line
+    }));
+
+    return {
+      type:'resultsBatch',
+      eventId:getGoogleEventId(),
+      version:version,
+      rows:rows
+    };
+  }
+
+  function buildGooglePreRoundPayload(version){
+    // The Pre-Round Group Email is the authoritative player-facing
+    // pre-round information. Publish that exact content to Google Sheets
+    // so the sheet and Google Site stay aligned with the HTML app.
+    const emailText = generateGroupPreEmail();
+    const lines = (emailText && typeof emailText === 'object' && 'body' in emailText) ? String(emailText.body || '').split(/\r?\n/) : String(emailText || '').split(/\r?\n/);
+    const rows = lines.map((line, index) => ({
+      section: 'Pre-Round Group Email',
+      item: String(index + 1),
+      value: line
+    }));
+
+    return {
+      type:'preRoundBatch',
+      eventId:getGoogleEventId(),
+      version:version,
+      rows:rows
+    };
+  }
+
+  async function publishCurrentEventToGoogle(){
+    if(!eventData){
+      setGoogleStatus('Upload a Squabbit CSV first.', true);
+      return;
+    }
+    const version = parseInt(publishVersionInput.value,10);
+    if(!version || version<1){
+      setGoogleStatus('Enter a valid version number.', true);
+      return;
+    }
+    if(mode==='post' && !(eventData.teams||[]).some(t=>t.roundScore!=='' && t.roundScore!==undefined)){
+      setGoogleStatus('The uploaded file does not appear to contain post-round results.', true);
+      return;
+    }
+
+    publishGoogleBtn.disabled=true;
+    testGoogleConnectionBtn.disabled=true;
+    setGoogleStatus(mode==='post' ? 'Publishing event, results, and current tee sheet…' : 'Publishing complete Pre-Round package and current tee sheet…');
+
+    try{
+      const eventResult = await postToGoogle(buildGoogleEventPayload(version));
+
+      const versionResult = await postToGoogle({
+        type:'eventVersion',
+        eventId:getGoogleEventId(),
+        version:version,
+        stage:mode==='post' ? 'Saturday Results' : 'Pre-Round',
+        status:mode==='post' ? 'COMPLETED' : 'PUBLISHED',
+        csvFilename:fileNameEl.textContent.replace(/ \(restored from last session\)$/,''),
+        published:'Yes',
+        notes:mode==='post' ? 'Published from Saturday Golf HTML app' : 'Published complete Pre-Round package from Saturday Golf HTML app'
+      });
+
+      const teeResult = await postToGoogle(buildGoogleTeeSheetPayload(version));
+      let preRoundResult=null;
+      let resultsResult=null;
+      if(mode==='post'){
+        resultsResult = await postToGoogle(buildGoogleResultsPayload(version));
+      }else{
+        preRoundResult = await postToGoogle(buildGooglePreRoundPayload(version));
+      }
+
+      if(mode==='post'){
+        setGoogleStatus(`Results Version ${version} published successfully — ${resultsResult.rowsAdded} result rows. Event is now Completed.`);
+      }else{
+        setGoogleStatus(`Pre-Round Version ${version} published successfully — ${teeResult.rowsAdded} tee-sheet rows and ${preRoundResult.rowsAdded} pre-round items sent to Google Sheets.`);
+      }
+      return {eventResult, versionResult, teeResult, preRoundResult, resultsResult};
+    }catch(err){
+      setGoogleStatus('Publish failed: ' + err.message, true);
+      throw err;
+    }finally{
+      publishGoogleBtn.disabled=false;
+      testGoogleConnectionBtn.disabled=false;
+    }
+  }
+
+  loadGoogleConnectionSettings();
+
+  googleScriptUrlInput.addEventListener('change', saveGoogleConnectionSettings);
+  publishVersionInput.addEventListener('change', saveGoogleConnectionSettings);
+
+  testGoogleConnectionBtn.addEventListener('click', async ()=>{
+    try{
+      testGoogleConnectionBtn.disabled=true;
+      setGoogleStatus('Testing connection…');
+      const url=getGoogleScriptUrl();
+      const response=await fetch(url,{method:'GET',redirect:'follow'});
+      const text=await response.text();
+      if(text.includes('Saturday Golf League connection is working!')){
+        saveGoogleConnectionSettings();
+        setGoogleStatus('Connection successful. Google Apps Script is responding.');
+      }else{
+        throw new Error('The web app responded, but not with the expected connection message.');
+      }
+    }catch(err){
+      setGoogleStatus('Connection failed: ' + err.message, true);
+    }finally{
+      testGoogleConnectionBtn.disabled=false;
+    }
+  });
+
+  publishGoogleBtn.addEventListener('click', async ()=>{
+    try{
+      await publishCurrentEventToGoogle();
+    }catch(err){ /* status already shown above */ }
+  });
+
+  function renderScoringOptions(){
+    if(!eventData){ scoringOptionsPanel.style.display='none'; return; }
+    scoringOptionsPanel.style.display='block';
+    useNetScoresInput.value = useNetScores;
+    handicapUsageInput.value = handicapUsage;
+    handicapPercentageInput.value = handicapPercentage;
+    handicapUsageWrap.style.display = useNetScores==='yes' ? 'block' : 'none';
+    handicapPercentageWrap.style.display = (useNetScores==='yes' && handicapUsage==='percentage') ? 'block' : 'none';
+  }
+
+  useNetScoresInput.addEventListener('change', e=>{
+    useNetScores = e.target.value;
+    renderScoringOptions();
+    renderCards();
+    schedulePayoutSave();
+  });
+  handicapUsageInput.addEventListener('change', e=>{
+    handicapUsage = e.target.value;
+    renderScoringOptions();
+    renderCards();
+    schedulePayoutSave();
+  });
+  handicapPercentageInput.addEventListener('input', e=>{
+    handicapPercentage = e.target.value;
+    renderCards();
+    schedulePayoutSave();
+  });
+
+  formatNotesInput.addEventListener('input', e=>{
+    formatNotes = e.target.value;
+    renderCards();
+    schedulePayoutSave();
+  });
+
+  ryderRoundFilterInput.addEventListener('change', e=>{
+    ryderRoundFilter = e.target.value;
+    renderCards();
+    schedulePayoutSave();
+  });
+
+  dropZone.addEventListener('click', ()=>fileInput.click());
+  dropZone.addEventListener('dragover', e=>{e.preventDefault(); dropZone.classList.add('drag');});
+  dropZone.addEventListener('dragleave', ()=>dropZone.classList.remove('drag'));
+  const LAST_UPLOAD_KEY = 'lastUpload:csv';
+
+  async function saveLastUpload(filename, csvText){
+    try{
+      await window.storage.set(LAST_UPLOAD_KEY, JSON.stringify({filename, csvText}), false);
+    }catch(err){ /* storage unavailable, fail silently */ }
+  }
+  async function loadLastUpload(){
+    try{
+      const res = await window.storage.get(LAST_UPLOAD_KEY, false);
+      if(res && res.value) return JSON.parse(res.value);
+    }catch(err){ /* nothing saved yet, or storage unavailable */ }
+    return null;
+  }
+  async function clearLastUpload(){
+    try{ await window.storage.delete(LAST_UPLOAD_KEY, false); }catch(err){ /* ignore */ }
+  }
+
+  dropZone.addEventListener('drop', e=>{
+    e.preventDefault(); dropZone.classList.remove('drag');
+    if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e=>{
+    if(e.target.files.length) handleFile(e.target.files[0]);
+  });
+  clearFileBtn.addEventListener('click', ()=>{
+    resetAll();
+    clearLastUpload();
+  });
+
+  function resetAll(){
+    eventData=null; lookups=null; mode=null; ctpEntries=[]; placePayouts=[]; buyInValue=''; formatNotes=''; matchPairings={1:[],2:[]}; ryderRoundFilter='both'; useNetScores='no'; handicapUsage='percentage'; handicapPercentage=''; currentStorageKey=null;
+    fileBadge.style.display='none'; fileInput.value='';
+    dataPanel.style.display='none'; ctpPanel.style.display='none'; teeSheetPanel.style.display='none'; skinsScorecardPanel.style.display='none'; scoringOptionsPanel.style.display='none';
+    cardsPanel.innerHTML=''; footerNote.style.display='none';
+  }
+
+  function handleFile(file){
+    const reader=new FileReader();
+    reader.onload=async function(e){
+      try{
+        eventData=parseEvent(e.target.result);
+        lookups=buildLookups(eventData);
+        fileNameEl.textContent=file.name;
+        fileBadge.style.display='flex';
+        await detectModeAndRender();
+        saveLastUpload(file.name, e.target.result);
+      }catch(err){
+        alert('Could not parse this CSV. Make sure it is an unmodified Squabbit export.\n\n'+err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  (async function restoreLastUpload(){
+    const last = await loadLastUpload();
+    if(!last || !last.csvText) return;
+    try{
+      eventData = parseEvent(last.csvText);
+      lookups = buildLookups(eventData);
+      fileNameEl.textContent = `${last.filename} (restored from last session)`;
+      fileBadge.style.display='flex';
+      await detectModeAndRender();
+    }catch(err){ /* stored data unreadable, ignore and let user upload fresh */ }
+  })();
+
+  function autoGenerateMatchPairings(){
+    const result={1:[], 2:[]};
+    [1,2].forEach(rnd=>{
+      const roundGroups = (eventData.groups||[]).filter(g=>g.round===rnd);
+      roundGroups.forEach(g=>{
+        const redNames = g.players.filter(p=>(eventData.players[p.name]||{}).ryderTeam==='Red').map(p=>p.name);
+        const blueNames = g.players.filter(p=>(eventData.players[p.name]||{}).ryderTeam==='Blue').map(p=>p.name);
+        if(!redNames.length || !blueNames.length) return;
+        if(rnd===1){
+          result[1].push({id:++matchIdCounter, red:redNames, blue:blueNames});
+        } else {
+          const pairCount = Math.min(redNames.length, blueNames.length);
+          for(let k=0;k<pairCount;k++){
+            result[2].push({id:++matchIdCounter, red:[redNames[k]], blue:[blueNames[k]]});
+          }
+        }
+      });
+    });
+    return result;
+  }
+
+  async function detectModeAndRender(){
+    const hasResults = (eventData.teams||[]).some(t=>t.roundScore && t.roundScore!=='');
+    mode = hasResults ? 'post' : 'pre';
+
+    currentStorageKey = 'payouts:' + sanitizeKey(eventData.eventDateShort + '-' + eventData.eventDateLong);
+    const saved = await loadPayoutData(currentStorageKey);
+    if(saved){
+      buyInValue = saved.buyInValue || '';
+      placePayouts = saved.placePayouts || [];
+      ctpEntries = saved.ctpEntries || [];
+      formatNotes = saved.formatNotes || '';
+      matchPairings = saved.matchPairings || {1:[],2:[]};
+      ryderRoundFilter = saved.ryderRoundFilter || 'both';
+      useNetScores = saved.useNetScores || 'no';
+      handicapUsage = saved.handicapUsage || 'percentage';
+      handicapPercentage = saved.handicapPercentage || '';
+      placeIdCounter = placePayouts.reduce((m,p)=>Math.max(m,p.id||0), 0);
+      ctpIdCounter = ctpEntries.reduce((m,c)=>Math.max(m,c.id||0), 0);
+      matchIdCounter = [...(matchPairings[1]||[]), ...(matchPairings[2]||[])].reduce((m,x)=>Math.max(m,x.id||0), 0);
+      buyInInput.value = buyInValue;
+      formatNotesInput.value = formatNotes;
+      if(ryderRoundFilterInput) ryderRoundFilterInput.value = ryderRoundFilter;
+      if(!buyInValue) detectBuyIn();
+    } else {
+      placePayouts=[]; ctpEntries=[]; placeIdCounter=0; ctpIdCounter=0; formatNotes=''; ryderRoundFilter='both';
+      useNetScores='no'; handicapUsage='percentage'; handicapPercentage='';
+      formatNotesInput.value='';
+      if(ryderRoundFilterInput) ryderRoundFilterInput.value='both';
+      detectBuyIn();
+      matchPairings = /ryder/i.test(eventData.formatName||'') ? autoGenerateMatchPairings() : {1:[],2:[]};
+    }
+    renderScoringOptions();
+
+    renderEventMeta();
+    renderSummary();
+    renderTabs();
+    dataPanel.style.display='block';
+    footerNote.style.display='block';
+    renderTeeSheet();
+    renderSkinsScorecard();
+    renderPayoutsPanel();
+    renderCards();
+    updateRotationHistoryForCurrentEvent();
+  }
+
+  function detectBuyIn(){
+    const counts={};
+    eventData.playerOrder.forEach(name=>{
+      const raw=eventData.players[name].totalFees;
+      if(raw) counts[raw]=(counts[raw]||0)+1;
+    });
+    let best=''; let bestCount=0;
+    Object.keys(counts).forEach(k=>{ if(counts[k]>bestCount){ best=k; bestCount=counts[k]; } });
+    buyInValue = best ? `$${parseMoney(best).toFixed(0)}` : '';
+    buyInInput.value = buyInValue;
+  }
+
+  function renderEventMeta(){
+    eventMeta.innerHTML='';
+    const pills=[
+      `📅 ${eventData.eventDateLong}`,
+      eventData.formatName ? `🏆 ${eventData.formatName}` : null,
+      eventData.groups.length ? `⏰ ${eventData.groups.length} tee time${eventData.groups.length>1?'s':''}` : null,
+      `👥 ${eventData.playerOrder.length} players`
+    ].filter(Boolean);
+    pills.forEach(txt=>{
+      const p=document.createElement('span'); p.className='pill'; p.textContent=txt;
+      eventMeta.appendChild(p);
+    });
+  }
+
+  function renderSummary(){
+    summaryBody.innerHTML='';
+    eventData.playerOrder.forEach(name=>{
+      const p=eventData.players[name];
+      const team=lookups.playerTeam[name];
+      const group=lookups.playerGroup[name];
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td>${name}</td>
+        <td>${p.tee||''}</td>
+        <td>${p.handicap||''}</td>
+        <td>${team?team.name:'—'}</td>
+        <td>${group?formatTeeTime(group.teeTime):'—'}</td>
+      `;
+      summaryBody.appendChild(tr);
+    });
+  }
+
+  function renderTeeSheet(){
+    if(!eventData || !eventData.groups || !eventData.groups.length){
+      teeSheetPanel.style.display='none';
+      return;
+    }
+    teeSheetPanel.style.display='block';
+
+    const rounds = [...new Set(eventData.groups.map(g=>g.round))].sort((a,b)=>a-b);
+    const multiRound = rounds.length>1;
+
+    const sortedGroups = [...eventData.groups].sort((a,b)=>{
+      if(a.round!==b.round) return a.round-b.round;
+      return new Date(a.teeTime) - new Date(b.teeTime);
+    });
+
+    // Group consecutive tee-time groups into sections by (round, date, course)
+    const sections=[];
+    let currentSection=null;
+    sortedGroups.forEach(group=>{
+      const key = `${group.round}|${formatTeeDate(group.teeTime)}|${group.course||''}`;
+      if(!currentSection || currentSection.key!==key){
+        currentSection = { key, round:group.round, date:formatTeeDate(group.teeTime), course:group.course||'', groups:[] };
+        sections.push(currentSection);
+      }
+      currentSection.groups.push(group);
+    });
+
+    let html='';
+    sections.forEach(section=>{
+      const headingParts=[];
+      if(multiRound) headingParts.push(`Round ${section.round}`);
+      if(section.date) headingParts.push(section.date);
+      if(section.course) headingParts.push(section.course);
+      html += `<div style="font-weight:700;color:var(--green-deep);font-size:14px;margin:16px 0 8px;">${headingParts.join(' — ')}</div>`;
+      html += '<table class="sum-table"><thead><tr><th>Tee Time</th><th>Player</th><th>Tee</th><th>Hcp Index</th><th>Playing Hcp</th></tr></thead><tbody>';
+      section.groups.forEach(group=>{
+        group.players.forEach((gp,idx)=>{
+          const p = eventData.players[gp.name];
+          const idxLabel = p ? p.handicap : '';
+          const teeLabel = gp.tee || (p ? p.tee : '') || '';
+          html += '<tr>';
+          html += `<td>${idx===0 ? formatTeeTime(group.teeTime) : ''}</td>`;
+          html += `<td>${gp.name}</td>`;
+          html += `<td>${teeLabel}</td>`;
+          html += `<td>${idxLabel}</td>`;
+          html += `<td>${gp.playingHandicap||''}</td>`;
+          html += '</tr>';
+        });
+      });
+      html += '</tbody></table>';
+    });
+    teeSheetTableWrap.innerHTML = html;
+
+    teeSheetTextarea.value = generateTeeSheetText(sortedGroups, multiRound);
+  }
+
+  function generateTeeSheetText(sortedGroups, multiRound){
+    const lines=[];
+    const firstGroup = sortedGroups[0];
+    if(firstGroup){
+      lines.push(`We are playing ${firstGroup.course||''} on ${formatTeeDate(firstGroup.teeTime)}`);
+    } else {
+      lines.push('Saturday Golf Tee Sheet');
+    }
+    let lastRound=null;
+    let lastDateCourse=null;
+    sortedGroups.forEach((group, gi)=>{
+      if(multiRound && group.round!==lastRound){
+        lines.push('');
+        lines.push(`Round ${group.round}:`);
+        lastRound=group.round;
+        lastDateCourse=null;
+      }
+      const dateCourseKey = `${formatTeeDate(group.teeTime)}|${group.course||''}`;
+      if(dateCourseKey!==lastDateCourse && gi!==0){
+        lines.push('');
+        const metaParts = [formatTeeDate(group.teeTime), group.course].filter(Boolean);
+        lines.push(metaParts.join(' — '));
+      }
+      lastDateCourse = dateCourseKey;
+      lines.push('');
+      lines.push(`Tee Time: ${formatTeeTime(group.teeTime)}`);
+      group.players.forEach(gp=>{
+        const p = eventData.players[gp.name];
+        const idxLabel = p ? p.handicap : '';
+        const teeLabel = gp.tee || (p ? p.tee : '') || '';
+        const playingLabel = gp.playingHandicap;
+        const hcpLabel = playingLabel
+          ? `HCP Index: ${idxLabel}, Playing HCP: ${playingLabel}`
+          : `HCP Index: ${idxLabel}`;
+        lines.push(`  • ${gp.name} (${teeLabel} — ${hcpLabel})`);
+      });
+    });
+    return lines.join('\n');
+  }
+
+  const AVATAR_COLORS = ['#C99A3E','#2F5D3F','#9A3B34','#1C3F94','#6B4C9A','#B5651D','#3A8C82','#8A2E6B'];
+
+  function getInitials(name){
+    const parts = name.trim().split(/\s+/);
+    return ((parts[0]||'')[0]||'') + ((parts[1]||'')[0]||'');
+  }
+
+  // ---------- Rotation History (tracked across all uploaded events) ----------
+  const ROTATION_HISTORY_KEY = 'rotationHistory';
+
+  async function loadRotationHistory(){
+    try{
+      const res = await window.storage.get(ROTATION_HISTORY_KEY);
+      if(res && res.value) return JSON.parse(res.value);
+    }catch(err){ /* nothing saved yet */ }
+    return { events:{}, pairCounts:{}, slotCounts:{}, attendance:{} };
+  }
+  async function saveRotationHistory(hist){
+    try{ await window.storage.set(ROTATION_HISTORY_KEY, JSON.stringify(hist)); }catch(err){ /* fail silently */ }
+  }
+  function pairKey(a,b){ return [a,b].sort().join(' & '); }
+
+  async function updateRotationHistoryForCurrentEvent(){
+    if(!eventData || !eventData.groups || !eventData.groups.length) return;
+    const eventKey = sanitizeKey(eventData.eventDateShort + '-' + eventData.eventDateLong);
+    const hist = await loadRotationHistory();
+    if(hist.events[eventKey]) { renderRotationHistory(hist); return; } // already logged, avoid double-count on re-upload
+
+    const rounds = [...new Set(eventData.groups.map(g=>g.round))].sort((a,b)=>a-b);
+    const playersSeen = new Set();
+
+    rounds.forEach(rnd=>{
+      const roundGroups = eventData.groups
+        .filter(g=>g.round===rnd)
+        .sort((a,b)=> new Date(a.teeTime) - new Date(b.teeTime));
+      roundGroups.forEach((group, idx)=>{
+        const slot = idx+1;
+        const names = group.players.map(p=>p.name);
+        names.forEach(n=>{
+          playersSeen.add(n);
+          hist.slotCounts[n] = hist.slotCounts[n] || {};
+          hist.slotCounts[n][slot] = (hist.slotCounts[n][slot]||0) + 1;
+        });
+        for(let i=0;i<names.length;i++){
+          for(let j=i+1;j<names.length;j++){
+            const key = pairKey(names[i], names[j]);
+            hist.pairCounts[key] = (hist.pairCounts[key]||0) + 1;
+          }
+        }
+      });
+    });
+
+    playersSeen.forEach(n=>{ hist.attendance[n] = (hist.attendance[n]||0) + 1; });
+    hist.events[eventKey] = { dateLabel: eventData.eventDateLong || eventData.eventDateShort || eventKey };
+
+    await saveRotationHistory(hist);
+    renderRotationHistory(hist);
+  }
+
+  function renderRotationHistory(hist){
+    if(!hist){ rotationHistoryPanel.style.display='none'; return; }
+    rotationHistoryPanel.style.display='block';
+
+    const eventCount = Object.keys(hist.events).length;
+    historyEventCountLabel.textContent = `Tracked across ${eventCount} event${eventCount===1?'':'s'} so far — use this to start fresh for a new season.`;
+
+    // Attendance table
+    const attendanceNames = Object.keys(hist.attendance).sort((a,b)=> hist.attendance[b]-hist.attendance[a]);
+    let attHtml = '<table class="sum-table"><thead><tr><th>Player</th><th>Events Played</th></tr></thead><tbody>';
+    attendanceNames.forEach(n=>{
+      attHtml += `<tr><td>${n}</td><td>${hist.attendance[n]}</td></tr>`;
+    });
+    attHtml += '</tbody></table>';
+    attendanceWrap.innerHTML = attendanceNames.length ? attHtml : '<div class="hint">No events tracked yet.</div>';
+
+    // Repeat pairings table (sorted by count desc, only show pairs seen more than once)
+    const pairKeys = Object.keys(hist.pairCounts).filter(k=>hist.pairCounts[k]>1).sort((a,b)=> hist.pairCounts[b]-hist.pairCounts[a]);
+    let pairHtml = '<table class="sum-table"><thead><tr><th>Pair</th><th>Times in Same Group</th></tr></thead><tbody>';
+    pairKeys.forEach(k=>{
+      pairHtml += `<tr><td>${k}</td><td>${hist.pairCounts[k]}</td></tr>`;
+    });
+    pairHtml += '</tbody></table>';
+    pairingsWrap.innerHTML = pairKeys.length ? pairHtml : '<div class="hint">No repeat pairings yet.</div>';
+
+    // Tee-time slot distribution table
+    const slotNames = Object.keys(hist.slotCounts).sort();
+    const maxSlot = slotNames.reduce((m,n)=> Math.max(m, ...Object.keys(hist.slotCounts[n]).map(Number)), 1);
+    let slotHtml = '<table class="sum-table"><thead><tr><th>Player</th>';
+    for(let s=1; s<=maxSlot; s++) slotHtml += `<th>${s===1?'1st':s===2?'2nd':s===3?'3rd':s+'th'} off</th>`;
+    slotHtml += '</tr></thead><tbody>';
+    slotNames.forEach(n=>{
+      slotHtml += `<tr><td>${n}</td>`;
+      for(let s=1; s<=maxSlot; s++) slotHtml += `<td>${hist.slotCounts[n][s]||0}</td>`;
+      slotHtml += '</tr>';
+    });
+    slotHtml += '</tbody></table>';
+    slotsWrap.innerHTML = slotNames.length ? slotHtml : '<div class="hint">No data yet.</div>';
+  }
+
+  let historyResetArmed = false;
+  let historyResetTimer = null;
+  resetHistoryBtn.addEventListener('click', async ()=>{
+    if(!historyResetArmed){
+      historyResetArmed = true;
+      resetHistoryBtn.textContent = 'Click again to confirm';
+      resetHistoryBtn.style.background = 'var(--red)';
+      resetHistoryBtn.style.color = '#fff';
+      resetHistoryBtn.style.borderColor = 'var(--red)';
+      clearTimeout(historyResetTimer);
+      historyResetTimer = setTimeout(()=>{
+        historyResetArmed = false;
+        resetHistoryBtn.textContent = 'Reset History';
+        resetHistoryBtn.style.background = '';
+        resetHistoryBtn.style.color = '';
+        resetHistoryBtn.style.borderColor = '';
+      }, 4000);
+      return;
+    }
+    clearTimeout(historyResetTimer);
+    historyResetArmed = false;
+    resetHistoryBtn.textContent = 'Reset History';
+    resetHistoryBtn.style.background = '';
+    resetHistoryBtn.style.color = '';
+    resetHistoryBtn.style.borderColor = '';
+    const empty = { events:{}, pairCounts:{}, slotCounts:{}, attendance:{} };
+    await saveRotationHistory(empty);
+    renderRotationHistory(empty);
+  });
+
+  (async function initRotationHistory(){
+    const hist = await loadRotationHistory();
+    renderRotationHistory(hist);
+  })();
+
+  function renderSkinsScorecard(){
+    const isSkins = /skins/i.test((eventData && eventData.formatName) || '');
+    if(!eventData || !isSkins || mode!=='post'){
+      skinsScorecardPanel.style.display='none';
+      return;
+    }
+
+    const allPlayersForSkins = (eventData.groups||[]).flatMap(g=>g.players.map(p=>({...p, parHoles:g.parHoles})));
+    if(!allPlayersForSkins.length || !allPlayersForSkins[0].parHoles){
+      skinsScorecardPanel.style.display='none';
+      return;
+    }
+    const parHoles = allPlayersForSkins[0].parHoles;
+
+    // Determine which (player, hole) cells won a skin, same logic as the email's Skins Detail
+    const skinCell = new Set(); // "playerName|holeIdx"
+    for(let h=0; h<18; h++){
+      let best=Infinity, winner=null, tieCount=0;
+      allPlayersForSkins.forEach(p=>{
+        if(!p.netToParHoles || !p.parHoles) return;
+        const v = p.netToParHoles[h];
+        if(isNaN(v)) return;
+        if(v<best){ best=v; winner=p; tieCount=1; }
+        else if(v===best){ tieCount++; }
+      });
+      if(winner && tieCount===1){
+        skinCell.add(`${winner.name}|${h}`);
+      }
+    }
+
+    skinsScorecardPanel.style.display='block';
+
+    const sumRange = (arr,start,end)=>{
+      let s=0, any=false;
+      for(let i=start;i<end;i++){ if(!isNaN(arr[i])){ s+=arr[i]; any=true; } }
+      return any ? s : null;
+    };
+
+    // Total skins per player, used for sorting and the Skins column
+    const totalSkinsByPlayer = {};
+    allPlayersForSkins.forEach(p=>{ totalSkinsByPlayer[p.name] = 0; });
+    skinCell.forEach(key=>{
+      const name = key.slice(0, key.lastIndexOf('|'));
+      totalSkinsByPlayer[name] = (totalSkinsByPlayer[name]||0) + 1;
+    });
+    const sortedPlayers = [...allPlayersForSkins].sort((a,b)=>
+      (totalSkinsByPlayer[b.name]||0) - (totalSkinsByPlayer[a.name]||0)
+    );
+
+    let html = '<table class="scorecard-table">';
+
+    // Hole # header row
+    html += '<thead><tr><th style="text-align:left;">Hole</th><th>Strokes</th><th>Net Skins</th>';
+    for(let h=1; h<=9; h++) html += `<th>${h}</th>`;
+    html += '<th>Out</th>';
+    for(let h=10; h<=18; h++) html += `<th>${h}</th>`;
+    html += '<th>In</th><th>Tot</th></tr>';
+
+    // Par row
+    html += '<tr><th style="text-align:left;">Par</th><th></th><th></th>';
+    for(let h=0; h<9; h++) html += `<th>${parHoles[h]}</th>`;
+    html += `<th>${sumRange(parHoles,0,9)}</th>`;
+    for(let h=9; h<18; h++) html += `<th>${parHoles[h]}</th>`;
+    html += `<th>${sumRange(parHoles,9,18)}</th><th>${sumRange(parHoles,0,18)}</th>`;
+    html += '</tr></thead><tbody>';
+
+    sortedPlayers.forEach((p,pi)=>{
+      const initials = getInitials(p.name);
+      const avatarColor = AVATAR_COLORS[pi % AVATAR_COLORS.length];
+      let frontSkins=0, backSkins=0;
+
+      const buildCell = h=>{
+        const gross = p.grossHoles ? p.grossHoles[h] : NaN;
+        const par = parHoles[h];
+        const net = (p.netToParHoles && !isNaN(p.netToParHoles[h])) ? par + p.netToParHoles[h] : null;
+        const strokeReceived = (net!==null && !isNaN(gross)) ? (gross-net)>0 : false;
+        const isSkin = skinCell.has(`${p.name}|${h}`);
+        if(isSkin){ if(h<9) frontSkins++; else backSkins++; }
+        if(isNaN(gross) || isNaN(par)) return '<td></td>';
+
+        const diff = gross - par;
+        let shape, color;
+        if(diff<=-1){ shape='circle'; color='green'; }
+        else if(diff===0){ shape='none'; color='neutral'; }
+        else if(diff===1){ shape='square'; color='orange'; }
+        else { shape='square'; color='red'; }
+        const filled = isSkin || diff<=-2 || diff>=2;
+        if(isSkin){ shape='circle'; color='green'; }
+
+        const shapeClass = shape==='none' ? '' : `cell-shape cell-${shape} cell-${color}${filled ? ' cell-filled' : ''}`;
+        const dot = strokeReceived ? '<span class="stroke-dot">•</span>' : '<span class="stroke-dot-empty"></span>';
+        return `<td><div class="cell-inner">${dot}<span class="${shapeClass}">${gross}</span></div></td>`;
+      };
+
+      let rowHtml = '<tr>';
+      rowHtml += `<td class="player-name"><span class="avatar" style="background:${avatarColor}">${initials}</span>${p.name}</td>`;
+      const strokesDisplay = p.playingHandicap ? parseInt(p.playingHandicap,10) : '';
+      rowHtml += `<td class="subtotal">${isNaN(strokesDisplay) ? '' : strokesDisplay}</td>`;
+      rowHtml += `<td class="skins-total">${totalSkinsByPlayer[p.name]||0}</td>`;
+      for(let h=0; h<9; h++) rowHtml += buildCell(h);
+      rowHtml += `<td class="subtotal">${frontSkins}</td>`;
+      for(let h=9; h<18; h++) rowHtml += buildCell(h);
+      rowHtml += `<td class="subtotal">${backSkins}</td><td class="subtotal">${frontSkins+backSkins}</td>`;
+      rowHtml += '</tr>';
+      html += rowHtml;
+    });
+
+    html += '</tbody></table>';
+    skinsScorecardWrap.innerHTML = html;
+  }
+
+  teeSheetCopyBtn.addEventListener('click', ()=>{
+    copyTextToClipboard(teeSheetTextarea.value, teeSheetTextarea).then(()=>{
+      teeSheetCopiedFlag.textContent='Copied!';
+      teeSheetCopiedFlag.classList.add('show');
+      setTimeout(()=>teeSheetCopiedFlag.classList.remove('show'), 1400);
+    }).catch(()=>{
+      teeSheetTextarea.focus();
+      teeSheetTextarea.select();
+      teeSheetCopiedFlag.textContent='Text selected — press Ctrl+C';
+      teeSheetCopiedFlag.classList.add('show');
+      setTimeout(()=>teeSheetCopiedFlag.classList.remove('show'), 2600);
+    });
+  });
+
+  function renderTabs(){
+    tabPre.classList.toggle('active', mode==='pre');
+    tabPost.classList.toggle('active', mode==='post');
+  }
+  tabPre.addEventListener('click', ()=>{ mode='pre'; renderTabs(); renderPayoutsPanel(); renderSkinsScorecard(); renderCards(); });
+  tabPost.addEventListener('click', ()=>{ mode='post'; renderTabs(); renderPayoutsPanel(); renderSkinsScorecard(); renderCards(); });
+
+  // ---------- Payouts panel (buy-in, place payouts, CTP) ----------
+  function renderPayoutsPanel(){
+    ctpPanel.style.display='block';
+    potLabel.textContent = computePotLabel();
+    const isTeamFormat = (eventData.teams||[]).some(t=>t.members.length>1);
+    placeLabelHeading.textContent = isTeamFormat ? 'Payout structure (per team)' : 'Payout structure';
+    formatNotesLabel.textContent = eventData.formatName ? `${eventData.formatName} Notes` : 'Format Notes';
+    renderPlaceRows();
+    renderCTPRows();
+    renderMatchPanel();
+  }
+
+  function computePotLabel(){
+    const amt = parseMoney(buyInValue);
+    if(!amt) return '';
+    const total = amt * eventData.playerOrder.length;
+    return `× ${eventData.playerOrder.length} players = $${total.toFixed(0)} pot`;
+  }
+
+  buyInInput.addEventListener('input', e=>{
+    buyInValue = e.target.value;
+    potLabel.textContent = computePotLabel();
+    renderCards();
+    schedulePayoutSave();
+  });
+
+  function renderPlaceRows(){
+    placeRowsEl.innerHTML='';
+    placePayouts.forEach(entry=>{
+      const row=document.createElement('div'); row.className='ctp-row';
+      row.style.gridTemplateColumns='1fr 110px 34px';
+
+      const placeInput=document.createElement('input');
+      placeInput.type='text'; placeInput.placeholder='e.g. 1st Place'; placeInput.value=entry.place;
+      placeInput.addEventListener('input', e=>{ entry.place=e.target.value; renderCards(); schedulePayoutSave(); });
+
+      const amountInput=document.createElement('input');
+      amountInput.type='text'; amountInput.placeholder='$ amount'; amountInput.value=entry.amount;
+      amountInput.addEventListener('input', e=>{ entry.amount=e.target.value; renderCards(); schedulePayoutSave(); });
+
+      const delBtn=document.createElement('button'); delBtn.textContent='✕';
+      delBtn.addEventListener('click', ()=>{
+        placePayouts=placePayouts.filter(x=>x.id!==entry.id);
+        renderPlaceRows(); renderCards(); schedulePayoutSave();
+      });
+
+      row.appendChild(placeInput); row.appendChild(amountInput); row.appendChild(delBtn);
+      placeRowsEl.appendChild(row);
+    });
+  }
+  addPlaceRowBtn.addEventListener('click', ()=>{
+    placePayouts.push({id:++placeIdCounter, place:'', amount:''});
+    renderPlaceRows(); renderCards(); schedulePayoutSave();
+  });
+
+  function renderCTPRows(){
+    ctpRowsEl.innerHTML='';
+    ctpEntries.forEach(entry=>{
+      const row=document.createElement('div'); row.className='ctp-row';
+      if(mode!=='post'){ row.style.gridTemplateColumns='90px 1fr 34px'; }
+
+      const holeInput=document.createElement('input');
+      holeInput.type='text'; holeInput.placeholder='Hole #'; holeInput.value=entry.hole;
+      holeInput.addEventListener('input', e=>{ entry.hole=e.target.value; renderCards(); schedulePayoutSave(); });
+
+      let winnerSelect=null;
+      if(mode==='post'){
+        winnerSelect=document.createElement('select');
+        const blankOpt=document.createElement('option'); blankOpt.value=''; blankOpt.textContent='Select winner…';
+        winnerSelect.appendChild(blankOpt);
+        eventData.playerOrder.forEach(n=>{
+          const opt=document.createElement('option'); opt.value=n; opt.textContent=n;
+          if(n===entry.winner) opt.selected=true;
+          winnerSelect.appendChild(opt);
+        });
+        winnerSelect.addEventListener('change', e=>{ entry.winner=e.target.value; renderCards(); schedulePayoutSave(); });
+      }
+
+      const payoutInput=document.createElement('input');
+      payoutInput.type='text'; payoutInput.placeholder='$ payout'; payoutInput.value=entry.payout;
+      payoutInput.addEventListener('input', e=>{ entry.payout=e.target.value; renderCards(); schedulePayoutSave(); });
+
+      const delBtn=document.createElement('button'); delBtn.textContent='✕';
+      delBtn.addEventListener('click', ()=>{
+        ctpEntries=ctpEntries.filter(x=>x.id!==entry.id);
+        renderCTPRows(); renderCards(); schedulePayoutSave();
+      });
+
+      row.appendChild(holeInput);
+      if(winnerSelect) row.appendChild(winnerSelect);
+      row.appendChild(payoutInput);
+      row.appendChild(delBtn);
+      ctpRowsEl.appendChild(row);
+    });
+  }
+  addCtpRowBtn.addEventListener('click', ()=>{
+    ctpEntries.push({id:++ctpIdCounter, hole:'', winner:'', payout:''});
+    renderCTPRows(); renderCards(); schedulePayoutSave();
+  });
+
+  // ---------- Match pairings (Ryder Cup) ----------
+  function renderMatchPanel(){
+    const isRyderCup = /ryder/i.test(eventData.formatName||'');
+    matchPanel.style.display = isRyderCup ? 'block' : 'none';
+    if(!isRyderCup) return;
+    renderRoundMatchRows(1, round1MatchRowsEl, true);
+    renderRoundMatchRows(2, round2MatchRowsEl, false);
+  }
+
+  function playerOptionsHtml(selected, teamFilter){
+    let html = '<option value="">Select player…</option>';
+    eventData.playerOrder.forEach(n=>{
+      const team = (eventData.players[n]||{}).ryderTeam;
+      if(teamFilter && team!==teamFilter) return;
+      html += `<option value="${n}"${n===selected?' selected':''}>${n}</option>`;
+    });
+    return html;
+  }
+
+  function renderRoundMatchRows(roundNum, container, isBestBall){
+    container.innerHTML='';
+    (matchPairings[roundNum]||[]).forEach(match=>{
+      while(match.red.length < (isBestBall?2:1)) match.red.push('');
+      while(match.blue.length < (isBestBall?2:1)) match.blue.push('');
+
+      const row=document.createElement('div'); row.className='match-row';
+
+      const redSide=document.createElement('div'); redSide.className='match-side';
+      match.red.forEach((val,idx)=>{
+        const sel=document.createElement('select');
+        sel.innerHTML=playerOptionsHtml(val, 'Red');
+        sel.addEventListener('change', e=>{
+          match.red[idx]=e.target.value;
+          renderCards(); schedulePayoutSave();
+        });
+        redSide.appendChild(sel);
+      });
+
+      const vsLabel=document.createElement('span'); vsLabel.className='vs-label'; vsLabel.textContent='vs';
+
+      const blueSide=document.createElement('div'); blueSide.className='match-side';
+      match.blue.forEach((val,idx)=>{
+        const sel=document.createElement('select');
+        sel.innerHTML=playerOptionsHtml(val, 'Blue');
+        sel.addEventListener('change', e=>{
+          match.blue[idx]=e.target.value;
+          renderCards(); schedulePayoutSave();
+        });
+        blueSide.appendChild(sel);
+      });
+
+      const delBtn=document.createElement('button'); delBtn.textContent='✕';
+      delBtn.addEventListener('click', ()=>{
+        matchPairings[roundNum] = matchPairings[roundNum].filter(m=>m.id!==match.id);
+        renderRoundMatchRows(roundNum, container, isBestBall);
+        renderCards(); schedulePayoutSave();
+      });
+
+      row.appendChild(redSide);
+      row.appendChild(vsLabel);
+      row.appendChild(blueSide);
+      row.appendChild(delBtn);
+      container.appendChild(row);
+    });
+  }
+
+  addRound1MatchBtn.addEventListener('click', ()=>{
+    matchPairings[1].push({id:++matchIdCounter, red:['',''], blue:['','']});
+    renderRoundMatchRows(1, round1MatchRowsEl, true);
+    renderCards(); schedulePayoutSave();
+  });
+  addRound2MatchBtn.addEventListener('click', ()=>{
+    matchPairings[2].push({id:++matchIdCounter, red:[''], blue:['']});
+    renderRoundMatchRows(2, round2MatchRowsEl, false);
+    renderCards(); schedulePayoutSave();
+  });
+
+  // ---------- Email generation ----------
+  function formatTeeDate(raw){
+    try{
+      const d=new Date(raw);
+      if(isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-US',{weekday:'long', month:'long', day:'numeric'});
+    }catch(e){ return ''; }
+  }
+  function formatShortDate(raw){
+    try{
+      const d=new Date(raw);
+      if(isNaN(d.getTime())) return '';
+      return d.toLocaleDateString('en-US',{month:'long', day:'numeric'});
+    }catch(e){ return ''; }
+  }
+  function getFilteredRounds(){
+    const all = [...new Set((eventData.groups||[]).map(g=>g.round))].sort((a,b)=>a-b);
+    if(ryderRoundFilter==='both' || all.length<=1) return all;
+    const want = parseInt(ryderRoundFilter,10);
+    return all.filter(r=>r===want);
+  }
+  function getEventDateLabel(){
+    const roundsPresentEarly = getFilteredRounds();
+    if(roundsPresentEarly.length<=1){
+      if(roundsPresentEarly.length===1){
+        const g = eventData.groups.find(x=>x.round===roundsPresentEarly[0]);
+        if(g && [...new Set((eventData.groups||[]).map(x=>x.round))].length>1) return formatShortDate(g.teeTime);
+      }
+      return eventData.eventDateLong;
+    }
+    const dates = roundsPresentEarly.map(rnd=>{
+      const g = eventData.groups.find(x=>x.round===rnd);
+      return g ? formatShortDate(g.teeTime) : '';
+    }).filter(Boolean);
+    return dates.length ? dates.join(' & ') : eventData.eventDateLong;
+  }
+
+  function generateGroupPreEmail(){
+    const eventDateLabel = getEventDateLabel();
+    const subject = `Saturday Golf – ${eventDateLabel} – Tee Times & Groups`;
+    let lines=[];
+    lines.push('Hey everyone,');
+    lines.push('');
+    const roundsPresentEarly = getFilteredRounds();
+    const isRyderCupPre = /ryder/i.test(eventData.formatName||'');
+    const singleCourse = (!isRyderCupPre && eventData.groups.length && roundsPresentEarly.length<=1) ? eventData.groups.find(g=>roundsPresentEarly.includes(g.round))?.course : '';
+    lines.push(`Here's the lineup for Saturday Golf on ${eventDateLabel}${singleCourse ? ' at ' + singleCourse : ''}:`);
+    lines.push('');
+    if(eventData.formatName){
+      lines.push(`Format: ${eventData.formatName}`);
+    }
+    const isQuotaPre = /quota/i.test(eventData.formatName||'');
+    if(isQuotaPre){
+      lines.push(QUOTA_RULES_TEXT);
+    }
+    if(formatNotes && formatNotes.trim()){
+      formatNotes.split('\n').forEach(l=>lines.push(l));
+    }
+    if(useNetScores==='yes'){
+      const usageLabel = handicapUsage==='lowest'
+        ? 'Compare to Lowest'
+        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
+      lines.push(`Scoring: Net Scores — ${usageLabel}`);
+    }
+
+    const isTeamFormat = (eventData.teams||[]).some(t=>t.members.length>1);
+    const isRyderCupRoster = /ryder/i.test(eventData.formatName||'');
+    if(isRyderCupRoster){
+      const filteredRoundsForRoster = getFilteredRounds();
+      const playersInRounds = new Set();
+      (eventData.groups||[]).forEach(g=>{
+        if(!filteredRoundsForRoster.includes(g.round)) return;
+        g.players.forEach(p=>playersInRounds.add(p.name));
+      });
+      const firstNameCounts = {};
+      eventData.playerOrder.filter(n=>playersInRounds.has(n)).forEach(n=>{
+        const first = n.trim().split(/\s+/)[0];
+        firstNameCounts[first] = (firstNameCounts[first]||0) + 1;
+      });
+      const displayName = n=>{
+        if(n.trim()==='El Presidente') return n;
+        const first = n.trim().split(/\s+/)[0];
+        return firstNameCounts[first] > 1 ? n : first;
+      };
+      const byFirstName = (a,b)=> a.trim().split(/\s+/)[0].localeCompare(b.trim().split(/\s+/)[0]);
+      const redRoster = eventData.playerOrder.filter(n=>(eventData.players[n]||{}).ryderTeam==='Red' && playersInRounds.has(n)).sort(byFirstName).map(displayName);
+      const blueRoster = eventData.playerOrder.filter(n=>(eventData.players[n]||{}).ryderTeam==='Blue' && playersInRounds.has(n)).sort(byFirstName).map(displayName);
+      lines.push('');
+      lines.push(`Team Red: ${redRoster.join(', ')}`);
+      lines.push('');
+      lines.push(`Team Blue: ${blueRoster.join(', ')}`);
+    } else if(isTeamFormat){
+      lines.push('');
+      lines.push('Teams:');
+      eventData.teams.forEach(team=>{
+        lines.push(`  ${team.name}: ${team.members.map(m=>m.name).join(' & ')}`);
+      });
+    }
+
+    const roundFormatLabels = {1:'2-Man Teams/Best Ball Matchplay', 2:'Singles Matchplay'};
+    const roundsPresent = getFilteredRounds();
+    roundsPresent.forEach(rnd=>{
+      const roundGroups = eventData.groups
+        .filter(g=>g.round===rnd)
+        .sort((a,b)=> new Date(a.teeTime) - new Date(b.teeTime));
+      if(!roundGroups.length) return;
+      if(roundsPresent.length>1 || isRyderCupPre){
+        const roundCourse = roundGroups[0].course;
+        const roundDate = formatTeeDate(roundGroups[0].teeTime);
+        const metaParts = [roundDate, roundCourse];
+        if(isRyderCupPre && roundFormatLabels[rnd]) metaParts.push(roundFormatLabels[rnd]);
+        const roundMeta = metaParts.filter(Boolean).join(' — ');
+        lines.push('');
+        lines.push(`Round ${rnd}${roundMeta ? ' — ' + roundMeta : ''}:`);
+      }
+      roundGroups.forEach(group=>{
+        lines.push('');
+        lines.push(`Tee Time: ${formatTeeTime(group.teeTime)}`);
+        if(!isRyderCupPre){
+          const isBestBall = /^best ball$/i.test((eventData.formatName||'').trim());
+          const isSkinsPre = /skins/i.test(eventData.formatName||'');
+          const isQuota = /quota/i.test(eventData.formatName||'');
+          group.players.forEach(gp=>{
+            const p=eventData.players[gp.name];
+            const playingLabel = gp.playingHandicap;
+            if(isBestBall){
+              const adjHcp = parseHandicapAdjusted(playingLabel);
+              const strokesLabel = !isNaN(adjHcp) ? `Strokes: ${adjHcp}` : '';
+              lines.push(strokesLabel ? `  • ${gp.name} (${strokesLabel})` : `  • ${gp.name}`);
+            } else if(isSkinsPre){
+              const strokesLabel = playingLabel ? `Strokes: ${playingLabel}` : '';
+              lines.push(strokesLabel ? `  • ${gp.name} (${strokesLabel})` : `  • ${gp.name}`);
+            } else if(isQuota){
+              const idxLabel = p ? p.handicap : '';
+              const hcpNum = parseHandicapAdjusted(playingLabel);
+              const quotaLabel = !isNaN(hcpNum) ? `Quota: ${36 - hcpNum}` : '';
+              const parts = [];
+              if(idxLabel) parts.push(`Handicap Index: ${idxLabel}`);
+              if(playingLabel) parts.push(`Playing Handicap: ${playingLabel}`);
+              if(quotaLabel) parts.push(quotaLabel);
+              lines.push(parts.length ? `  • ${gp.name} (${parts.join(', ')})` : `  • ${gp.name}`);
+            } else {
+              const teeLabel = gp.tee || (p ? p.tee : '');
+              const idxLabel = p ? p.handicap : '';
+              const hcpLabel = playingLabel
+                ? `Handicap Index: ${idxLabel}, Playing Handicap: ${playingLabel}`
+                : `Handicap Index: ${idxLabel}`;
+              lines.push(`  • ${gp.name} (${teeLabel} — ${hcpLabel})`);
+            }
+          });
+        }
+
+        if(isRyderCupPre){
+          const groupNames = new Set(group.players.map(gp=>gp.name));
+          const hcpByName = {};
+          group.players.forEach(gp=>{ hcpByName[gp.name] = parseHandicapAdjusted(gp.playingHandicap); });
+          const nameWithHcp = n => !isNaN(hcpByName[n]) ? `${n} (${hcpByName[n]})` : n;
+          const matchesHere = (matchPairings[rnd]||[]).filter(match=>{
+            const names = [...match.red, ...match.blue].filter(Boolean);
+            return names.length && names.every(n=>groupNames.has(n));
+          });
+          matchesHere.forEach(match=>{
+            const redLabel = match.red.filter(Boolean).map(nameWithHcp).join(' & ') || 'TBD';
+            const blueLabel = match.blue.filter(Boolean).map(nameWithHcp).join(' & ') || 'TBD';
+            lines.push(`    Matchup — Blue: ${blueLabel}  vs  Red: ${redLabel}`);
+          });
+        }
+      });
+    });
+
+    const buyInAmt = parseMoney(buyInValue);
+    if(buyInAmt){
+      lines.push('');
+      if(isRyderCupPre){
+        lines.push(`Buy-In: $${buyInAmt.toFixed(0)} per player`);
+      } else {
+        const pot = buyInAmt * eventData.playerOrder.length;
+        lines.push(`Buy-In: $${buyInAmt.toFixed(0)} per player (pot: $${pot.toFixed(0)})`);
+      }
+    }
+
+    const validPlaces = placePayouts.filter(e=>e.place || e.amount);
+    const isSkinsPre = /skins/i.test(eventData.formatName||'');
+    if(isSkinsPre){
+      const ctpTotal = ctpEntries.reduce((sum,e)=> sum + parseMoney(e.payout), 0);
+      const pot = buyInAmt * eventData.playerOrder.length;
+      const remaining = pot - ctpTotal;
+      if(pot || ctpTotal){
+        lines.push('');
+        lines.push('Payouts:');
+        const ctpPart = ctpTotal ? ` − $${ctpTotal.toFixed(0)} CTP` : '';
+        lines.push(`  Payout per Skin: ($${pot.toFixed(0)} pool${ctpPart}) ÷ total skins won`);
+      }
+    } else if(validPlaces.length){
+      const isTeamFormat = (eventData.teams||[]).some(t=>t.members.length>1);
+      lines.push('');
+      lines.push(isTeamFormat ? 'Payouts (per team, split between partners):' : 'Payouts:');
+      validPlaces.forEach(e=>{
+        const placeLabel = e.place || '—';
+        const amountLabel = e.amount ? `$${e.amount.replace(/[^0-9.]/g,'')}` : '—';
+        lines.push(`  ${placeLabel}: ${amountLabel}`);
+      });
+    }
+
+    const validCtp = ctpEntries.filter(e=>e.hole || e.payout);
+    if(validCtp.length){
+      lines.push('');
+      lines.push('Closest to the Pin:');
+      validCtp.forEach(e=>{
+        const holeLabel = e.hole ? `Hole ${e.hole}` : 'Hole —';
+        const amountLabel = e.payout ? `$${e.payout.replace(/[^0-9.]/g,'')}` : '—';
+        lines.push(`  ${holeLabel}: ${amountLabel}`);
+      });
+    }
+
+    lines.push('');
+    lines.push('See you on the course!');
+
+    return {subject, body: lines.join('\n')};
+  }
+
+  function generateGroupPostEmail(){
+    const isRyderCupSubject = /ryder/i.test(eventData.formatName||'');
+    const filteredRoundsForSubject = getFilteredRounds();
+    const bothRoundsShown = isRyderCupSubject && filteredRoundsForSubject.length>1;
+    const eventDateLabel = bothRoundsShown ? getEventDateLabel() : eventData.eventDateLong;
+
+    const subject = bothRoundsShown
+      ? `Saturday Golf – ${eventDateLabel} – Final Results`
+      : `Saturday Golf – ${eventDateLabel} – Results`;
+    let lines=[];
+    lines.push('Reminder to register for next week\'s round in Squabbit by Monday.');
+    lines.push('');
+    lines.push('Hey everyone,');
+    lines.push('');
+    const course = eventData.groups.length ? eventData.groups[0].course : '';
+    if(bothRoundsShown){
+      lines.push(`Final Results are in for Saturday Golf on ${eventDateLabel}:`);
+    } else {
+      lines.push(`Results are in for Saturday Golf on ${eventDateLabel}${course ? ' at ' + course : ''}:`);
+    }
+    lines.push('');
+    if(eventData.formatName){
+      lines.push(`Format: ${eventData.formatName}`);
+    }
+    if(formatNotes && formatNotes.trim()){
+      formatNotes.split('\n').forEach(l=>lines.push(l));
+      lines.push('');
+    }
+
+    const isTeamFormat = (eventData.teams||[]).some(t=>t.members.length>1);
+    const isDescendingFormat = /quota|ryder|skins/i.test(eventData.formatName||'');
+    const isRyderCupTeams = /ryder/i.test(eventData.formatName||'');
+    const isSkinsFormatScores = /skins/i.test(eventData.formatName||'');
+    const teamScore = t => (t.totalScore!==undefined && t.totalScore!==null && t.totalScore!=='') ? t.totalScore : t.roundScore;
+    const sortedTeams = [...(eventData.teams||[])].sort((a,b)=>{
+      const av=parseInt(teamScore(a),10)||0, bv=parseInt(teamScore(b),10)||0;
+      return isDescendingFormat ? (bv-av) : (av-bv);
+    });
+
+    let payoutRoundingLeftover = 0;
+
+    if(sortedTeams.length && !isSkinsFormatScores){
+      lines.push(isTeamFormat ? 'Team Scores:' : 'Scores:');
+      const validPlaces = placePayouts.filter(e=>e.place || e.amount);
+
+      // Group consecutive tied scores together so tied places split the combined payout
+      const rankGroups=[];
+      let gi=0;
+      while(gi<sortedTeams.length){
+        const val = parseInt(teamScore(sortedTeams[gi]),10)||0;
+        let gj=gi+1;
+        while(gj<sortedTeams.length && (parseInt(teamScore(sortedTeams[gj]),10)||0)===val) gj++;
+        rankGroups.push({teams: sortedTeams.slice(gi,gj), startIdx:gi, endIdx:gj-1});
+        gi=gj;
+      }
+
+      rankGroups.forEach(group=>{
+        const rankLabel = group.startIdx+1;
+        let totalAmt=0;
+        for(let k=group.startIdx; k<=group.endIdx; k++){
+          const entry=validPlaces[k];
+          if(entry) totalAmt += parseMoney(entry.amount);
+        }
+        const perTeamAmt = group.teams.length ? totalAmt/group.teams.length : 0;
+
+        group.teams.forEach(team=>{
+          if(isRyderCupTeams){
+            const showPayout = ryderRoundFilter==='both';
+            const amountLabel = (showPayout && perTeamAmt) ? ` $${formatDollar(perTeamAmt)}` : '';
+            lines.push(`${team.name} ${formatSignedScore(teamScore(team))}${amountLabel}`);
+          } else if(isTeamFormat){
+            const maxRounds = new Set((eventData.groups||[]).map(g=>g.round)).size;
+            const isQuotaTeams = /quota/i.test(eventData.formatName||'');
+            lines.push(`${rankLabel}. ${team.name} ${formatSignedScore(teamScore(team))}`);
+
+            const memberScoreLabel = m=>{
+              if(!isQuotaTeams) return '';
+              const memberGroup = lookups.playerGroup[m.name];
+              const memberInGroup = memberGroup ? memberGroup.players.find(gp=>gp.name===m.name) : null;
+              const hcpNum = memberInGroup ? parseHandicapAdjusted(memberInGroup.playingHandicap) : NaN;
+              const diffNum = parseInt(m.roundScore,10);
+              if(isNaN(hcpNum) || isNaN(diffNum)) return `${formatSignedScore(m.roundScore)}`;
+              const pointsMade = (36 - hcpNum) + diffNum;
+              return `${formatSignedScore(m.roundScore)} (${pointsMade} pts)`;
+            };
+
+            if(perTeamAmt && maxRounds>1){
+              const partial=[], full=[];
+              team.members.forEach(m=>{
+                (playerRoundsPlayed(m.name) < maxRounds ? partial : full).push(m);
+              });
+              // Partial-round players get half of what full-round players get.
+              // fullShare * full.length + (fullShare/2) * partial.length = perTeamAmt
+              const weight = full.length + partial.length/2;
+              const fullShare = weight ? perTeamAmt/weight : 0;
+              const partialShare = fullShare/2;
+              team.members.forEach(m=>{
+                const isPartial = partial.includes(m);
+                const amt = isPartial ? partialShare : fullShare;
+                const amountLabel = amt ? `$${formatDollar(amt)}` : '';
+                const scoreLabel = memberScoreLabel(m);
+                const parts = [scoreLabel, amountLabel].filter(Boolean);
+                lines.push(parts.length ? `     ${m.name}: ${parts.join(', ')}` : `     ${m.name}`);
+              });
+            } else {
+              const rawPerMemberAmt = (perTeamAmt && team.members.length) ? perTeamAmt/team.members.length : 0;
+              const perMemberAmt = Math.floor(rawPerMemberAmt);
+              if(rawPerMemberAmt){
+                payoutRoundingLeftover += (rawPerMemberAmt - perMemberAmt) * team.members.length;
+              }
+              team.members.forEach(m=>{
+                const amountLabel = perMemberAmt ? `$${formatDollar(perMemberAmt)}` : '';
+                const scoreLabel = memberScoreLabel(m);
+                const parts = [scoreLabel, amountLabel].filter(Boolean);
+                lines.push(parts.length ? `     ${m.name}: ${parts.join(', ')}` : `     ${m.name}`);
+              });
+            }
+          } else {
+            const rawTeamAmt = perTeamAmt;
+            const wholeTeamAmt = Math.floor(rawTeamAmt);
+            if(rawTeamAmt) payoutRoundingLeftover += (rawTeamAmt - wholeTeamAmt);
+            const amountLabel = wholeTeamAmt ? ` $${formatDollar(wholeTeamAmt)}` : '';
+            const isSkinsFormat = /skins/i.test(eventData.formatName||'');
+            const scoreDisplay = isSkinsFormat
+              ? (()=>{ const n=parseInt(teamScore(team),10)||0; return `${n} Net Skin${n===1?'':'s'}`; })()
+              : formatSignedScore(teamScore(team));
+            lines.push(`${rankLabel}. ${team.name} ${scoreDisplay}${amountLabel}`);
+          }
+        });
+      });
+    }
+
+    const isRyderCup = /ryder/i.test(eventData.formatName||'');
+    if(isRyderCup){
+      const roundLabels = {1:'2-Man Best Ball', 2:'Singles Matchplay'};
+      const formatPts = n => Number.isInteger(n) ? `${n}` : n.toFixed(1);
+      const matchLines=[];
+      let grandBlue=0, grandRed=0;
+      getFilteredRounds().forEach(rnd=>{
+        const roundMatches = matchPairings[rnd]||[];
+        if(!roundMatches.length) return;
+        let bluePts=0, redPts=0;
+        const rows=[];
+        roundMatches.forEach(match=>{
+          const result = computeMatchResultForPairing(match.red, match.blue, rnd);
+          if(!result) return;
+          if(result.resultText.includes('halved')){ bluePts+=0.5; redPts+=0.5; }
+          else if(result.resultText.includes('Team Red')) redPts+=1; else bluePts+=1;
+          const blueLabel = match.blue.filter(Boolean).join(' & ') || 'TBD';
+          const redLabel = match.red.filter(Boolean).join(' & ') || 'TBD';
+          rows.push(`  Blue: ${blueLabel}  vs  Red: ${redLabel}  →  ${result.resultText}`);
+        });
+        grandBlue+=bluePts; grandRed+=redPts;
+        matchLines.push('');
+        matchLines.push(`Round ${rnd} — ${roundLabels[rnd]||''}  (Blue ${formatPts(bluePts)} : ${formatPts(redPts)} Red)`);
+        matchLines.push(...rows);
+      });
+      if(matchLines.length){
+        lines.push('');
+        lines.push('Match Results:');
+        matchLines.forEach(l=>lines.push(l));
+        lines.push('');
+        lines.push(`Final: Blue ${formatPts(grandBlue)} – Red ${formatPts(grandRed)}`);
+      }
+    }
+
+    const isSkinsFormat = /skins/i.test(eventData.formatName||'');
+    if(isSkinsFormat){
+      const allPlayersForSkins = (eventData.groups||[]).flatMap(g=>g.players.map(p=>({...p, parHoles:g.parHoles})));
+      const skinsByPlayer = {};
+      let anyStroke = false;
+      for(let h=0; h<18; h++){
+        let best=Infinity, winner=null, tieCount=0;
+        allPlayersForSkins.forEach(p=>{
+          if(!p.netToParHoles || !p.parHoles) return;
+          const v = p.netToParHoles[h];
+          if(isNaN(v)) return;
+          if(v<best){ best=v; winner=p; tieCount=1; }
+          else if(v===best){ tieCount++; }
+        });
+        if(winner && tieCount===1){
+          const netScore = winner.parHoles[h] + best;
+          const gross = winner.grossHoles ? winner.grossHoles[h] : NaN;
+          const gotStroke = !isNaN(gross) && (gross - netScore) > 0;
+          if(gotStroke) anyStroke = true;
+          if(!skinsByPlayer[winner.name]) skinsByPlayer[winner.name]=[];
+          skinsByPlayer[winner.name].push({hole:h+1, netScore, gotStroke});
+        }
+      }
+      const skinsNames = Object.keys(skinsByPlayer);
+      if(skinsNames.length){
+        const totalSkinsWon = skinsNames.reduce((sum,name)=>sum+skinsByPlayer[name].length, 0);
+        const buyInAmtPost = parseMoney(buyInValue);
+        const potPost = buyInAmtPost * eventData.playerOrder.length;
+        const ctpTotalPost = ctpEntries.reduce((sum,e)=> sum + parseMoney(e.payout), 0);
+        const remainingPost = potPost - ctpTotalPost;
+        const rawPayoutPerSkin = totalSkinsWon>0 ? remainingPost / totalSkinsWon : 0;
+        const payoutPerSkin = Math.floor(rawPayoutPerSkin);
+        const skinsLeftover = totalSkinsWon>0 ? remainingPost - (payoutPerSkin * totalSkinsWon) : 0;
+        payoutRoundingLeftover += skinsLeftover;
+
+        lines.push('');
+        lines.push('Net Skins Detail:');
+        if(payoutPerSkin){
+          lines.push(`  Payout per Skin: $${formatDollar(payoutPerSkin)} (${totalSkinsWon} total skin${totalSkinsWon===1?'':'s'})`);
+        }
+        skinsNames.forEach(name=>{
+          const detail = skinsByPlayer[name].map(s=>`Hole ${s.hole} (${s.netScore}${s.gotStroke ? '*' : ''})`).join(', ');
+          const winAmt = payoutPerSkin ? ` — $${formatDollar(payoutPerSkin*skinsByPlayer[name].length)}` : '';
+          lines.push(`  ${name}: ${detail}${winAmt}`);
+        });
+        if(anyStroke){
+          lines.push('  * received a handicap stroke on that hole');
+        }
+      }
+    }
+
+    const validCtp = ctpEntries.filter(e=>e.hole || e.winner || e.payout);
+    if(validCtp.length){
+      lines.push('');
+      lines.push('Closest to the Pin:');
+      const ctpEntriesWithPayout = validCtp.filter(e=>e.payout);
+      const perCtpBonus = (payoutRoundingLeftover && ctpEntriesWithPayout.length) ? payoutRoundingLeftover / ctpEntriesWithPayout.length : 0;
+      validCtp.forEach(e=>{
+        const holeLabel = e.hole ? `Hole ${e.hole}` : 'Hole —';
+        const winnerLabel = e.winner || 'TBD';
+        const baseAmt = e.payout ? parseMoney(e.payout) : 0;
+        const totalAmt = baseAmt + (e.payout ? perCtpBonus : 0);
+        const payoutLabel = totalAmt ? ` – $${formatDollar(totalAmt)}` : '';
+        lines.push(`  ${holeLabel}: ${winnerLabel}${payoutLabel}`);
+      });
+    }
+
+    const allPlayers = (eventData.groups||[]).flatMap(g=>g.players.map(p=>({...p, parHoles:g.parHoles})));
+
+    if(!isRyderCupTeams){
+      const withGross = allPlayers.filter(p=>!isNaN(p.grossTotal));
+      if(withGross.length){
+        const lowGross = withGross.reduce((best,p)=> p.grossTotal < best.grossTotal ? p : best);
+        lines.push('');
+        lines.push(`Low Gross Round: ${lowGross.name} (${lowGross.grossTotal})`);
+      }
+
+      const birdieThreshold = -1;
+      const birdieEntries=[];
+      allPlayers.forEach(p=>{
+        if(!p.grossHoles || !p.parHoles) return;
+        const achievements=[];
+        let hasAce=false;
+        for(let h=0; h<18; h++){
+          const gross=p.grossHoles[h]; const par=p.parHoles[h];
+          if(isNaN(gross) || isNaN(par)) continue;
+          const diff = gross - par;
+          if(diff <= birdieThreshold){
+            const isAce = gross===1;
+            if(isAce) hasAce=true;
+            const label = isAce ? 'Hole in One' : diff===-1 ? 'Birdie' : diff===-2 ? 'Eagle' : diff===-3 ? 'Albatross' : `${Math.abs(diff)} under`;
+            achievements.push(`${label} (Hole ${h+1})`);
+          }
+        }
+        if(achievements.length){
+          birdieEntries.push({name:p.name, achievements, hasAce});
+        }
+      });
+      birdieEntries.sort((a,b)=> (b.hasAce?1:0) - (a.hasAce?1:0));
+      if(birdieEntries.length){
+        lines.push('');
+        lines.push('Birdies or Better:');
+        birdieEntries.forEach(e=>lines.push(`  ${e.name}: ${e.achievements.join(', ')}`));
+      }
+    }
+
+    lines.push('');
+    lines.push('Thanks for playing — see you next week!');
+
+    return {subject, body: lines.join('\n')};
+  }
+
+  function renderGroupEmailCard(generateFn){
+    const gen = generateFn();
+
+    const card=document.createElement('div'); card.className='player-card';
+
+    const head=document.createElement('div'); head.className='p-head';
+    head.innerHTML = `<span class="p-name">Whole Group</span>`;
+    card.appendChild(head);
+
+    const textarea=document.createElement('textarea');
+    textarea.value = `Subject: ${gen.subject}\n\n${gen.body}`;
+    card.appendChild(textarea);
+
+    const actions=document.createElement('div'); actions.className='p-actions';
+
+    const regenBtn=document.createElement('button'); regenBtn.className='btn btn-secondary'; regenBtn.textContent='Regenerate';
+    regenBtn.title='Rebuild this email from the latest data and payout info above';
+    regenBtn.addEventListener('click', ()=>{
+      const fresh = generateFn();
+      textarea.value = `Subject: ${fresh.subject}\n\n${fresh.body}`;
+    });
+
+    const copyBtn=document.createElement('button'); copyBtn.className='btn btn-primary'; copyBtn.textContent='Copy';
+    const copiedFlag=document.createElement('span'); copiedFlag.className='copied-flag'; copiedFlag.textContent='Copied!';
+    copyBtn.addEventListener('click', ()=>{
+      copyTextToClipboard(textarea.value, textarea).then(()=>{
+        copiedFlag.textContent='Copied!';
+        copiedFlag.classList.add('show');
+        setTimeout(()=>copiedFlag.classList.remove('show'), 1400);
+      }).catch(()=>{
+        textarea.focus();
+        textarea.select();
+        copiedFlag.textContent='Text selected — press Ctrl+C';
+        copiedFlag.classList.add('show');
+        setTimeout(()=>copiedFlag.classList.remove('show'), 2600);
+      });
+    });
+
+    actions.appendChild(copyBtn);
+    actions.appendChild(regenBtn);
+    actions.appendChild(copiedFlag);
+    card.appendChild(actions);
+
+    cardsPanel.appendChild(card);
+  }
+
+  // ---------- Cards ----------
+  function renderCards(){
+    cardsPanel.innerHTML='';
+    if(!eventData){ return; }
+
+    const heading=document.createElement('h2');
+    heading.style.fontFamily="'Fraunces',serif";
+    heading.style.fontSize='19px';
+    heading.style.margin='4px 4px 12px';
+    heading.style.color='var(--green-deep)';
+    heading.textContent = mode==='pre' ? '3. Pre-Round Group Email' : '3. Post-Round Group Email';
+    cardsPanel.appendChild(heading);
+
+    if(mode==='pre'){
+      renderGroupEmailCard(generateGroupPreEmail);
+    } else {
+      renderGroupEmailCard(generateGroupPostEmail);
+    }
+  }
+
+})();
+</script>
+</body>
+</html>
