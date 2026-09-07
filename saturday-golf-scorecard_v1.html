@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squabbit — Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F5F1E6;
+    --paper-line: #DCD3B8;
+    --fairway: #1F3B2C;
+    --fairway-light: #2E5540;
+    --brass: #A9812F;
+    --brass-light: #C9A24A;
+    --ink: #232019;
+    --ink-soft: #6b6455;
+    --clay: #9C4A34;
+    --white: #FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding:28px 16px 60px;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(31,59,44,0.05), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(169,129,47,0.06), transparent 55%);
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* Header */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:3px solid var(--fairway);
+    padding-bottom:14px;
+    margin-bottom:22px;
+  }
+  .brand-eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0;
+    color:var(--fairway);
+    line-height:1.05;
+  }
+  .subhead{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+  .custom-heading-field{margin-top:10px;}
+  .custom-heading-field label{
+    display:block;font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-soft);
+    letter-spacing:.03em;margin-bottom:4px;
+  }
+  .custom-heading-field input{
+    font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);
+    border:1px solid var(--paper-line);border-radius:3px;
+    padding:7px 10px;width:280px;max-width:100%;background:var(--white);
+  }
+  .custom-heading-field input:focus{outline:2px solid var(--brass-light);outline-offset:1px;}
+
+  /* Upload state */
+  #dropzone{
+    border:2px dashed var(--paper-line);
+    border-radius:4px;
+    background:var(--white);
+    padding:48px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  #dropzone:hover, #dropzone.drag{
+    border-color:var(--brass);
+    background:#FFFBF0;
+  }
+  #dropzone .icon{font-size:30px;margin-bottom:10px;color:var(--fairway-light);}
+  #dropzone .main{font-family:'Fraunces',serif;font-size:19px;color:var(--fairway);margin-bottom:4px;}
+  #dropzone .sub{font-size:12.5px;color:var(--ink-soft);}
+  input[type=file]{display:none;}
+  #err{
+    display:none;
+    margin-top:14px;
+    background:#FBEDE8;
+    border:1px solid var(--clay);
+    color:#7A3421;
+    padding:12px 14px;
+    border-radius:3px;
+    font-size:13px;
+  }
+  #lastFileBanner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    background:#EFF5F0;
+    border:1px solid #C7DBCB;
+    color:var(--fairway);
+    padding:11px 14px;
+    border-radius:3px;
+    font-size:12.5px;
+    margin-bottom:16px;
+  }
+  #lastFileBanner button{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    background:none;
+    border:1px solid var(--fairway);
+    color:var(--fairway);
+    border-radius:3px;
+    padding:6px 10px;
+    cursor:pointer;
+  }
+
+  /* Controls */
+  #controls{
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .tab-btn{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.02em;
+    padding:9px 14px;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:var(--fairway);
+    border-color:var(--fairway);
+    color:var(--white);
+  }
+  .right-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .toggle-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;color:var(--ink-soft);
+    font-weight:500;
+    user-select:none;
+    cursor:pointer;
+  }
+  .switch{
+    position:relative;width:36px;height:20px;background:#CFC5A8;border-radius:20px;transition:background .15s;
+  }
+  .switch::after{
+    content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--white);border-radius:50%;transition:left .15s;
+  }
+  input.switch-input{display:none;}
+  input.switch-input:checked + .switch{background:var(--fairway);}
+  input.switch-input:checked + .switch::after{left:18px;}
+  .new-file-btn{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    background:none;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:8px 12px;
+    cursor:pointer;
+  }
+
+  /* Legend */
+  .legend{
+    display:none;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:-6px 0 20px;
+    padding:10px 14px;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+  }
+  .legend .item{display:flex;align-items:center;gap:7px;}
+  .legend .swatch{width:26px;height:26px;border:1px solid var(--paper-line);border-radius:2px;position:relative;background:var(--white);}
+  .legend .dot{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--brass);box-shadow:-4px 0 0 var(--brass);}
+  .legend .dot.single{box-shadow:none;}
+  .legend .net-num{color:var(--fairway-light);font-weight:700;}
+
+  /* Scorecard block per course/tee-time */
+  .round-block{
+    display:none;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:26px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+  }
+  .round-block.active{display:block;}
+  .round-title-bar{
+    background:var(--fairway);
+    color:var(--white);
+    padding:14px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .round-title-bar .course{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+  }
+  .round-title-bar .time{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    color:#D9CFA9;
+  }
+
+  .card-scroll{overflow-x:auto;}
+  table.scorecard{
+    border-collapse:collapse;
+    width:100%;
+    min-width:920px;
+    font-family:'Space Mono',monospace;
+  }
+  table.scorecard th, table.scorecard td{
+    border:1px solid var(--paper-line);
+    text-align:center;
+    padding:0;
+    font-variant-numeric:tabular-nums;
+  }
+  table.scorecard th.rowlabel, table.scorecard td.rowlabel{
+    text-align:left;
+    padding-left:12px;
+    font-family:'Inter',sans-serif;
+  }
+  .hole-header th{
+    background:#EFE9D6;
+    color:var(--ink-soft);
+    font-size:11px;
+    padding:7px 4px;
+    font-weight:700;
+  }
+  .hole-header th.out-in{background:#E3DAB9;color:var(--fairway);}
+  .row-si td, .row-si th{
+    background:#FAF7EE;
+    color:var(--brass);
+    font-size:10.5px;
+    padding:4px 2px;
+  }
+  .row-par td, .row-par th{
+    background:#F2EEE0;
+    color:var(--ink-soft);
+    font-size:11px;
+    padding:5px 2px;
+    font-weight:700;
+  }
+  .player-group{border-top:2px solid var(--fairway);}
+  .player-group:first-of-type{border-top:none;}
+  .row-gross td.rowlabel{
+    font-weight:700;
+    color:var(--fairway);
+    font-size:13.5px;
+    padding-top:10px;
+  }
+  .row-gross .meta{
+    display:block;
+    font-family:'Space Mono',monospace;
+    font-weight:400;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:1px;
+  }
+  .row-gross td, .row-gross th{padding-top:10px;}
+  .row-net td.rowlabel, .row-net th.rowlabel{
+    color:var(--ink-soft);
+    font-size:10.5px;
+    padding-bottom:10px;
+  }
+  .row-net td, .row-net th{padding-bottom:10px;}
+  .score-cell{
+    position:relative;
+    font-size:13.5px;
+    color:var(--ink);
+    min-width:34px;
+  }
+  .score-cell .dots{
+    position:absolute;
+    top:3px;right:3px;
+    display:flex;gap:2px;
+  }
+  .score-cell .dots span{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--brass-light);
+    display:inline-block;
+  }
+  .score-cell.birdie{position:relative;}
+  .score-cell.birdie::before{
+    content:'';position:absolute;inset:5px;border:1.5px solid var(--fairway-light);border-radius:50%;
+  }
+  .score-cell.bogey::before{
+    content:'';position:absolute;inset:6px;border:1.5px solid var(--clay);
+  }
+  .out-in-cell{
+    font-weight:700;
+    background:#FBF8ED;
+  }
+  .total-cell{
+    font-weight:700;
+    background:var(--fairway);
+    color:var(--white);
+  }
+  .net-val{color:var(--fairway-light);font-weight:700;}
+  .net-val.under{color:var(--clay);}
+  .net-total{font-weight:700;color:var(--fairway-light);background:#EAF1EC;}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:30px;
+    font-family:'Space Mono',monospace;
+  }
+
+  /* Tee S.I. modal */
+  .modal-overlay{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(35,32,25,0.55);
+    z-index:50;
+    align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--white);
+    border-radius:5px;
+    max-width:720px;
+    width:100%;
+    max-height:86vh;
+    overflow-y:auto;
+    padding:24px 26px 20px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);
+  }
+  .modal h2{
+    font-family:'Fraunces',serif;
+    color:var(--fairway);
+    font-size:21px;
+    margin:0 0 4px;
+  }
+  .modal .modal-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:18px;}
+  .tee-section{
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .tee-section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .tee-section-head .name{
+    font-family:'Space Mono',monospace;
+    font-weight:700;
+    font-size:13px;
+    color:var(--fairway);
+  }
+  .tee-section-head .name .course-sub{
+    display:block;font-weight:400;color:var(--ink-soft);font-size:11px;margin-top:2px;
+  }
+  .custom-badge{
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    background:var(--brass-light);
+    color:var(--white);
+    padding:2px 7px;
+    border-radius:10px;
+    letter-spacing:.03em;
+  }
+  .si-grid{
+    display:grid;
+    grid-template-columns:repeat(9,1fr);
+    gap:6px;
+  }
+  .si-grid .si-input-wrap{text-align:center;}
+  .si-grid label{
+    display:block;font-size:9.5px;color:var(--ink-soft);margin-bottom:2px;font-family:'Space Mono',monospace;
+  }
+  .si-grid input{
+    width:100%;
+    text-align:center;
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:5px 2px;
+    color:var(--ink);
+  }
+  .si-grid input:focus{outline:2px solid var(--brass-light);outline-offset:1px;}
+  .tee-section-actions{
+    display:flex;gap:8px;margin-top:12px;
+  }
+  .tee-section-actions button{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    padding:7px 12px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .btn-save{background:var(--fairway);color:var(--white);border:1px solid var(--fairway);}
+  .btn-reset{background:none;color:var(--ink-soft);border:1px solid var(--paper-line);}
+  .modal-close-row{text-align:right;margin-top:6px;}
+  .modal-close-row button{
+    font-family:'Space Mono',monospace;font-size:11.5px;
+    background:none;border:1px solid var(--paper-line);border-radius:3px;
+    padding:8px 14px;cursor:pointer;color:var(--ink-soft);
+  }
+  .edit-si-btn{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--white);
+    background:var(--brass);
+    border:1px solid var(--brass);
+    border-radius:3px;
+    padding:8px 12px;
+    cursor:pointer;
+  }
+  .custom-si-tag{color:var(--brass);}
+
+  @media print{
+    body{background:#fff;padding:0;}
+    #dropzone,#controls,.legend,.new-file-btn,footer{display:none !important;}
+    .round-block{display:block !important;box-shadow:none;border:none;page-break-after:always;}
+    .round-block:not(.active){display:none !important;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow">Squabbit</div>
+      <h1>Scorecard</h1>
+      <div class="subhead" id="eventSubhead">Upload a Squabbit event export to get started</div>
+      <div class="custom-heading-field">
+        <label for="customHeadingInput">Custom heading for printed cards (optional)</label>
+        <input type="text" id="customHeadingInput" placeholder="e.g. league name, sponsor, event title">
+      </div>
+      <div class="custom-heading-field">
+        <label for="gameDetailsInput">Game details for printed cards (optional)</label>
+        <input type="text" id="gameDetailsInput" placeholder="e.g. format, stakes, skins rules">
+      </div>
+    </div>
+  </header>
+
+  <div id="dropzone">
+    <div class="icon">⛳</div>
+    <div class="main">Drop a Squabbit CSV export here</div>
+    <div class="sub">or click to browse — event details CSV with hole-by-hole scores</div>
+    <input type="file" id="fileInput" accept=".csv,text/csv">
+  </div>
+  <div id="lastFileBanner" style="display:none;"></div>
+  <div id="err"></div>
+
+  <div id="controls">
+    <div class="tabs" id="roundTabs"></div>
+    <div class="right-controls">
+      <label class="toggle-label">
+        <input type="checkbox" class="switch-input" id="netToggle" checked>
+        <span class="switch"></span>
+        Show net strokes
+      </label>
+      <button class="edit-si-btn" id="editSiBtn">Edit tee S.I.</button>
+      <button class="edit-si-btn" id="printBlankBtn" style="background:var(--fairway);border-color:var(--fairway);">Print blank cards</button>
+      <button class="new-file-btn" id="newFileBtn">Load different file</button>
+    </div>
+  </div>
+
+  <div class="legend" id="legend">
+    <div class="item"><div class="swatch"><span class="dots" style="position:absolute;top:2px;right:2px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A24A;display:inline-block;"></span></span></div> 1 stroke hole</div>
+    <div class="item"><div class="swatch"><span style="position:absolute;top:2px;right:2px;display:flex;gap:2px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A24A;display:inline-block;"></span><span style="width:5px;height:5px;border-radius:50%;background:#C9A24A;display:inline-block;"></span></span></div> 2 stroke hole</div>
+    <div class="item"><div class="swatch" style="display:flex;align-items:center;justify-content:center;"><span style="width:16px;height:16px;border:1.5px solid #2E5540;border-radius:50%;"></span></div> Birdie or better (gross)</div>
+    <div class="item"><div class="swatch" style="display:flex;align-items:center;justify-content:center;"><span style="width:16px;height:16px;border:1.5px solid #9C4A34;"></span></div> Bogey or worse (gross)</div>
+    <div class="item"><span class="net-num">Green</span> = net score row</div>
+  </div>
+
+  <div id="roundsContainer"></div>
+
+  <footer>Parsed locally in your browser — nothing is uploaded anywhere</footer>
+</div>
+
+<div class="modal-overlay" id="siModalOverlay">
+  <div class="modal">
+    <h2>Tee stroke index</h2>
+    <div class="modal-sub">Ladies and forward tees often rank holes differently than the card's default S.I. row. Set a custom ranking per tee here — it's remembered on this device for this course.</div>
+    <div id="teeSectionsContainer"></div>
+    <div class="modal-close-row"><button id="closeSiModal">Close</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const errBox = document.getElementById('err');
+  const controls = document.getElementById('controls');
+  const legend = document.getElementById('legend');
+  const roundTabs = document.getElementById('roundTabs');
+  const roundsContainer = document.getElementById('roundsContainer');
+  const netToggle = document.getElementById('netToggle');
+  const newFileBtn = document.getElementById('newFileBtn');
+  const eventSubhead = document.getElementById('eventSubhead');
+  const editSiBtn = document.getElementById('editSiBtn');
+  const siModalOverlay = document.getElementById('siModalOverlay');
+  const teeSectionsContainer = document.getElementById('teeSectionsContainer');
+  const closeSiModal = document.getElementById('closeSiModal');
+  const customHeadingInput = document.getElementById('customHeadingInput');
+  const gameDetailsInput = document.getElementById('gameDetailsInput');
+
+  let parsedRounds = [];
+  let currentData = null;
+  let activeRoundIndex = 0;
+
+  // ---------- Custom heading (persisted, shown on printed cards) ----------
+  const CUSTOM_HEADING_KEY = 'sgScorecardCustomHeading';
+  try {
+    const savedHeading = localStorage.getItem(CUSTOM_HEADING_KEY);
+    if (savedHeading) customHeadingInput.value = savedHeading;
+  } catch (e) { /* storage unavailable */ }
+  customHeadingInput.addEventListener('input', () => {
+    try { localStorage.setItem(CUSTOM_HEADING_KEY, customHeadingInput.value); }
+    catch (e) { /* storage unavailable — value still works for this session */ }
+  });
+
+  // ---------- Game details (persisted, shown at the bottom of printed cards) ----------
+  const GAME_DETAILS_KEY = 'sgScorecardGameDetails';
+  try {
+    const savedDetails = localStorage.getItem(GAME_DETAILS_KEY);
+    if (savedDetails) gameDetailsInput.value = savedDetails;
+  } catch (e) { /* storage unavailable */ }
+  gameDetailsInput.addEventListener('input', () => {
+    try { localStorage.setItem(GAME_DETAILS_KEY, gameDetailsInput.value); }
+    catch (e) { /* storage unavailable — value still works for this session */ }
+  });
+
+
+  // ---------- Per-tee S.I. overrides (persisted locally per browser) ----------
+  const SI_STORAGE_KEY = 'sgScorecardSiOverrides';
+  function loadOverrides(){
+    try { return JSON.parse(localStorage.getItem(SI_STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveOverridesToStorage(){
+    try { localStorage.setItem(SI_STORAGE_KEY, JSON.stringify(siOverrides)); }
+    catch (e) { /* storage unavailable — overrides still work for this session */ }
+  }
+  let siOverrides = loadOverrides();
+  function overrideKey(course, tee){ return course + '::' + (tee || 'Default'); }
+  function effectiveSi(round, tee){
+    const key = overrideKey(round.courseName, tee);
+    const ov = siOverrides[key];
+    if (ov && ov.length === round.numHoles) return ov;
+    return round.si;
+  }
+  function hasOverride(round, tee){
+    const ov = siOverrides[overrideKey(round.courseName, tee)];
+    return !!(ov && ov.length === round.numHoles);
+  }
+  function distinctTees(round){
+    const seen = [];
+    round.players.forEach(p => {
+      const t = p.tee || 'Default';
+      if (!seen.includes(t)) seen.push(t);
+    });
+    return seen;
+  }
+
+  // Build the set of S.I. reference rows to display: a single "Mens HCP" row for every
+  // tee that matches the card's baseline S.I., plus one extra labeled row per tee (or
+  // group of tees) whose S.I. actually differs from that baseline.
+  function computeSiRowGroups(round, teesInRound){
+    const arraysEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+    const baseline = round.si;
+    const matching = [];
+    const diffGroups = {};
+    teesInRound.forEach(tee => {
+      const si = effectiveSi(round, tee);
+      if (arraysEqual(si, baseline)){
+        matching.push(tee);
+      } else {
+        const key = si.join(',');
+        if (!diffGroups[key]) diffGroups[key] = { si, tees: [] };
+        diffGroups[key].tees.push(tee);
+      }
+    });
+    const rows = [];
+    if (matching.length > 0 || Object.keys(diffGroups).length === 0){
+      rows.push({ label: 'Mens HCP', si: baseline });
+    }
+    Object.values(diffGroups).forEach(g => {
+      rows.push({ label: g.tees.join(' / '), si: g.si });
+    });
+    return rows;
+  }
+
+  function collectTees(rounds){
+    const map = {};
+    rounds.forEach(r => {
+      r.players.forEach(p => {
+        const key = overrideKey(r.courseName, p.tee);
+        if (!map[key]) map[key] = { course: r.courseName, tee: p.tee || 'Default', numHoles: r.numHoles, defaultSi: r.si, holeCols: r.holeCols };
+      });
+    });
+    return Object.values(map);
+  }
+
+  function openSiModal(){
+    if (!currentData) return;
+    const tees = collectTees(currentData.rounds);
+    teeSectionsContainer.innerHTML = '';
+    tees.forEach(t => {
+      const key = overrideKey(t.course, t.tee);
+      const active = hasOverride({ courseName: t.course, numHoles: t.numHoles }, t.tee);
+      const values = active ? siOverrides[key] : t.defaultSi;
+
+      const section = document.createElement('div');
+      section.className = 'tee-section';
+      section.innerHTML = `
+        <div class="tee-section-head">
+          <div class="name">${escapeHtml(t.tee)} tee <span class="course-sub">${escapeHtml(t.course)}</span></div>
+          ${active ? '<span class="custom-badge">Custom</span>' : ''}
+        </div>
+        <div class="si-grid">
+          ${t.holeCols.map((c, i) => `
+            <div class="si-input-wrap">
+              <label>Hole ${c.label}</label>
+              <input type="number" min="1" max="${t.numHoles}" data-idx="${i}" value="${values[i]}">
+            </div>`).join('')}
+        </div>
+        <div class="tee-section-actions">
+          <button class="btn-save">Save</button>
+          <button class="btn-reset">Reset to card default</button>
+        </div>
+      `;
+      section.querySelector('.btn-save').addEventListener('click', () => {
+        const inputs = section.querySelectorAll('.si-grid input');
+        const arr = Array.from(inputs).map(inp => parseInt(inp.value, 10) || 0);
+        siOverrides[key] = arr;
+        saveOverridesToStorage();
+        rerenderKeepingTab();
+        openSiModal();
+      });
+      section.querySelector('.btn-reset').addEventListener('click', () => {
+        delete siOverrides[key];
+        saveOverridesToStorage();
+        rerenderKeepingTab();
+        openSiModal();
+      });
+      teeSectionsContainer.appendChild(section);
+    });
+    siModalOverlay.classList.add('open');
+  }
+  editSiBtn.addEventListener('click', openSiModal);
+  closeSiModal.addEventListener('click', () => siModalOverlay.classList.remove('open'));
+  siModalOverlay.addEventListener('click', e => { if (e.target === siModalOverlay) siModalOverlay.classList.remove('open'); });
+
+  const printBlankBtn = document.getElementById('printBlankBtn');
+  printBlankBtn.addEventListener('click', () => { printAllBlankCards(); });
+
+  function buildCompactCardHtml(round, pageHeadingText, gameDetailsText){
+    const numHoles = round.numHoles;
+    const cols = round.holeCols;
+    const isEighteen = numHoles === 18;
+    const turn = isEighteen ? 9 : numHoles;
+    const teesInRound = distinctTees(round);
+
+    // Same as headerCells but leaves the OUT/IN/TOT columns blank — used for S.I. rows,
+    // where a running total doesn't mean anything.
+    function holeOnlyCells(getVal){
+      let out = '';
+      cols.forEach((c, i) => {
+        out += `<td class="th">${getVal(i)}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) out += `<td class="th turn"></td>`;
+      });
+      if (isEighteen) out += `<td class="th turn"></td>`;
+      out += `<td class="th turn"></td>`;
+      return out;
+    }
+
+    // Hole-number header row.
+    function holeHeaderCells(getVal){
+      let out = '';
+      cols.forEach((c, i) => {
+        out += `<td class="th">${getVal(i)}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) out += `<td class="th turn">OUT</td>`;
+      });
+      if (isEighteen) out += `<td class="th turn">IN</td>`;
+      out += `<td class="th turn">TOT</td>`;
+      return out;
+    }
+
+    // Par row: hole values plus real front-9 / back-9 / total sums (not text labels).
+    let frontPar = 0, backPar = 0;
+    round.par.forEach((v, i) => {
+      const holeNum = parseInt(cols[i].label,10);
+      if (isEighteen && holeNum <= turn) frontPar += v; else backPar += v;
+    });
+    function parRowCells(){
+      let out = '';
+      cols.forEach((c, i) => {
+        out += `<td class="th">${round.par[i]}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) out += `<td class="th turn">${frontPar}</td>`;
+      });
+      if (isEighteen) out += `<td class="th turn">${backPar}</td>`;
+      out += `<td class="th turn">${frontPar + backPar}</td>`;
+      return out;
+    }
+
+    function blankSpacerRow(){
+      let cells = cols.map(() => `<td class="blankbox"></td>`).join('');
+      if (isEighteen) cells += `<td class="blankbox sum"></td><td class="blankbox sum"></td>`;
+      cells += `<td class="blankbox sum tot"></td>`;
+      return `<tr><td class="pname">&nbsp;</td>${cells}</tr>`;
+    }
+
+    const siRowGroups = computeSiRowGroups(round, teesInRound);
+    const siRows = siRowGroups.map(g =>
+      `<tr><th class="th nameHead">${escapeHtml(g.label)}</th>${holeOnlyCells(i => g.si[i])}</tr>`
+    ).join('');
+
+    const playerRows = round.players.map(p => {
+      const playerSi = effectiveSi(round, p.tee);
+      let holeCells = '';
+      cols.forEach((c, i) => {
+        const strokes = strokesForHole(p.handicap, playerSi[i], numHoles);
+        const dots = (strokes > 0 && !round.isQuota)
+          ? `<span class="pdots">${'<i></i>'.repeat(Math.min(strokes,2))}</span>`
+          : '';
+        holeCells += `<td class="blankbox">${dots}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) holeCells += `<td class="blankbox sum"></td>`;
+      });
+      if (isEighteen) holeCells += `<td class="blankbox sum"></td>`;
+      holeCells += `<td class="blankbox sum tot"></td>`;
+      return `<tr><td class="pname">${escapeHtml(p.name)} <span class="pmeta">${escapeHtml(p.tee||'')}&middot;${p.handicap}</span></td>${holeCells}</tr>`;
+    });
+
+    const parRow = `<tr><td class="pname"><strong>Par</strong></td>${parRowCells()}</tr>`;
+
+    // Insert the Par row (flanked by two blank spacer rows) between the 2nd and 3rd player.
+    let bodyRows;
+    if (playerRows.length >= 3){
+      bodyRows = [
+        ...playerRows.slice(0, 2),
+        blankSpacerRow(),
+        parRow,
+        blankSpacerRow(),
+        ...playerRows.slice(2)
+      ];
+    } else {
+      bodyRows = [...playerRows, blankSpacerRow(), parRow, blankSpacerRow()];
+    }
+
+    const colgroup = `<colgroup><col class="namecol">${cols.map(()=>'<col>').join('')}${isEighteen?'<col class="turncol"><col class="turncol">':''}<col class="turncol"></colgroup>`;
+
+    return `
+      <div class="pagetop">
+        <div class="cardhead">${escapeHtml(round.courseName)} &ndash; ${escapeHtml(round.teeTime)}${round.isQuota ? ` <span class="quotanote">(${escapeHtml(round.formatName || 'Quota')} — gross only)</span>` : ''}</div>
+        <div class="pageheading">${pageHeadingText || ''}</div>
+      </div>
+      <table class="cardtable">
+        ${colgroup}
+        <thead>
+          <tr><th class="th nameHead">Hole</th>${holeHeaderCells(i => cols[i].label)}</tr>
+        </thead>
+        <tbody>
+          ${bodyRows.join('')}
+          ${blankSpacerRow()}
+          ${siRows}
+        </tbody>
+      </table>
+      <div class="cardkey">${round.isQuota ? 'Gross scores only — this format does not use handicap strokes' : '&#9679; 1 stroke &nbsp;&nbsp; &#9679;&#9679; 2 strokes &nbsp;&nbsp; strokes shown per player\'s tee'}</div>
+      ${gameDetailsText ? `<div class="gamedetails">${gameDetailsText}</div>` : ''}
+    `;
+  }
+
+  function printAllBlankCards(){
+    if (!currentData || !currentData.rounds.length) return;
+    const win = window.open('', '_blank');
+    if (!win){
+      alert('Please allow pop-ups to print blank cards.');
+      return;
+    }
+    const customHeadingVal = (customHeadingInput.value || '').trim();
+    const pageHeadingText = customHeadingVal ? escapeHtml(customHeadingVal) : '';
+    const gameDetailsVal = (gameDetailsInput.value || '').trim();
+    const gameDetailsText = gameDetailsVal ? escapeHtml(gameDetailsVal) : '';
+    const pages = currentData.rounds.map(round =>
+      `<div class="page">${buildCompactCardHtml(round, pageHeadingText, gameDetailsText)}</div>`
+    ).join('');
+
+    const doc = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Blank scorecards</title>
+<style>
+  @page { size: landscape; margin: 0.5in; }
+  *{ box-sizing:border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+  body{ font-family: Georgia, 'Times New Roman', serif; color:#111; margin:0; }
+  .page{ page-break-after: always; padding: 4px 2px; max-width: 7.5in; }
+  .page:last-child{ page-break-after: auto; }
+  .pagetop{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .pageheading{ font-size:9.5px; color:#777; text-transform:uppercase; letter-spacing:.05em; text-align:right; white-space:nowrap; }
+  .cardhead{ font-size:12px; font-weight:700; }
+  .quotanote{ font-size:8.5px; font-weight:400; color:#555; }
+  table.cardtable{ border-collapse:collapse; width:100%; table-layout:fixed; }
+  .namecol{ width:150px; }
+  .turncol{ width:26px; }
+  .th{ border:1px solid #999; background:#eee; font-weight:700; font-size:9px; padding:2px 1px; text-align:center; }
+  .th.turn{ background:#d8d8d8; }
+  .nameHead{ text-align:left; padding-left:5px; }
+  .pname{ border:1px solid #999; font-size:8.5px; font-weight:700; text-align:left; padding:2px 5px; white-space:nowrap; }
+  .pmeta{ font-weight:400; color:#555; }
+  .blankbox{ border:1px solid #999; font-size:9px; padding:2px 1px; text-align:center; height:20px; position:relative; }
+  .blankbox.sum{ background:#f4f4f4; }
+  .blankbox.tot{ background:#e2e2e2; font-weight:700; }
+  .pdots{ position:absolute; top:2px; right:2px; display:flex; gap:1px; }
+  .pdots i{ width:3px; height:3px; border-radius:50%; background:#333; border:0.4px solid #333; display:inline-block; }
+  .cardkey{ font-size:7.5px; color:#555; margin-top:3px; }
+  .gamedetails{ font-size:8px; color:#333; margin-top:3px; border-top:1px solid #ccc; padding-top:3px; }
+  .noprint{ margin-top:10px; }
+  @media print{ .noprint{ display:none; } }
+</style>
+</head>
+<body>
+  ${pages}
+  <div class="noprint"><button onclick="window.print()" style="font-size:13px;padding:8px 14px;">Print</button></div>
+</body></html>`;
+
+    win.document.open();
+    win.document.write(doc);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { try { win.print(); } catch(e){} }, 300);
+  }
+
+  function rerenderKeepingTab(){
+    const keep = activeRoundIndex;
+    render(currentData);
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const blocks = document.querySelectorAll('.round-block');
+    if (tabBtns[keep]){
+      tabBtns.forEach(b => b.classList.remove('active'));
+      blocks.forEach(b => b.classList.remove('active'));
+      tabBtns[keep].classList.add('active');
+      if (blocks[keep]) blocks[keep].classList.add('active');
+      activeRoundIndex = keep;
+    }
+  }
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+  newFileBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    dropzone.style.display = 'block';
+    controls.style.display = 'none';
+    legend.style.display = 'none';
+    roundsContainer.innerHTML = '';
+    eventSubhead.textContent = 'Upload a Squabbit event export to get started';
+    errBox.style.display = 'none';
+    lastFileBanner.style.display = 'none';
+  });
+  netToggle.addEventListener('change', () => {
+    document.querySelectorAll('.row-net').forEach(r => {
+      r.style.display = netToggle.checked ? '' : 'none';
+    });
+    document.querySelectorAll('.score-cell .dots').forEach(d => {
+      d.style.display = netToggle.checked ? 'flex' : 'none';
+    });
+  });
+
+  function showError(msg){
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+
+  // ---------- Last-file cache (so re-printing doesn't require a re-upload) ----------
+  const LAST_CSV_KEY = 'sgScorecardLastCsv';
+  const lastFileBanner = document.getElementById('lastFileBanner');
+
+  function saveLastCsv(filename, text){
+    try {
+      localStorage.setItem(LAST_CSV_KEY, JSON.stringify({ filename, text, savedAt: Date.now() }));
+    } catch (e) { /* storage full or unavailable — not fatal, just won't be cached */ }
+  }
+  function loadLastCsv(){
+    try { return JSON.parse(localStorage.getItem(LAST_CSV_KEY)); }
+    catch (e) { return null; }
+  }
+  function formatSavedAt(ts){
+    try { return new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }); }
+    catch (e) { return ''; }
+  }
+
+  function tryLoadCachedFile(){
+    const cached = loadLastCsv();
+    if (!cached || !cached.text) return;
+    try {
+      const data = parseSquabbitCsv(cached.text);
+      if (!data.rounds.length) return;
+      parsedRounds = data.rounds;
+      render(data);
+      lastFileBanner.style.display = 'flex';
+      lastFileBanner.innerHTML = `<span>Showing last file: <strong>${escapeHtml(cached.filename || 'previous upload')}</strong> · uploaded ${escapeHtml(formatSavedAt(cached.savedAt))}</span>`;
+      const dismissBtn = document.createElement('button');
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.addEventListener('click', () => { lastFileBanner.style.display = 'none'; });
+      lastFileBanner.appendChild(dismissBtn);
+    } catch (e) {
+      console.error('Could not reload cached file', e);
+    }
+  }
+
+  function handleFile(file){
+    errBox.style.display = 'none';
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const text = e.target.result;
+        const data = parseSquabbitCsv(text);
+        if (!data.rounds.length) {
+          showError("Couldn't find any hole-by-hole scorecard sections in this file. Make sure this is a Squabbit event details export.");
+          return;
+        }
+        parsedRounds = data.rounds;
+        render(data);
+        lastFileBanner.style.display = 'none';
+        saveLastCsv(file.name, text);
+      } catch (err) {
+        console.error(err);
+        showError("Something went wrong reading this file: " + err.message);
+      }
+    };
+    reader.onerror = () => showError('Could not read that file.');
+    reader.readAsText(file);
+  }
+
+  // ---------- CSV parsing ----------
+
+  // Parse a single CSV line respecting quoted fields, return array of trimmed cells.
+  function parseCsvLine(line){
+    const cells = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++){
+      const c = line[i];
+      if (inQuotes){
+        if (c === '"'){
+          if (line[i+1] === '"'){ cur += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          cur += c;
+        }
+      } else {
+        if (c === '"'){ inQuotes = true; }
+        else if (c === ','){ cells.push(cur); cur = ''; }
+        else { cur += c; }
+      }
+    }
+    cells.push(cur);
+    return cells.map(c => c.trim());
+  }
+
+  function isBlankRow(cells){
+    return cells.every(c => c === '');
+  }
+
+  function parseSquabbitCsv(text){
+    const rawLines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const rows = rawLines.map(parseCsvLine);
+
+    // Event title: first non-blank row, typically "June 13,\"Jun 13, 2026\""
+    let eventLabel = '';
+    for (const r of rows){
+      if (!isBlankRow(r)){ eventLabel = r[1] || r[0] || ''; break; }
+    }
+
+    // Players section -> map name -> {handicap, tee}
+    const players = {};
+    const playersIdx = rows.findIndex(r => r[0] === 'Players');
+    if (playersIdx !== -1){
+      const header = rows[playersIdx + 1] || [];
+      const nameCol = header.indexOf('Name');
+      const hcpCol = header.indexOf('Handicap');
+      const teeCol = header.indexOf('Tee');
+      let i = playersIdx + 2;
+      while (i < rows.length && !isBlankRow(rows[i])){
+        const r = rows[i];
+        const name = r[nameCol];
+        if (name) players[name] = { handicap: parseFloat(r[hcpCol]) || 0, tee: r[teeCol] || '' };
+        i++;
+      }
+    }
+
+    // Round-detail blocks: identified by a header row containing "Handicap" in col index 2
+    // and "Hole 1" somewhere in the row.
+    const rounds = [];
+    for (let i = 0; i < rows.length; i++){
+      const r = rows[i];
+      if (r.length > 3 && r[2] === 'Handicap' && r.some(c => c === 'Hole 1')){
+        // The line above this header row is the course/time title row.
+        let titleRow = ['Round', ''];
+        for (let j = i - 1; j >= 0; j--){
+          if (!isBlankRow(rows[j])) { titleRow = rows[j]; break; }
+        }
+        const round = parseRoundBlock(rows, i, titleRow, players);
+        if (round) rounds.push(round);
+      }
+    }
+
+    // Ascending by tee time — parse each round's tee time into a real Date for a correct
+    // chronological sort. Rounds whose tee time doesn't parse fall back to file order.
+    rounds.sort((a, b) => {
+      const da = Date.parse(a.teeTime);
+      const db = Date.parse(b.teeTime);
+      if (isNaN(da) && isNaN(db)) return 0;
+      if (isNaN(da)) return 1;
+      if (isNaN(db)) return -1;
+      return da - db;
+    });
+
+    return { eventLabel, players, rounds };
+  }
+
+  function parseRoundBlock(rows, headerIdx, titleRow, players){
+    const header = rows[headerIdx];
+    const holeCols = []; // {index, label}
+    let outCol = -1, inCol = -1, totalCol = -1;
+    header.forEach((cell, idx) => {
+      if (/^Hole \d+$/.test(cell)) holeCols.push({ index: idx, label: cell.replace('Hole ', '') });
+      else if (cell === 'Out') outCol = idx;
+      else if (cell === 'In') inCol = idx;
+      else if (cell === 'Total') totalCol = idx;
+    });
+    if (!holeCols.length) return null;
+
+    const siRow = rows[headerIdx + 1];
+    const parRow = rows[headerIdx + 2];
+    if (!siRow || siRow[0] !== 'S.I.' || !parRow || parRow[0] !== 'Par') return null;
+
+    const si = holeCols.map(h => parseInt(siRow[h.index], 10) || 0);
+    const par = holeCols.map(h => parseInt(parRow[h.index], 10) || 0);
+    const numHoles = holeCols.length;
+
+    const playersOut = [];
+    let i = headerIdx + 3;
+    while (i < rows.length){
+      const r = rows[i];
+      if (isBlankRow(r)) break;
+      // A player row has a name in col 0.
+      if (r[0]){
+        const name = r[0];
+        const tee = r[1] || (players[name] ? players[name].tee : '');
+        const gross = holeCols.map(h => {
+          const v = parseInt(r[h.index], 10);
+          return isNaN(v) ? null : v;
+        });
+        const grossOut = outCol !== -1 ? (parseInt(r[outCol], 10) || null) : null;
+        const grossIn = inCol !== -1 ? (parseInt(r[inCol], 10) || null) : null;
+        const grossTotal = totalCol !== -1 ? (parseInt(r[totalCol], 10) || null) : null;
+
+        // Next row (if present, blank col0) may hold the format/net row.
+        let playingHcp = players[name] ? players[name].handicap : 0;
+        let netRow = null;
+        let formatName = null;
+        const next = rows[i + 1];
+        if (next && next[0] === '' && next[1] && !isBlankRow(next)){
+          const hcpVal = parseFloat(next[2]);
+          if (!isNaN(hcpVal)) playingHcp = hcpVal;
+          netRow = next;
+          formatName = next[1];
+          i++;
+        }
+
+        playersOut.push({
+          name, tee,
+          handicap: playingHcp,
+          gross, grossOut, grossIn, grossTotal,
+          formatName
+        });
+      }
+      i++;
+    }
+
+    const courseName = titleRow[0] || 'Round';
+    const teeTime = titleRow[1] || '';
+
+    // Determine the round's game format (most common non-empty formatName among players).
+    const formatCounts = {};
+    playersOut.forEach(p => {
+      if (p.formatName) formatCounts[p.formatName] = (formatCounts[p.formatName] || 0) + 1;
+    });
+    let roundFormat = null, bestCount = 0;
+    Object.keys(formatCounts).forEach(f => {
+      if (formatCounts[f] > bestCount){ bestCount = formatCounts[f]; roundFormat = f; }
+    });
+    const isQuota = /quota/i.test(roundFormat || '');
+
+    return {
+      id: courseName + '__' + teeTime,
+      courseName, teeTime,
+      holeCols, si, par, numHoles,
+      outCol, inCol, totalCol,
+      players: playersOut,
+      formatName: roundFormat,
+      isQuota
+    };
+  }
+
+  // Standard handicap stroke allocation across a round's stroke-index array.
+  function strokesForHole(handicap, strokeIndex, numHoles){
+    const h = Math.round(handicap);
+    if (h <= 0) return 0;
+    const base = Math.floor(h / numHoles);
+    const remainder = h - base * numHoles;
+    return base + (strokeIndex <= remainder ? 1 : 0);
+  }
+
+  // ---------- Rendering ----------
+
+  function render(data){
+    currentData = data;
+    dropzone.style.display = 'none';
+    controls.style.display = 'flex';
+    legend.style.display = 'flex';
+    roundsContainer.innerHTML = '';
+    roundTabs.innerHTML = '';
+    eventSubhead.textContent = data.eventLabel ? data.eventLabel : 'Squabbit event export';
+
+    data.rounds.forEach((round, idx) => {
+      const tabBtn = document.createElement('button');
+      tabBtn.className = 'tab-btn' + (idx === 0 ? ' active' : '');
+      tabBtn.textContent = round.teeTime ? round.teeTime.replace(/^[A-Za-z]+ \d+, \d+ /, '') : ('Round ' + (idx + 1));
+      tabBtn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.round-block').forEach(b => b.classList.remove('active'));
+        tabBtn.classList.add('active');
+        document.getElementById('block-' + idx).classList.add('active');
+        activeRoundIndex = idx;
+      });
+      roundTabs.appendChild(tabBtn);
+
+      const block = document.createElement('div');
+      block.className = 'round-block' + (idx === 0 ? ' active' : '');
+      block.id = 'block-' + idx;
+      block.innerHTML = renderRoundTable(round);
+      roundsContainer.appendChild(block);
+    });
+  }
+
+  function renderRoundTable(round){
+    const cols = round.holeCols;
+    const frontCols = cols.filter(c => parseInt(c.label,10) <= (round.numHoles === 18 ? 9 : round.numHoles));
+    const backCols = cols.filter(c => parseInt(c.label,10) > (round.numHoles === 18 ? 9 : round.numHoles));
+
+    let html = `<div class="round-title-bar">
+      <div class="course">${escapeHtml(round.courseName)}${round.isQuota ? ' <span style="font-size:10px;font-weight:400;background:rgba(255,255,255,0.18);padding:2px 8px;border-radius:10px;margin-left:8px;vertical-align:middle;">' + escapeHtml(round.formatName || 'Quota') + ' — gross scores only</span>' : ''}</div>
+      <div class="time">${escapeHtml(round.teeTime)}</div>
+    </div>
+    <div class="card-scroll">
+    <table class="scorecard">
+    <thead>
+    <tr class="hole-header">
+      <th class="rowlabel">Player</th>`;
+    cols.forEach((c, i) => {
+      html += `<th>${c.label}</th>`;
+      if (round.numHoles === 18 && parseInt(c.label,10) === 9) html += `<th class="out-in">OUT</th>`;
+    });
+    if (round.numHoles === 18) html += `<th class="out-in">IN</th>`;
+    html += `<th class="out-in">TOT</th></tr>
+`;
+
+    const teesInRound = distinctTees(round);
+    const siRowsToRender = computeSiRowGroups(round, teesInRound);
+    siRowsToRender.forEach(t => {
+      html += `<tr class="row-si"><th class="rowlabel">${escapeHtml(t.label)}</th>`;
+      t.si.forEach((v, i) => {
+        html += `<td>${v}</td>`;
+        if (round.numHoles === 18 && parseInt(cols[i].label,10) === 9) html += `<td></td>`;
+      });
+      if (round.numHoles === 18) html += `<td></td>`;
+      html += `<td></td></tr>\n`;
+    });
+
+    html += `
+    <tr class="row-par">
+      <th class="rowlabel">Par</th>`;
+    let outPar = 0, inPar = 0;
+    round.par.forEach((v, i) => {
+      html += `<td>${v}</td>`;
+      const holeNum = parseInt(cols[i].label,10);
+      if (round.numHoles === 18 && holeNum <= 9) outPar += v; else inPar += v;
+      if (round.numHoles === 18 && holeNum === 9) html += `<td class="out-in-cell">${outPar}</td>`;
+    });
+    if (round.numHoles === 18) html += `<td class="out-in-cell">${inPar}</td>`;
+    html += `<td class="out-in-cell">${outPar + inPar}</td></tr>
+    </thead><tbody>`;
+
+    round.players.forEach(p => {
+      const playerSi = effectiveSi(round, p.tee);
+      const usesCustomSi = hasOverride(round, p.tee);
+      html += `<tr class="player-group row-gross">
+        <td class="rowlabel">${escapeHtml(p.name)}<span class="meta">${escapeHtml(p.tee || '')} · Hcp ${p.handicap}${usesCustomSi ? ' · <span class="custom-si-tag">custom S.I.</span>' : ''}</span></td>`;
+
+      let grossOutRun = 0, grossInRun = 0;
+      let grossOutCount = 0, grossInCount = 0;
+
+      p.gross.forEach((score, i) => {
+        const parVal = round.par[i];
+        const siVal = playerSi[i];
+        const strokes = strokesForHole(p.handicap, siVal, round.numHoles);
+        const holeNum = parseInt(cols[i].label,10);
+        let cellClass = 'score-cell';
+        if (score !== null && parVal){
+          if (score <= parVal - 1) cellClass += ' birdie';
+          else if (score >= parVal + 1) cellClass += ' bogey';
+        }
+        const dots = (strokes > 0 && !round.isQuota)
+          ? `<span class="dots">${'<span></span>'.repeat(Math.min(strokes,2))}</span>`
+          : '';
+        html += `<td class="${cellClass}">${score !== null ? score : '–'}${dots}</td>`;
+
+        if (score !== null){
+          if (round.numHoles === 18 && holeNum <= 9) { grossOutRun += score; grossOutCount++; }
+          else { grossInRun += score; grossInCount++; }
+        }
+        if (round.numHoles === 18 && holeNum === 9){
+          const outVal = p.grossOut !== null ? p.grossOut : (grossOutCount > 0 ? grossOutRun : null);
+          html += `<td class="out-in-cell">${outVal !== null ? outVal : '–'}</td>`;
+        }
+      });
+      const inVal = p.grossIn !== null ? p.grossIn : (grossInCount > 0 ? grossInRun : null);
+      const totalVal = p.grossTotal !== null ? p.grossTotal : ((grossOutCount + grossInCount) > 0 ? (grossOutRun + grossInRun) : null);
+      if (round.numHoles === 18) html += `<td class="out-in-cell">${inVal !== null ? inVal : '–'}</td>`;
+      html += `<td class="total-cell">${totalVal !== null ? totalVal : '–'}</td></tr>`;
+
+      if (round.isQuota) return; // Quota / Team Quota formats are scored on gross — no net row.
+
+      // Net row
+      html += `<tr class="row-net"><th class="rowlabel">net</th>`;
+      let netOutRun = 0, netInRun = 0;
+      let netOutCount = 0, netInCount = 0;
+      p.gross.forEach((score, i) => {
+        const siVal = playerSi[i];
+        const strokes = strokesForHole(p.handicap, siVal, round.numHoles);
+        const holeNum = parseInt(cols[i].label,10);
+        const net = score !== null ? score - strokes : null;
+        const parVal = round.par[i];
+        let cls = 'net-val';
+        if (net !== null && parVal && net < parVal) cls += ' under';
+        html += `<td class="${cls}">${net !== null ? net : '–'}</td>`;
+        if (net !== null){
+          if (round.numHoles === 18 && holeNum <= 9) { netOutRun += net; netOutCount++; }
+          else { netInRun += net; netInCount++; }
+        }
+        if (round.numHoles === 18 && holeNum === 9) html += `<td class="net-total">${netOutCount > 0 ? netOutRun : '–'}</td>`;
+      });
+      if (round.numHoles === 18) html += `<td class="net-total">${netInCount > 0 ? netInRun : '–'}</td>`;
+      html += `<td class="net-total">${(netOutCount + netInCount) > 0 ? (netOutRun + netInRun) : '–'}</td></tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    return html;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[m]));
+  }
+
+  tryLoadCachedFile();
+})();
+</script>
+</body>
+</html>
