@@ -112,7 +112,7 @@ function makeEvent(row) {
   if (eventId) {
     // Pass the event ID in both parameter names so either detail-page version
     // can read it, and also preserve it in browser storage as a fallback.
-    const detailUrl = new URL('Event_Detail_Streamlined_v57.html', document.baseURI);
+    const detailUrl = new URL('Event_Detail_Streamlined_v61.html', document.baseURI);
     detailUrl.searchParams.set('eventId', eventId);
     detailUrl.searchParams.set('id', eventId);
     div.href = detailUrl.href;
