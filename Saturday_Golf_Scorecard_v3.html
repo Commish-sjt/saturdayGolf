@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squabbit — Scorecard v2</title>
+<style>
+:root{--paper:#F5F1E6;--fairway:#1F3B2C;--fairway-light:#2E5540;--brass:#A9812F;--ink:#232019;--ink-soft:#6b6455;--clay:#9C4A34;--white:#FFFDF8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:Arial,sans-serif}
+.wrap{max-width:1100px;margin:auto;padding:24px 14px 50px}
+header{background:var(--fairway);color:white;padding:24px 20px;border-radius:14px;margin-bottom:18px}
+.eyebrow{text-transform:uppercase;letter-spacing:2px;font-size:12px;opacity:.8}
+h1{margin:4px 0 4px;font-size:34px}
+#eventSubhead{font-size:16px}
+.controls,.inputs{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+input,button{font:inherit}
+input[type=text]{padding:10px 11px;border:1px solid #cfc8b7;border-radius:8px;background:white;min-width:210px}
+button{padding:10px 13px;border:0;border-radius:8px;background:var(--fairway);color:white;cursor:pointer}
+button.secondary{background:var(--brass)}
+button.light{background:white;color:var(--fairway);border:1px solid #cfc8b7}
+.panel{background:var(--white);border-radius:12px;padding:14px;margin-bottom:14px;box-shadow:0 1px 3px #0001}
+.status{font-weight:bold;margin:8px 0;color:var(--fairway)}
+#error{color:var(--clay);font-weight:bold}
+.hidden{display:none!important}
+.tabs{display:flex;gap:7px;margin:12px 0}
+.tab{background:#ddd6c5;color:var(--ink)}
+.tab.active{background:var(--fairway);color:white}
+.card{background:white;border:1px solid #d5cdbd;border-radius:10px;overflow:hidden;margin:14px 0}
+.cardHead{background:var(--fairway-light);color:white;padding:12px}
+.cardHead h2{margin:0;font-size:20px}
+.cardHead div{margin-top:3px;font-size:13px}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+th,td{border:1px solid #d8d1c3;text-align:center;padding:5px;font-size:12px}
+th{background:#eee8da;font-weight:bold}
+.player{text-align:left;width:150px;font-weight:bold}
+.scoreBox{position:relative;height:38px;min-width:34px}
+.score{font-size:15px;line-height:28px}
+.net{font-size:10px;color:var(--ink-soft);line-height:10px;min-height:10px}
+.scoreDivider{border-top:1px solid #bdb5a5;margin:1px 5px 1px}
+.stroke-dot{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%;background:var(--ink)}
+.siRow td{background:#f6f0e3;font-size:11px}
+.parRow td{background:#faf7f0;font-size:11px}
+.legend{font-size:13px;color:var(--ink-soft);margin:8px 0}
+.dotSample{display:inline-block;width:7px;height:7px;background:var(--ink);border-radius:50%;margin:0 4px}
+.notice{padding:12px;background:#eee8da;border-radius:8px;color:var(--ink-soft)}
+@media(max-width:700px){
+ .wrap{padding:12px 7px 35px} header{padding:18px 14px} h1{font-size:28px}
+ .player{width:112px;white-space:normal}
+ th,td{padding:3px;font-size:10px}.scoreBox{height:35px;min-width:27px}.score{font-size:13px}
+ .stroke-dot{width:5px;height:5px;right:2px;top:2px}
+}
+body.dotsOnlyPrint .score,body.dotsOnlyPrint .net{visibility:hidden}
+body.dotsOnlyPrint .scoreBox{height:38px}
+@media print{
+ body{background:white}.wrap{max-width:none;padding:0}.noPrint,header .inputs,.controls,.tabs,.legend{display:none!important}
+ .panel{box-shadow:none;padding:0}.card{break-inside:avoid;margin:0 0 18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">Squabbit</div>
+  <h1>Scorecard</h1>
+  <div id="eventSubhead">Saturday Golf</div>
+</header>
+
+<div class="panel noPrint">
+  <div class="inputs">
+    <input id="customHeadingInput" type="text" placeholder="Printed Card Heading">
+    <input id="gameDetailsInput" type="text" placeholder="Game Details">
+  </div>
+  <div class="controls">
+    <button id="printBlankBtn">Print Blank Cards</button>
+    <button id="printDotsBtn" class="secondary">Print with Dots Only</button>
+    <button id="editSiBtn" class="secondary">Edit Tee S.I.</button>
+    <button id="newFileBtn" class="light">Load Different CSV</button>
+    <input id="fileInput" type="file" accept=".csv" class="hidden">
+  </div>
+  <div id="status" class="status">Loading event from Google Sheets…</div>
+  <div id="error"></div>
+  <div id="csvFallback" class="notice hidden">
+    Automatic event loading is unavailable. Choose a Squabbit CSV to load the scorecard.
+  </div>
+</div>
+
+<div id="content"></div>
+</div>
+
+<div id="siModal" class="hidden noPrint" style="position:fixed;inset:0;background:#0008;z-index:10;padding:20px;overflow:auto">
+ <div class="panel" style="max-width:600px;margin:30px auto">
+   <h2>Edit Tee S.I.</h2>
+   <div id="siEditor"></div>
+   <div class="controls">
+     <button id="saveSi">Save</button><button id="closeSi" class="light">Cancel</button>
+   </div>
+ </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+const API="https://script.google.com/macros/s/AKfycbxtK7gUo6FAbD-tlxrYhDoAx4P5uauKAT5Y8DfTzpxJmDMap2CCzvhIxTM-BzpAwJc5jQ/exec";
+const $=id=>document.getElementById(id);
+let eventData=null, rounds=[], active=0, mode="post", siOverrides={};
+
+$("customHeadingInput").value=localStorage.getItem("sgScorecardCustomHeading")||"";
+$("gameDetailsInput").value=localStorage.getItem("sgScorecardGameDetails")||"";
+$("customHeadingInput").oninput=()=>localStorage.setItem("sgScorecardCustomHeading",$("customHeadingInput").value);
+$("gameDetailsInput").oninput=()=>localStorage.setItem("sgScorecardGameDetails",$("gameDetailsInput").value);
+
+try{siOverrides=JSON.parse(localStorage.getItem("sgScorecardSiOverrides")||"{}")}catch(e){siOverrides={}}
+
+function val(o,...names){
+ for(const n of names) if(o && o[n]!==undefined && o[n]!==null && String(o[n]).trim()!=="") return o[n];
+ return "";
+}
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function parseNum(s){const n=parseFloat(String(s).replace("+",""));return isNaN(n)?0:n}
+function strokeCount(ph,si){
+ let h=parseFloat(String(ph).replace("+",""));
+ let s=parseInt(si,10);
+ if(isNaN(h)||h<=0||isNaN(s)) return 0;
+ let whole=Math.floor(h/18), rem=h%18;
+ return whole+(s<=rem?1:0);
+}
+function getSI(round,h){
+ const tee=round.players[0]?.tee||"";
+ const key=(round.id+"|"+tee+"|"+(h+1));
+ return siOverrides[key]!==undefined?siOverrides[key]:round.si[h];
+}
+function normalizeRows(rows){
+ return (rows||[]).map(r=>{
+   const x={};
+   Object.keys(r||{}).forEach(k=>x[k]=r[k]);
+   return x;
+ });
+}
+function buildFromScorecard(data){
+ const rows=normalizeRows(data.scorecard);
+ if(!rows.length) return [];
+ const groups=new Map();
+ rows.forEach(r=>{
+   const group=val(r,"Group","group")||"1";
+   const roundNo=val(r,"Round","round")||"1";
+   const teeTime=val(r,"Tee Time","teeTime");
+   const date=val(r,"Date","date");
+   const key=roundNo+"|"+group+"|"+date+"|"+teeTime;
+   if(!groups.has(key)) groups.set(key,{id:key,round:roundNo,group,date,teeTime,si:Array(18).fill(""),par:Array(18).fill(""),players:[]});
+   const g=groups.get(key), h=parseInt(val(r,"Hole","hole"),10)-1;
+   if(h>=0&&h<18){
+     if(g.si[h]==="")g.si[h]=val(r,"SI","si");
+     if(g.par[h]==="")g.par[h]=val(r,"Par","par");
+   }
+   const name=val(r,"Player","player");
+   let p=g.players.find(p=>p.name===name);
+   if(!p){p={name,tee:val(r,"Tee","tee"),handicap:val(r,"Handicap Index","handicapIndex"),playingHandicap:val(r,"Playing handicap","Playing Handicap","playingHandicap"),gross:Array(18).fill(""),net:Array(18).fill("")};g.players.push(p)}
+   if(h>=0&&h<18){
+     p.gross[h]=val(r,"Gross","gross");
+     p.net[h]=val(r,"Net","net");
+   }
+ });
+ return [...groups.values()].sort((a,b)=>String(a.teeTime).localeCompare(String(b.teeTime)));
+}
+function detectMode(data){
+ const rows=normalizeRows(data.scorecard);
+ if(rows.some(r=>String(val(r,"Gross","gross")).trim()!=="")) return "post";
+ return "pre";
+}
+function formatName(data){
+ const rows=normalizeRows(data.eventDetail);
+ for(const r of rows){
+   if(String(val(r,"Item","item")).toLowerCase()==="game format") return val(r,"Value","value")||"";
+ }
+ const pre=normalizeRows(data.preRound);
+ for(const r of pre){
+   const v=String(val(r,"Value","value"));
+   if(/^Format:\s*/i.test(v)) return v.replace(/^Format:\s*/i,"").trim();
+ }
+ return "";
+}
+function render(){
+ const format=formatName(eventData);
+ const date=val((eventData.teeSheet||[])[0],"Date","date") || val(eventData,"eventId");
+ $("eventSubhead").textContent=(date?date+" — ":"")+"Saturday Golf";
+ let html="";
+ if(rounds.length>1){
+   html+='<div class="tabs noPrint">';
+   rounds.forEach((r,i)=>html+=`<button class="tab ${i===active?"active":""}" onclick="window.sgSetRound(${i})">Group ${esc(r.group)} — ${esc(r.teeTime)}</button>`);
+   html+="</div>";
+ }
+ const heading=$("customHeadingInput").value;
+ const details=$("gameDetailsInput").value;
+ const r=rounds[active];
+ if(!r){$("content").innerHTML='<div class="panel">No scorecard rows were found for this event.</div>';return}
+ html+=`<div class="card"><div class="cardHead"><h2>${esc(heading||"Saturday Golf Scorecard")}</h2><div>${esc(r.date)} · ${esc(r.teeTime)} · Group ${esc(r.group)}${format?" · "+esc(format):""}</div>${details?`<div>${esc(details)}</div>`:""}</div>`;
+ html+='<table><thead><tr><th class="player">Player</th>';
+ for(let h=0;h<18;h++)html+=`<th>${h+1}</th>`;
+ html+="<th>OUT</th><th>IN</th><th>TOT</th></tr></thead>";
+ html+='<tbody><tr class="siRow"><td class="player">S.I.</td>';
+ for(let h=0;h<18;h++)html+=`<td>${esc(getSI(r,h))}</td>`;
+ html+="<td></td><td></td><td></td></tr>";
+ html+='<tr class="parRow"><td class="player">Par</td>';
+ for(let h=0;h<18;h++)html+=`<td>${esc(r.par[h])}</td>`;
+ html+="<td></td><td></td><td></td></tr>";
+ r.players.forEach(p=>{
+   let out=0,inn=0,total=0;
+   for(let h=0;h<18;h++){const g=parseInt(p.gross[h],10);if(!isNaN(g)){total+=g;if(h<9)out+=g;else inn+=g}}
+   html+=`<tr><td class="player">${esc(p.name)}<br><small>${esc(p.tee)} · PH ${esc(p.playingHandicap)}</small></td>`;
+   for(let h=0;h<18;h++){
+     const dot=strokeCount(p.playingHandicap,getSI(r,h))>0;
+     const g=p.gross[h], n=p.net[h];
+     html+=`<td><div class="scoreBox">${dot?'<span class="stroke-dot"></span>':""}<div class="score">${mode==="post"&&g!==""?esc(g):""}</div><div class="scoreDivider"></div><div class="net">${mode==="post"&&n!==""?esc(n):""}</div></div></td>`;
+   }
+   html+=`<td>${mode==="post"&&out?out:""}</td><td>${mode==="post"&&inn?inn:""}</td><td>${mode==="post"&&total?total:""}</td></tr>`;
+ });
+ html+="</tbody></table></div>";
+ html+='<div class="legend"><span class="dotSample"></span> Handicap stroke on this hole</div>';
+ $("content").innerHTML=html;
+}
+window.sgSetRound=i=>{active=i;render()};
+
+async function loadEvent(id){
+ $("status").textContent="Loading event from Google Sheets…";$("error").textContent="";$("csvFallback").classList.add("hidden");
+ try{
+   const res=await fetch(API+"?action=event&eventId="+encodeURIComponent(id),{cache:"no-store"});
+   if(!res.ok)throw new Error("HTTP "+res.status);
+   const data=await res.json();
+   if(!data.success)throw new Error(data.error||"Event could not be loaded");
+   eventData=data; rounds=buildFromScorecard(data); mode=detectMode(data);
+   if(!rounds.length)throw new Error("The event was found, but no Scorecard rows were returned.");
+   $("status").textContent="Event loaded automatically from Google Sheets.";
+   render();
+ }catch(e){
+   $("status").textContent="Automatic event load unavailable — CSV fallback ready";
+   $("error").textContent=e.message||String(e);
+   $("csvFallback").classList.remove("hidden");
+ }
+}
+async function loadLatest(){
+ try{
+   const res=await fetch(API+"?action=events",{cache:"no-store"});
+   if(!res.ok)throw new Error("HTTP "+res.status);
+   const data=await res.json();
+   const rows=Array.isArray(data)?data:(data.events||[]);
+   if(!rows.length)throw new Error("No events returned");
+   const ids=rows.map(r=>val(r,"Event ID","eventId","id","ID")).filter(Boolean);
+   if(!ids.length)throw new Error("No event ID found");
+   await loadEvent(ids[ids.length-1]);
+ }catch(e){
+   $("status").textContent="Automatic event load unavailable — CSV fallback ready";
+   $("error").textContent=e.message||String(e);
+   $("csvFallback").classList.remove("hidden");
+ }
+}
+function csvParse(text){
+ const lines=text.replace(/\r/g,"").split("\n").map(x=>x.split(",").map(v=>v.replace(/^"|"$/g,"")));
+ const rows=[];let players=[], header=-1, si=[],par=[];
+ for(let i=0;i<lines.length;i++){
+   const row=lines[i]; if(row.some(x=>String(x).toLowerCase().includes("hole 1"))){header=i;break}
+ }
+ if(header<0)throw new Error("Could not find a Squabbit scorecard header.");
+ const hrow=lines[header], holeStart=hrow.findIndex(x=>/hole 1/i.test(x));
+ const siRow=lines[header+1]||[], parRow=lines[header+2]||[];
+ for(let h=0;h<18;h++){si[h]=siRow[holeStart+h]||"";par[h]=parRow[holeStart+h]||""}
+ for(let i=header+3;i<lines.length;i++){
+   const row=lines[i],name=row[0]||"";
+   if(!name||/net|total|gross/i.test(name))continue;
+   const handicap=row[1]||"",tee=row[2]||"";
+   const gross=Array(18).fill(""),net=Array(18).fill("");
+   for(let h=0;h<18;h++)gross[h]=row[holeStart+h]||"";
+   players.push({name,tee,handicap,playingHandicap:handicap,gross,net});
+ }
+ rounds=[{id:"csv",group:"1",date:"",teeTime:"",si,par,players}];mode="post";render();
+ $("status").textContent="CSV loaded locally."; $("csvFallback").classList.add("hidden");
+}
+$("newFileBtn").onclick=()=>$("fileInput").click();
+$("fileInput").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{csvParse(r.result)}catch(x){$("error").textContent=x.message}};r.readAsText(f)};
+$("printBlankBtn").onclick=()=>window.print();
+$("printDotsBtn").onclick=()=>{
+  document.body.classList.add("dotsOnlyPrint");
+  const clear=()=>{
+    document.body.classList.remove("dotsOnlyPrint");
+    window.removeEventListener("afterprint",clear);
+  };
+  window.addEventListener("afterprint",clear);
+  window.print();
+  setTimeout(clear,1000);
+};
+$("editSiBtn").onclick=()=>{
+ if(!rounds.length)return;
+ let r=rounds[active], html="";
+ for(let h=0;h<18;h++)html+=`<label style="display:inline-block;width:70px;margin:5px">H${h+1}<input id="si_${h}" value="${esc(getSI(r,h))}" style="width:55px"></label>`;
+ $("siEditor").innerHTML=html;$("siModal").classList.remove("hidden");
+};
+$("closeSi").onclick=()=>$("siModal").classList.add("hidden");
+$("saveSi").onclick=()=>{
+ const r=rounds[active],tee=r.players[0]?.tee||"";
+ for(let h=0;h<18;h++)siOverrides[r.id+"|"+tee+"|"+(h+1)]=$("si_"+h).value;
+ localStorage.setItem("sgScorecardSiOverrides",JSON.stringify(siOverrides));
+ $("siModal").classList.add("hidden");render();
+};
+
+const params=new URLSearchParams(location.search);
+const requested=params.get("eventId");
+if(requested)loadEvent(requested); else loadLatest();
+})();
+</script>
+</body>
+</html>
