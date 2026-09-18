@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saturday Golf — League Rules</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F5F1E6;
+    --paper-line: #DCD3B8;
+    --fairway: #1F3B2C;
+    --fairway-light: #2E5540;
+    --brass: #A9812F;
+    --brass-light: #C9A24A;
+    --ink: #232019;
+    --ink-soft: #6b6455;
+    --clay: #9C4A34;
+    --white: #FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding:28px 16px 60px;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(31,59,44,0.05), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(169,129,47,0.06), transparent 55%);
+  }
+  .wrap{max-width:840px;margin:0 auto;}
+
+  header{
+    border-bottom:3px solid var(--fairway);
+    padding-bottom:14px;
+    margin-bottom:22px;
+  }
+  .brand-eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0;
+    color:var(--fairway);
+    line-height:1.05;
+  }
+  .subhead{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+
+  /* Search */
+  #searchWrap{
+    position:sticky;
+    top:12px;
+    z-index:5;
+    margin-bottom:22px;
+  }
+  #searchBox{
+    width:100%;
+    font-family:'Inter',sans-serif;
+    font-size:15px;
+    color:var(--ink);
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    padding:12px 16px 12px 40px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.05);
+  }
+  #searchBox:focus{
+    outline:2px solid var(--brass-light);
+    outline-offset:1px;
+    border-color:var(--brass);
+  }
+  #searchWrap{position:relative;}
+  #searchIcon{
+    position:absolute;
+    left:14px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:15px;
+    color:var(--ink-soft);
+    pointer-events:none;
+  }
+  #searchWrap.sticky-active #searchBox{
+    box-shadow:0 2px 8px rgba(0,0,0,0.1);
+  }
+  #resultCount{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    padding-left:2px;
+    min-height:14px;
+  }
+
+  /* Rule cards */
+  #rulesContainer{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .rule-card{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    padding:18px 22px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+  }
+  .rule-card.hidden{display:none;}
+  .rule-card h2{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+    color:var(--fairway);
+    margin:0 0 8px;
+  }
+  .rule-card p{
+    margin:0 0 8px;
+    font-size:14px;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  .rule-card p:last-child{margin-bottom:0;}
+  .rule-card ol, .rule-card ul{
+    margin:0 0 8px;
+    padding-left:22px;
+    font-size:14px;
+    line-height:1.55;
+    color:var(--ink);
+  }
+  .rule-card ol:last-child, .rule-card ul:last-child{margin-bottom:0;}
+  .rule-card li{margin-bottom:4px;}
+  .rule-card li:last-child{margin-bottom:0;}
+  .rule-card mark{
+    background:#FCE9B8;
+    color:var(--ink);
+    border-radius:2px;
+    padding:0 1px;
+  }
+
+  #noResults{
+    display:none;
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-soft);
+    font-size:14px;
+    background:var(--white);
+    border:1px dashed var(--paper-line);
+    border-radius:4px;
+  }
+  #noResults strong{color:var(--fairway);}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:30px;
+    font-family:'Space Mono',monospace;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand-eyebrow">Saturday Golf</div>
+    <h1>League Rules</h1>
+    <div class="subhead">Local rules, format guidelines, and scoring procedures</div>
+  </header>
+
+  <div id="searchWrap">
+    <span id="searchIcon">&#128269;</span>
+    <input type="text" id="searchBox" placeholder="Search rules…" autocomplete="off">
+    <div id="resultCount"></div>
+  </div>
+
+  <div id="rulesContainer">
+      <article class="rule-card" data-search="handicaps for all games played during our matches, net handicaps are calculated from ghin system.  it&#x27;s expected that each golfer will enter all scores from rounds played into ghin system weekly.">
+        <h2>Handicaps</h2>
+        <p>For all games played during our matches, net handicaps are calculated from GHIN system.  It&#x27;s expected that each golfer will enter all scores from rounds played into GHIN system weekly.</p>
+      </article>
+
+      <article class="rule-card" data-search="tracking of round scores each foursome to turn in one scorecard at end of round. both carts should keep score (on card) and compare after 9th hole and also compare after 18th hole. scorecard will have: gross scores entered, for each player, for all 18 holes total of gross scores, for each player, for front 9, back 9 and 18. confirmation that total gross scores on scorecard, for each player, match their total gross scores in squabbit match play only - both teams/carts should track match score (+ or -) and confirm after each hole.">
+        <h2>Tracking of Round Scores</h2>
+        <p>Each foursome to turn in one scorecard at end of round. Both carts should keep score (on card) and compare after 9th hole and also compare after 18th hole. Scorecard will have:</p><ol><li>gross scores entered, for each player, for all 18 holes</li><li>total of gross scores, for each player, for front 9, back 9 and 18.</li><li>Confirmation that total gross scores on scorecard, for each player, match their total gross scores in Squabbit</li><li>Match Play Only - Both teams/carts should track match score (+ or -) and confirm after each hole.</li></ol>
+      </article>
+
+      <article class="rule-card" data-search="first tee breakfast ball allowed on first tee only. must play the second ball for remainder of hole">
+        <h2>First Tee</h2>
+        <p>Breakfast ball allowed on first tee only. Must play the second ball for remainder of hole</p>
+      </article>
+
+      <article class="rule-card" data-search="fairways and fringe lift, clean and place allowed when in fairway or fringe ball can be moved from divot or wet area in fairway or fringe">
+        <h2>Fairways and Fringe</h2>
+        <p>Lift, clean and place allowed when in fairway or fringe</p><p>Ball can be moved from divot or wet area in fairway or fringe</p>
+      </article>
+
+      <article class="rule-card" data-search="&quot;play the ball down&quot; in rough and sand traps this means you can only move or touch your ball when in the fairway, on the green or on fringe">
+        <h2>&quot;Play the Ball Down&quot; in Rough and Sand Traps</h2>
+        <p>This means you can only move or touch your ball when in the fairway, on the green or on fringe</p>
+      </article>
+
+      <article class="rule-card" data-search="putting gimmee = 2 feet (except in ryder cup format)  putt must be &quot;given&quot; by a golfer in your group for all formats">
+        <h2>Putting</h2>
+        <p>Gimmee = 2 feet (Except in Ryder Cup format)  Putt must be &quot;given&quot; by a golfer in your group for all formats</p>
+      </article>
+
+      <article class="rule-card" data-search="unplayable ball (general area) two options for 1 penalty stroke play another ball from where previous stroke was made lateral relief (two club lengths) no closer to hole">
+        <h2>Unplayable Ball (General Area)</h2>
+        <p>Two Options for 1 penalty stroke</p><ol><li>Play another ball from where previous stroke was made</li><li>Lateral relief (two club lengths) no closer to hole</li></ol>
+      </article>
+
+      <article class="rule-card" data-search="bunker - unplayable ball unplayable ball in bunker. four options: play another ball from where the previous stroke was made for 1 penalty stroke take back on the line relief in the bunker for 1 penalty stroke take lateral relief in the bunker (two club lengths) for 1 penalty stroke take back-on-the-line relief outside the bunker for 2 penalty strokes">
+        <h2>Bunker - Unplayable Ball</h2>
+        <p>Unplayable Ball in Bunker. Four options:</p><ol><li>Play another ball from where the previous stroke was made for 1 penalty stroke</li><li>Take back on the line relief in the bunker for 1 penalty stroke</li><li>Take lateral relief in the bunker (two club lengths) for 1 penalty stroke</li><li>Take back-on-the-line relief outside the bunker for 2 penalty strokes</li></ol>
+      </article>
+
+      <article class="rule-card" data-search="lost ball or out of bounds if you think ball might be out bounds (past white stakes) or that you might not find it, you can play a provisional ball, if you are then unable to find your original ball, or you find it out of bounds, your provisional ball is your ball in play for 1 penalty stroke. you can also take relief under the local rule for 2 penalty strokes. estimate the spot where ball came to rest on course or estimated spot where it crossed the out of bounds line.  take two club lengths from nearest spot on fairway (no closer to the hole).  does not apply if ball is lost in penalty area.">
+        <h2>Lost Ball or Out of Bounds</h2>
+        <p>If you think ball might be out bounds (past white stakes) or that you might not find it, you can play a provisional ball, If you are then unable to find your original ball, or you find it out of bounds, your provisional ball is your ball in play for 1 penalty stroke. You can also take relief under the local rule for 2 penalty strokes. Estimate the spot where ball came to rest on course or estimated spot where it crossed the out of bounds line.  Take two club lengths from nearest spot on fairway (no closer to the hole).  Does not apply if ball is lost in penalty area.</p>
+      </article>
+
+      <article class="rule-card" data-search="penalty areas yellow stakes - two relief options for 1 penalty stroke play another ball from where previous stroke was made drop ball outside penalty area keeping point where ball entered penalty area between the hole and point where the ball is dropped red stakes - three relief options for 1 penalty stroke play another ball from where previous stroke was made drop ball outside penalty area keeping point where ball entered penalty area between the hole and point where the ball is dropped lateral relief (two club lengths from penalty area)">
+        <h2>Penalty Areas</h2>
+        <p>Yellow Stakes - Two Relief Options for 1 penalty stroke</p><ol><li>Play another ball from where previous stroke was made</li><li>Drop ball outside penalty area keeping point where ball entered penalty area between the hole and point where the ball is dropped</li></ol><p>Red Stakes - Three Relief Options for 1 penalty stroke</p><ol><li>Play another ball from where previous stroke was made</li><li>Drop ball outside penalty area keeping point where ball entered penalty area between the hole and point where the ball is dropped</li><li>Lateral relief (two club lengths from penalty area)</li></ol>
+      </article>
+
+      <article class="rule-card" data-search="abnormal course conditions (general area) any of these four defined conditions: animal hole, ground under repair, immovable obstructions or temporary water;  examples of an immovable obtruction are cart path, sprinkler head, metal drains. fence posts and trees are not considered immovable obstruction meaning: 1) player&#x27;s ball touches or is in abnormal course condition or 2) abnormal course condition physically interferes with player&#x27;s area of intended stance or area of intended swing or 3) only when ball is on putting green, an abnormal course condition on or off the putting green intervenes on the line of play. free relief of 1 club length is allowed from the nearest point of complete relief when taking free relief, you must find the closest spot where you are no longer interfered with by the abnormal course condition, which can be on the fairway even if your ball was originally in the rough.   free relief cannot be taken when your ball lies in penalty area.">
+        <h2>Abnormal Course Conditions (General Area)</h2>
+        <p>Any of these four defined conditions: Animal Hole, Ground Under Repair, Immovable Obstructions or Temporary Water;  Examples of an immovable obtruction are cart path, sprinkler head, metal drains. Fence posts and trees are NOT considered Immovable Obstruction</p><p>Meaning: 1) player&#x27;s ball touches or is in abnormal course condition or 2) abnormal course condition physically interferes with player&#x27;s area of intended stance or area of intended swing or 3) only when ball is on putting green, an abnormal course condition on or off the putting green intervenes on the line of play.</p><p>Free relief of 1 club length is allowed from the nearest point of complete relief When taking free relief, you must find the closest spot where you are no longer interfered with by the abnormal course condition, which can be on the fairway even if your ball was originally in the rough.   Free relief cannot be taken when your ball lies in penalty area.</p>
+      </article>
+
+      <article class="rule-card" data-search="other local rules playing wrong ball - if a player mistakenly hits the wrong ball, that player will not be assessed any penalty strokes bunkers - you are allowed to lift, rake and replace when bunkers have not previously been raked">
+        <h2>Other Local Rules</h2>
+        <ul><li>Playing Wrong Ball - If a player mistakenly hits the wrong ball, that player will not be assessed any penalty strokes</li><li>Bunkers - You are allowed to lift, rake and replace when bunkers have not previously been raked</li></ul>
+      </article>
+
+      <article class="rule-card" data-search="max hole scores double bogey for quota/stableford game net triple bogey for all other formats (except ryder cup)">
+        <h2>Max Hole Scores</h2>
+        <ul><li>Double Bogey for Quota/Stableford Game</li><li>Net Triple Bogey for all other formats (except Ryder Cup)</li></ul>
+      </article>
+  </div>
+
+  <div id="noResults">No rules match "<strong id="noResultsTerm"></strong>"</div>
+
+  <footer>Saturday Golf League Rules</footer>
+</div>
+
+<script>
+(function(){
+  const searchBox = document.getElementById('searchBox');
+  const resultCount = document.getElementById('resultCount');
+  const noResults = document.getElementById('noResults');
+  const noResultsTerm = document.getElementById('noResultsTerm');
+  const cards = Array.from(document.querySelectorAll('.rule-card'));
+  const totalCount = cards.length;
+
+  function escapeRegExp(str){
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function clearHighlights(card){
+    card.querySelectorAll('mark').forEach(m => {
+      const parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+
+  function highlightIn(el, regex){
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+    const textNodes = [];
+    let node;
+    while ((node = walker.nextNode())) textNodes.push(node);
+    textNodes.forEach(tn => {
+      const text = tn.nodeValue;
+      if (!regex.test(text)) return;
+      regex.lastIndex = 0;
+      const frag = document.createDocumentFragment();
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(text))){
+        if (match.index > lastIndex) frag.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+        const mark = document.createElement('mark');
+        mark.textContent = match[0];
+        frag.appendChild(mark);
+        lastIndex = match.index + match[0].length;
+        if (match[0].length === 0) regex.lastIndex++;
+      }
+      if (lastIndex < text.length) frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+      tn.parentNode.replaceChild(frag, tn);
+    });
+  }
+
+  function runSearch(){
+    const term = searchBox.value.trim().toLowerCase();
+    let visibleCount = 0;
+
+    cards.forEach(card => {
+      clearHighlights(card);
+      const haystack = card.getAttribute('data-search') || '';
+      const matches = term === '' || haystack.includes(term);
+      card.classList.toggle('hidden', !matches);
+      if (matches){
+        visibleCount++;
+        if (term !== ''){
+          const regex = new RegExp(escapeRegExp(term), 'gi');
+          highlightIn(card, regex);
+        }
+      }
+    });
+
+    if (term === ''){
+      resultCount.textContent = '';
+      noResults.style.display = 'none';
+    } else if (visibleCount === 0){
+      resultCount.textContent = '';
+      noResultsTerm.textContent = searchBox.value.trim();
+      noResults.style.display = 'block';
+    } else {
+      resultCount.textContent = visibleCount + ' of ' + totalCount + ' rules match';
+      noResults.style.display = 'none';
+    }
+  }
+
+  searchBox.addEventListener('input', runSearch);
+
+  // subtle shadow bump once the search bar is stuck to the top on scroll
+  const searchWrap = document.getElementById('searchWrap');
+  const observer = new IntersectionObserver(
+    ([e]) => searchWrap.classList.toggle('sticky-active', e.intersectionRatio < 1),
+    { threshold: [1] }
+  );
+  observer.observe(searchWrap);
+})();
+</script>
+</body>
+</html>
