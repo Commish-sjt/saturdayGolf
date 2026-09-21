@@ -398,7 +398,7 @@ function toggleGameResults(btn){
 function renderResults(rows){
   const el=document.getElementById('results');
   if(!Array.isArray(rows)||!rows.length){el.innerHTML='<div class="empty">Results will be published after the round.</div>';return;}
-  const buckets={format:[],lowgross:[],ctp:[],birdies:[]};
+  const buckets={format:[],skins:[],lowgross:[],ctp:[],birdies:[]};
   const clean=v=>String(v??'').trim();
   const field=(r,name)=>{
     if(!r)return '';
@@ -422,6 +422,10 @@ function renderResults(rows){
     if(section==='format'||section.includes('gameformat')){
       if(!place || /^(game format|format)$/i.test(item))return;
       buckets.format.push({place:place,name:team||player||winner,value:value,payout:payout});
+      return;
+    }
+    if(section==='skins'||section.includes('netskins')){
+      buckets.skins.push({name:item||player||winner||team,value,payout});
       return;
     }
     if(section==='ctp'||section.includes('closesttopin')||/closest\s*to\s*pin/i.test(item)){
@@ -450,6 +454,12 @@ function renderResults(rows){
     h+='</tbody></table>';
     if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
   }else h+='<div class="empty">No game results entered.</div>';
+  h+=heading('Skins');
+  if(buckets.skins.length){
+    h+='<table class=\"compact-table skins-table\"><colgroup><col style=\"width:28%\"><col style=\"width:52%\"><col style=\"width:20%\"></colgroup><thead><tr><th>Player</th><th>Holes Won</th><th class=\"num\">Payout</th></tr></thead><tbody>';
+    buckets.skins.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class=\"num\">'+esc(money(r.payout))+'</td></tr>');
+    h+='</tbody></table>';
+  }else h+='<div class=\"empty\">No skins results entered.</div>';
   h+=heading('Closest to Pin');
   if(buckets.ctp.length){
     h+='<table class="compact-table ctp-table"><colgroup><col style="width:22%"><col style="width:58%"><col style="width:20%"></colgroup><thead><tr><th>Hole</th><th>Winner</th><th class="num">Payout</th></tr></thead><tbody>';
