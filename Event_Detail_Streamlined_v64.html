@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saturday Golf — Event Details v61</title>
+<title>Saturday Golf — Event Details v65</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f5f7f4;color:#17351f}
 .wrap{max-width:980px;margin:auto;padding:28px 18px 50px}
@@ -233,8 +233,21 @@ th.num,td.num{text-align:right;width:110px}.group-gap td{padding:5px 0;border-bo
 }
 
 
-.skins-scorecard-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}.results .skins-scorecard{width:max-content!important;min-width:100%!important;table-layout:auto!important;font-size:13px!important;border-collapse:collapse!important;border-spacing:0!important}.results .skins-scorecard th,.results .skins-scorecard td{min-width:32px;text-align:center;white-space:nowrap;padding:7px 6px!important;border:1px solid #dfe5df!important;border-radius:0!important;overflow-wrap:normal!important}.results .skins-scorecard th:first-child{text-align:left;min-width:115px;position:sticky;left:0;background:#f7f9f7;z-index:1}.results .skins-scorecard .subtotal{font-weight:700;background:#f2f5f2}.results .skins-scorecard .skin-win{background:#dcebdc!important;color:#174c25}.results .skins-scorecard .stroke-dot{color:#315b3d;font-weight:900;margin-right:2px}.skins-scorecard-legend{font-size:12px;color:#68726b;margin:6px 0 12px}
-
+/* v65: Net Skins scorecard phone/tablet layout */
+.skins-scorecard-scroll{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.skins-scorecard{width:max-content;min-width:1120px;table-layout:auto;border-collapse:collapse;font-size:14px;}
+.skins-scorecard th,.skins-scorecard td{white-space:nowrap;text-align:center;padding:7px 8px;min-width:34px;}
+.skins-scorecard th:first-child,.skins-scorecard td:first-child{min-width:118px;width:118px;text-align:left;white-space:normal;position:sticky;left:0;background:#fff;z-index:2;}
+.skins-scorecard th:nth-child(2),.skins-scorecard td:nth-child(2){min-width:64px;width:64px;}
+.skins-scorecard th:nth-child(3),.skins-scorecard td:nth-child(3){min-width:82px;width:82px;}
+.skins-scorecard th:nth-child(11),.skins-scorecard td:nth-child(11),.skins-scorecard th:nth-child(21),.skins-scorecard td:nth-child(21),.skins-scorecard th:last-child,.skins-scorecard td:last-child{font-weight:700;background:#eef3ee;}
+@media(max-width:700px){
+ .skins-scorecard{min-width:1120px;font-size:12px;}
+ .skins-scorecard th,.skins-scorecard td{padding:7px 6px;min-width:32px;}
+ .skins-scorecard th:first-child,.skins-scorecard td:first-child{min-width:108px;width:108px;}
+ .skins-scorecard th:nth-child(2),.skins-scorecard td:nth-child(2){min-width:58px;width:58px;}
+ .skins-scorecard th:nth-child(3),.skins-scorecard td:nth-child(3){min-width:76px;width:76px;}
+}
 </style>
 </head>
 <body>
@@ -398,56 +411,10 @@ function toggleGameResults(btn){
   btn.dataset.expanded=expanded?'0':'1';
   btn.textContent=expanded?'Show all players':'Hide non-winning players';
 }
-function renderNetSkinsScorecard(scorecardRows){
-  if(!Array.isArray(scorecardRows)||!scorecardRows.length) return '<div class="empty">Net Skins scorecard data is not available.</div>';
-  const clean=v=>String(v??'').trim();
-  const num=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.+-]/g,''));return Number.isFinite(n)?n:null;};
-  const getField=(r,names)=>get(r,names);
-  const byPlayer=new Map();
-  scorecardRows.forEach(r=>{
-    const name=clean(getField(r,['Player']));
-    const hole=num(getField(r,['Hole']));
-    if(!name||hole===null||hole<1||hole>18)return;
-    if(!byPlayer.has(name))byPlayer.set(name,{name,holes:new Map(),playingHcp:getField(r,['Playing Handicap','Playing Hcp'])});
-    byPlayer.get(name).holes.set(hole,{par:num(getField(r,['Par'])),gross:num(getField(r,['Gross'])),net:num(getField(r,['Net']))});
-  });
-  if(!byPlayer.size)return '<div class="empty">Net Skins scorecard data is not available.</div>';
-  const parByHole=new Map();
-  byPlayer.forEach(p=>p.holes.forEach((v,h)=>{if(v.par!==null&&!parByHole.has(h))parByHole.set(h,v.par);}));
-  const winners=new Map();
-  for(let h=1;h<=18;h++){
-    let best=Infinity,winner=null,ties=0;
-    byPlayer.forEach(p=>{const v=p.holes.get(h);if(!v||v.net===null||v.par===null)return;const score=v.net-v.par;if(score<best){best=score;winner=p.name;ties=1;}else if(score===best)ties++;});
-    if(winner&&ties===1)winners.set(h,winner);
-  }
-  const skinCounts=new Map();winners.forEach(name=>skinCounts.set(name,(skinCounts.get(name)||0)+1));
-  const players=[...byPlayer.values()].sort((a,b)=>(skinCounts.get(b.name)||0)-(skinCounts.get(a.name)||0)||a.name.localeCompare(b.name));
-  const sum=(player,start,end,field)=>{let n=0,any=false;for(let h=start;h<=end;h++){const v=player.holes.get(h)?.[field];if(v!==null&&v!==undefined){n+=v;any=true;}}return any?n:'';};
-  let html='<div class="skins-scorecard-scroll"><table class="skins-scorecard"><thead><tr><th>Player</th><th>Strokes</th><th>Net Skins</th>';
-  for(let h=1;h<=9;h++)html+='<th>'+h+'</th>';html+='<th>Out</th>';
-  for(let h=10;h<=18;h++)html+='<th>'+h+'</th>';html+='<th>In</th><th>Tot</th></tr></thead><tbody><tr><th>Par</th><td></td><td></td>';
-  for(let h=1;h<=9;h++)html+='<td>'+((parByHole.get(h)??''))+'</td>';html+='<td>'+[...Array(9)].reduce((s,_,i)=>s+(parByHole.get(i+1)||0),0)+'</td>';
-  for(let h=10;h<=18;h++)html+='<td>'+((parByHole.get(h)??''))+'</td>';html+='<td>'+[...Array(9)].reduce((s,_,i)=>s+(parByHole.get(i+10)||0),0)+'</td><td>'+[...parByHole.values()].reduce((s,v)=>s+v,0)+'</td></tr>';
-  players.forEach(p=>{
-    const strokeCount=num(p.playingHcp);
-    html+='<tr><th>'+esc(p.name)+'</th><td>'+ (strokeCount===null?'':esc(strokeCount)) +'</td><td>'+ (skinCounts.get(p.name)||0) +'</td>';
-    for(let h=1;h<=18;h++){
-      const v=p.holes.get(h);if(h===10)html+='<td class="subtotal">'+sum(p,1,9,'gross')+'</td>';
-      if(!v||v.gross===null){html+='<td></td>';continue;}
-      const skin=winners.get(h)===p.name;
-      const gotStroke=v.net!==null&&v.gross>v.net;
-      html+='<td class="'+(skin?'skin-win':'')+'">'+(gotStroke?'<span class="stroke-dot">•</span>':'')+(skin?'<strong>'+esc(v.gross)+'</strong>':esc(v.gross))+'</td>';
-    }
-    html+='<td class="subtotal">'+sum(p,10,18,'gross')+'</td><td class="subtotal">'+sum(p,1,18,'gross')+'</td></tr>';
-  });
-  html+='</tbody></table></div><div class="skins-scorecard-legend">• Handicap stroke on hole · <strong>Highlighted score</strong> = skin won</div>';
-  return html;
-}
-
-function renderResults(rows, scorecardRows){
+function renderResults(rows){
   const el=document.getElementById('results');
   if(!Array.isArray(rows)||!rows.length){el.innerHTML='<div class="empty">Results will be published after the round.</div>';return;}
-  const buckets={format:[],skins:[],lowgross:[],ctp:[],birdies:[]};
+  const buckets={format:[],lowgross:[],ctp:[],birdies:[]};
   const clean=v=>String(v??'').trim();
   const field=(r,name)=>{
     if(!r)return '';
@@ -473,10 +440,6 @@ function renderResults(rows, scorecardRows){
       buckets.format.push({place:place,name:team||player||winner,value:value,payout:payout});
       return;
     }
-    if(section==='skins'||section.includes('netskins')){
-      buckets.skins.push({name:item||player||winner||team,value,payout});
-      return;
-    }
     if(section==='ctp'||section.includes('closesttopin')||/closest\s*to\s*pin/i.test(item)){
       buckets.ctp.push({hole:hole||item,winner:winner||value||player||team,payout:payout});
       return;
@@ -493,22 +456,16 @@ function renderResults(rows, scorecardRows){
   const heading=t=>'<h3><span class="result-heading">'+esc(t)+'</span></h3>';
   const money=v=>{v=clean(v);if(!v)return '';if(/^\$/.test(v))return '$'+Number(v.replace(/[^0-9.\-]/g,'')).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});if(/^[-+]?\d+(?:\.\d+)?$/.test(v))return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});return v;};
   const gameName=(window.__eventGameFormat||'').trim()||'Game Results';
-  const isSkinsFormat=/\bskins?\b/i.test(gameName);
-  let h='';
-  // Skins events use the dedicated hole-by-hole payout table below; suppress the generic format table to avoid duplicate Skins sections.
-  if(!isSkinsFormat){
-    h+=heading(gameName);
-    if(buckets.format.length){
-      h+='<table class="format-table"><colgroup><col style="width:55%"><col style="width:22%"><col style="width:23%"></colgroup><thead><tr><th>Player / Team</th><th>Score</th><th class="num">Payout</th></tr></thead><tbody>';
-      const paid=buckets.format.filter(r=>{const n=parseFloat(String(r.payout||'').replace(/[^0-9.\-]/g,''));return !Number.isNaN(n)&&n>0;});
-      const unpaid=buckets.format.filter(r=>!paid.includes(r));
-      paid.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
-      unpaid.forEach(r=>h+='<tr class="game-result-extra" style="display:none"><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
-      h+='</tbody></table>';
-      if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
-    }else h+='<div class="empty">No game results entered.</div>';
-  }
-  if(isSkinsFormat){ h+=heading('Net Skins Scorecard'); h+=renderNetSkinsScorecard(scorecardRows); }
+  let h=heading(gameName);
+  if(buckets.format.length){
+    h+='<table class="format-table"><colgroup><col style="width:55%"><col style="width:22%"><col style="width:23%"></colgroup><thead><tr><th>Player / Team</th><th>Score</th><th class="num">Payout</th></tr></thead><tbody>';
+    const paid=buckets.format.filter(r=>{const n=parseFloat(String(r.payout||'').replace(/[^0-9.\-]/g,''));return !Number.isNaN(n)&&n>0;});
+    const unpaid=buckets.format.filter(r=>!paid.includes(r));
+    paid.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+    unpaid.forEach(r=>h+='<tr class="game-result-extra" style="display:none"><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+    h+='</tbody></table>';
+    if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
+  }else h+='<div class="empty">No game results entered.</div>';
   h+=heading('Closest to Pin');
   if(buckets.ctp.length){
     h+='<table class="compact-table ctp-table"><colgroup><col style="width:22%"><col style="width:58%"><col style="width:20%"></colgroup><thead><tr><th>Hole</th><th>Winner</th><th class="num">Payout</th></tr></thead><tbody>';
@@ -615,7 +572,7 @@ async function load(){
   __teePlayerCount=new Set(teeRows.map(r=>String(get(r,['Player'])).trim()).filter(Boolean)).size || null;
   document.getElementById('gameFormat').textContent=formatValue||'—';renderTeams(detail,formatValue);renderPayouts(detail);
   renderTee(teeRows,formatValue);
-  renderResults(data.results||data.postRoundResults||data.postRound||data.resultRows||[], data.scorecard||[]);
+  renderResults(data.results||data.postRoundResults||data.postRound||data.resultRows||[]);
   renderScorecards(data.scorecard);
   const er=await fetch(API+'?action=events',{cache:'no-store'});if(er.ok){const ed=await er.json(),ev=(ed.events||[]).find(r=>String(get(r,['Event ID','Event Id'])).trim()===EVENT_ID);if(ev){document.getElementById('title').textContent=get(ev,['Event Name'])||EVENT_ID;let m='';const c=get(ev,['Course']),s=get(ev,['Status']),v=get(ev,['Current Version']);if(c)m+=esc(c);if(s)m+=(m?' · ':'')+esc(s);if(v)m+=(m?' · ':'')+'Version '+esc(v);document.getElementById('meta').innerHTML=m}}
  }catch(err){
