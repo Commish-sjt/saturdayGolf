@@ -232,6 +232,9 @@ th.num,td.num{text-align:right;width:110px}.group-gap td{padding:5px 0;border-bo
   .scorecard-table th:first-child,.scorecard-table td:first-child{position:static}
 }
 
+
+.skins-scorecard-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;margin:8px 0}.results .skins-scorecard{width:max-content!important;min-width:100%!important;table-layout:auto!important;font-size:13px!important;border-collapse:collapse!important;border-spacing:0!important}.results .skins-scorecard th,.results .skins-scorecard td{min-width:32px;text-align:center;white-space:nowrap;padding:7px 6px!important;border:1px solid #dfe5df!important;border-radius:0!important;overflow-wrap:normal!important}.results .skins-scorecard th:first-child{text-align:left;min-width:115px;position:sticky;left:0;background:#f7f9f7;z-index:1}.results .skins-scorecard .subtotal{font-weight:700;background:#f2f5f2}.results .skins-scorecard .skin-win{background:#dcebdc!important;color:#174c25}.results .skins-scorecard .stroke-dot{color:#315b3d;font-weight:900;margin-right:2px}.skins-scorecard-legend{font-size:12px;color:#68726b;margin:6px 0 12px}
+
 </style>
 </head>
 <body>
@@ -395,7 +398,53 @@ function toggleGameResults(btn){
   btn.dataset.expanded=expanded?'0':'1';
   btn.textContent=expanded?'Show all players':'Hide non-winning players';
 }
-function renderResults(rows){
+function renderNetSkinsScorecard(scorecardRows){
+  if(!Array.isArray(scorecardRows)||!scorecardRows.length) return '<div class="empty">Net Skins scorecard data is not available.</div>';
+  const clean=v=>String(v??'').trim();
+  const num=v=>{const n=parseFloat(String(v??'').replace(/[^0-9.+-]/g,''));return Number.isFinite(n)?n:null;};
+  const getField=(r,names)=>get(r,names);
+  const byPlayer=new Map();
+  scorecardRows.forEach(r=>{
+    const name=clean(getField(r,['Player']));
+    const hole=num(getField(r,['Hole']));
+    if(!name||hole===null||hole<1||hole>18)return;
+    if(!byPlayer.has(name))byPlayer.set(name,{name,holes:new Map(),playingHcp:getField(r,['Playing Handicap','Playing Hcp'])});
+    byPlayer.get(name).holes.set(hole,{par:num(getField(r,['Par'])),gross:num(getField(r,['Gross'])),net:num(getField(r,['Net']))});
+  });
+  if(!byPlayer.size)return '<div class="empty">Net Skins scorecard data is not available.</div>';
+  const parByHole=new Map();
+  byPlayer.forEach(p=>p.holes.forEach((v,h)=>{if(v.par!==null&&!parByHole.has(h))parByHole.set(h,v.par);}));
+  const winners=new Map();
+  for(let h=1;h<=18;h++){
+    let best=Infinity,winner=null,ties=0;
+    byPlayer.forEach(p=>{const v=p.holes.get(h);if(!v||v.net===null||v.par===null)return;const score=v.net-v.par;if(score<best){best=score;winner=p.name;ties=1;}else if(score===best)ties++;});
+    if(winner&&ties===1)winners.set(h,winner);
+  }
+  const skinCounts=new Map();winners.forEach(name=>skinCounts.set(name,(skinCounts.get(name)||0)+1));
+  const players=[...byPlayer.values()].sort((a,b)=>(skinCounts.get(b.name)||0)-(skinCounts.get(a.name)||0)||a.name.localeCompare(b.name));
+  const sum=(player,start,end,field)=>{let n=0,any=false;for(let h=start;h<=end;h++){const v=player.holes.get(h)?.[field];if(v!==null&&v!==undefined){n+=v;any=true;}}return any?n:'';};
+  let html='<div class="skins-scorecard-scroll"><table class="skins-scorecard"><thead><tr><th>Player</th><th>Strokes</th><th>Net Skins</th>';
+  for(let h=1;h<=9;h++)html+='<th>'+h+'</th>';html+='<th>Out</th>';
+  for(let h=10;h<=18;h++)html+='<th>'+h+'</th>';html+='<th>In</th><th>Tot</th></tr></thead><tbody><tr><th>Par</th><td></td><td></td>';
+  for(let h=1;h<=9;h++)html+='<td>'+((parByHole.get(h)??''))+'</td>';html+='<td>'+[...Array(9)].reduce((s,_,i)=>s+(parByHole.get(i+1)||0),0)+'</td>';
+  for(let h=10;h<=18;h++)html+='<td>'+((parByHole.get(h)??''))+'</td>';html+='<td>'+[...Array(9)].reduce((s,_,i)=>s+(parByHole.get(i+10)||0),0)+'</td><td>'+[...parByHole.values()].reduce((s,v)=>s+v,0)+'</td></tr>';
+  players.forEach(p=>{
+    const strokeCount=num(p.playingHcp);
+    html+='<tr><th>'+esc(p.name)+'</th><td>'+ (strokeCount===null?'':esc(strokeCount)) +'</td><td>'+ (skinCounts.get(p.name)||0) +'</td>';
+    for(let h=1;h<=18;h++){
+      const v=p.holes.get(h);if(h===10)html+='<td class="subtotal">'+sum(p,1,9,'gross')+'</td>';
+      if(!v||v.gross===null){html+='<td></td>';continue;}
+      const skin=winners.get(h)===p.name;
+      const gotStroke=v.net!==null&&v.gross>v.net;
+      html+='<td class="'+(skin?'skin-win':'')+'">'+(gotStroke?'<span class="stroke-dot">•</span>':'')+(skin?'<strong>'+esc(v.gross)+'</strong>':esc(v.gross))+'</td>';
+    }
+    html+='<td class="subtotal">'+sum(p,10,18,'gross')+'</td><td class="subtotal">'+sum(p,1,18,'gross')+'</td></tr>';
+  });
+  html+='</tbody></table></div><div class="skins-scorecard-legend">• Handicap stroke on hole · <strong>Highlighted score</strong> = skin won</div>';
+  return html;
+}
+
+function renderResults(rows, scorecardRows){
   const el=document.getElementById('results');
   if(!Array.isArray(rows)||!rows.length){el.innerHTML='<div class="empty">Results will be published after the round.</div>';return;}
   const buckets={format:[],skins:[],lowgross:[],ctp:[],birdies:[]};
@@ -459,12 +508,7 @@ function renderResults(rows){
       if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
     }else h+='<div class="empty">No game results entered.</div>';
   }
-  h+=heading('Skins');
-  if(buckets.skins.length){
-    h+='<table class=\"compact-table skins-table\"><colgroup><col style=\"width:28%\"><col style=\"width:52%\"><col style=\"width:20%\"></colgroup><thead><tr><th>Player</th><th>Holes Won</th><th class=\"num\">Payout</th></tr></thead><tbody>';
-    buckets.skins.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class=\"num\">'+esc(money(r.payout))+'</td></tr>');
-    h+='</tbody></table>';
-  }else h+='<div class=\"empty\">No skins results entered.</div>';
+  if(isSkinsFormat){ h+=heading('Net Skins Scorecard'); h+=renderNetSkinsScorecard(scorecardRows); }
   h+=heading('Closest to Pin');
   if(buckets.ctp.length){
     h+='<table class="compact-table ctp-table"><colgroup><col style="width:22%"><col style="width:58%"><col style="width:20%"></colgroup><thead><tr><th>Hole</th><th>Winner</th><th class="num">Payout</th></tr></thead><tbody>';
@@ -571,7 +615,7 @@ async function load(){
   __teePlayerCount=new Set(teeRows.map(r=>String(get(r,['Player'])).trim()).filter(Boolean)).size || null;
   document.getElementById('gameFormat').textContent=formatValue||'—';renderTeams(detail,formatValue);renderPayouts(detail);
   renderTee(teeRows,formatValue);
-  renderResults(data.results||data.postRoundResults||data.postRound||data.resultRows||[]);
+  renderResults(data.results||data.postRoundResults||data.postRound||data.resultRows||[], data.scorecard||[]);
   renderScorecards(data.scorecard);
   const er=await fetch(API+'?action=events',{cache:'no-store'});if(er.ok){const ed=await er.json(),ev=(ed.events||[]).find(r=>String(get(r,['Event ID','Event Id'])).trim()===EVENT_ID);if(ev){document.getElementById('title').textContent=get(ev,['Event Name'])||EVENT_ID;let m='';const c=get(ev,['Course']),s=get(ev,['Status']),v=get(ev,['Current Version']);if(c)m+=esc(c);if(s)m+=(m?' · ':'')+esc(s);if(v)m+=(m?' · ':'')+'Version '+esc(v);document.getElementById('meta').innerHTML=m}}
  }catch(err){
