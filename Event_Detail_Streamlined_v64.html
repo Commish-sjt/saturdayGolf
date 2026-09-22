@@ -444,16 +444,21 @@ function renderResults(rows){
   const heading=t=>'<h3><span class="result-heading">'+esc(t)+'</span></h3>';
   const money=v=>{v=clean(v);if(!v)return '';if(/^\$/.test(v))return '$'+Number(v.replace(/[^0-9.\-]/g,'')).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});if(/^[-+]?\d+(?:\.\d+)?$/.test(v))return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});return v;};
   const gameName=(window.__eventGameFormat||'').trim()||'Game Results';
-  let h=heading(gameName);
-  if(buckets.format.length){
-    h+='<table class="format-table"><colgroup><col style="width:55%"><col style="width:22%"><col style="width:23%"></colgroup><thead><tr><th>Player / Team</th><th>Score</th><th class="num">Payout</th></tr></thead><tbody>';
-    const paid=buckets.format.filter(r=>{const n=parseFloat(String(r.payout||'').replace(/[^0-9.\-]/g,''));return !Number.isNaN(n)&&n>0;});
-    const unpaid=buckets.format.filter(r=>!paid.includes(r));
-    paid.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
-    unpaid.forEach(r=>h+='<tr class="game-result-extra" style="display:none"><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
-    h+='</tbody></table>';
-    if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
-  }else h+='<div class="empty">No game results entered.</div>';
+  const isSkinsFormat=/\bskins?\b/i.test(gameName);
+  let h='';
+  // Skins events use the dedicated hole-by-hole payout table below; suppress the generic format table to avoid duplicate Skins sections.
+  if(!isSkinsFormat){
+    h+=heading(gameName);
+    if(buckets.format.length){
+      h+='<table class="format-table"><colgroup><col style="width:55%"><col style="width:22%"><col style="width:23%"></colgroup><thead><tr><th>Player / Team</th><th>Score</th><th class="num">Payout</th></tr></thead><tbody>';
+      const paid=buckets.format.filter(r=>{const n=parseFloat(String(r.payout||'').replace(/[^0-9.\-]/g,''));return !Number.isNaN(n)&&n>0;});
+      const unpaid=buckets.format.filter(r=>!paid.includes(r));
+      paid.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+      unpaid.forEach(r=>h+='<tr class="game-result-extra" style="display:none"><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+      h+='</tbody></table>';
+      if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
+    }else h+='<div class="empty">No game results entered.</div>';
+  }
   h+=heading('Skins');
   if(buckets.skins.length){
     h+='<table class=\"compact-table skins-table\"><colgroup><col style=\"width:28%\"><col style=\"width:52%\"><col style=\"width:20%\"></colgroup><thead><tr><th>Player</th><th>Holes Won</th><th class=\"num\">Payout</th></tr></thead><tbody>';
