@@ -645,7 +645,7 @@ function renderNetSkinsResults(scorecardRows, resultRows, eventDetailRows){
   // player payouts only to estimate the pot; otherwise winnings remain $0.
   if(totalPot===null){
     let publishedPot=0;
-    resultList.forEach(r=>{
+    resultRows.forEach(r=>{
       const section=String(get(r,['Section'])??'').toLowerCase().replace(/[^a-z0-9]/g,'');
       if(section.includes('closesttopin')||section==='ctp'||section.includes('lowgross')||section.includes('birdie')||section.includes('eagle'))return;
       const payout=parseFloat(String(get(r,['Payout','Value'])??'').replace(/[^0-9.\-]/g,''));
