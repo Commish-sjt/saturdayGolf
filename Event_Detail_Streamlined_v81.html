@@ -624,6 +624,7 @@ function renderNetSkinsResults(scorecardRows, resultRows, eventDetailRows){
   // the same whole-dollar amount (for example, $35 / 6 = $5.83 -> $5).
   const detailList=Array.isArray(eventDetailRows)?eventDetailRows:[];
   const cleanText=v=>String(v??'').trim();
+  const normalizeName=v=>String(v??'').trim().toLowerCase().replace(/\s+/g,' ');
   const normField=(r,name)=>{
     if(!r)return '';
     if(r[name]!==undefined&&r[name]!==null&&cleanText(r[name])!=='')return cleanText(r[name]);
