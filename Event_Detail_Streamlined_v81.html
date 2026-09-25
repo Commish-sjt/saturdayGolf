@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saturday Golf — Event Details v68</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f5f7f4;color:#17351f}
+.wrap{max-width:980px;margin:auto;padding:28px 18px 50px}
+.back{display:inline-block;margin-bottom:18px;color:#315b3d;text-decoration:none;font-weight:600}
+h1{margin:0 0 5px;font-size:30px}.meta{color:#5f6962;margin-bottom:22px}
+.card{background:white;border:1px solid #d8dfd9;border-radius:10px;padding:18px;margin-bottom:14px}
+h2{margin:0 0 14px;font-size:20px}h3{margin:14px 0 7px;font-size:15px;color:#35543e}
+.section-card h2{cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none}
+.section-card h2::after{content:"▾";font-size:14px;color:#68726b}.section-card.collapsed h2::after{content:"▸"}
+.section-card.collapsed .section-body{display:none}
+table{width:100%;border-collapse:collapse;font-size:14px;table-layout:fixed}
+th,td{padding:7px 9px;border-bottom:1px solid #e4e8e5;text-align:left;vertical-align:top;box-sizing:border-box}
+th.time,td.time{width:95px}th.tee,td.tee{width:70px}th.hcp,td.hcp{width:85px}th.playhcp,td.playhcp{width:95px}
+th.num,td.num{text-align:right;width:110px}.group-gap td{padding:5px 0;border-bottom:0}
+.item{background:#f7f9f7;border-radius:8px;padding:9px 12px;margin-bottom:7px}
+.label{display:block;font-size:12px;color:#68726b;margin-bottom:3px}.value{font-weight:700}
+.team-list{display:grid;gap:6px}.team-card{background:#f7f9f7;border-radius:8px;padding:8px 12px}
+.team-name{font-weight:700;color:#35543e;margin-bottom:2px}.team-players{font-size:13.5px}
+.game-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.subsection{min-width:0}.payout-title{font-size:17px;font-weight:700;margin-bottom:10px}.payout-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}.summary-item{background:#f7f9f7;border-radius:8px;padding:9px 12px}.payout-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.payout-table{margin-top:8px}.results-email{display:grid;gap:8px}.results table th{font-weight:400}.results-line{padding:10px 12px;border:1px solid #e1e6e2;border-radius:8px;background:#f8faf8;line-height:1.45;overflow-wrap:anywhere}.results table{border-collapse:separate;border-spacing:0 6px;min-width:100%}.results table tr{background:#f7f9f7}.results table td{padding:10px 9px;line-height:1.45;overflow-wrap:anywhere;border-top:1px solid #e1e6e2;border-bottom:1px solid #e1e6e2}.results table td:first-child{border-left:1px solid #e1e6e2;border-radius:7px 0 0 7px}.results table td:last-child{border-right:1px solid #e1e6e2;border-radius:0 7px 7px 0}.results .format-table th:nth-child(1),.results .format-table td:nth-child(1){width:55px}.results .format-table th:nth-child(2),.results .format-table td:nth-child(2){width:calc(15% - 55px)}.results .format-table th:nth-child(3),.results .format-table td:nth-child(3){width:25%}.results .format-table th:nth-child(4),.results .format-table td:nth-child(4){width:20%}.results .compact-table th:nth-child(1),.results .compact-table td:nth-child(1){width:15%}.results .compact-table th:nth-child(2),.results .compact-table td:nth-child(2){width:25%}.results .compact-table th:nth-child(3),.results .compact-table td:nth-child(3){width:20%}.result-heading{font-weight:800;text-decoration:underline;background:#eef3ee;border-radius:6px;padding:4px 7px;display:inline-block}
+.empty{color:#68726b}.error{background:#fff4f4;border:1px solid #e3caca;color:#8a3333;padding:14px;border-radius:8px}
+@media(max-width:700px){.game-grid,.payout-detail-grid{grid-template-columns:1fr}.payout-summary{grid-template-columns:1fr 1fr}table{font-size:12px}}
+
+.results-expand{margin-top:8px;border:0;background:none;padding:4px 0;color:#315b3d;font-weight:700;cursor:pointer;text-decoration:underline;font-size:14px}
+.results-expand:hover{opacity:.8}
+
+/* v56 mobile layout: fit all tables inside a phone viewport */
+@media (max-width:700px){
+  .wrap{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+    padding:22px 14px 40px;
+  }
+  h1{
+    font-size:clamp(34px,8vw,48px);
+    line-height:1.05;
+    overflow-wrap:anywhere;
+  }
+  .meta{
+    font-size:16px;
+    line-height:1.4;
+    overflow-wrap:anywhere;
+  }
+  .card{
+    width:100%;
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .section-body{
+    width:100%;
+    box-sizing:border-box;
+    overflow-x:hidden;
+  }
+  table{
+    width:100% !important;
+    min-width:0 !important;
+    table-layout:fixed;
+    font-size:14px !important;
+  }
+  th,td{
+    box-sizing:border-box;
+    overflow-wrap:anywhere;
+    word-break:normal;
+  }
+
+  /* Tee sheet: give the player name room while keeping Tee visible. */
+  #tee table th:nth-child(1), #tee table td:nth-child(1){width:25% !important;}
+  #tee table th:nth-child(2), #tee table td:nth-child(2){width:48% !important;}
+  #tee table th:nth-child(3), #tee table td:nth-child(3){width:27% !important;}
+
+  /* Compact result tables */
+  .results .format-table th:nth-child(1),
+  .results .format-table td:nth-child(1){width:12% !important;}
+  .results .format-table th:nth-child(2),
+  .results .format-table td:nth-child(2){width:42% !important;}
+  .results .format-table th:nth-child(3),
+  .results .format-table td:nth-child(3){width:23% !important;}
+  .results .format-table th:nth-child(4),
+  .results .format-table td:nth-child(4){width:23% !important;}
+
+  .results .compact-table th:nth-child(1),
+  .results .compact-table td:nth-child(1){width:27% !important;}
+  .results .compact-table th:nth-child(2),
+  .results .compact-table td:nth-child(2){width:73% !important;}
+
+  .payout-summary{
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .summary-item{
+    padding:8px 9px;
+    min-width:0;
+  }
+}
+
+
+/* v58: Improve mobile table readability without changing desktop layout */
+@media(max-width:700px){
+  /* Keep short table headers intact and never split player names mid-word. */
+  .results table th{white-space:nowrap;overflow-wrap:normal;word-break:normal;}
+  .results table td:first-child{overflow-wrap:normal;word-break:normal;}
+
+  /* Game Results: Player/Team 60%, Score 20%, Payout 20%. */
+  .results .format-table th:nth-child(1),
+  .results .format-table td:nth-child(1){width:60% !important;white-space:nowrap;}
+  .results .format-table th:nth-child(2),
+  .results .format-table td:nth-child(2){width:20% !important;min-width:70px !important;white-space:nowrap !important;overflow-wrap:normal !important;word-break:normal !important;}
+  .results .format-table th:nth-child(3),
+  .results .format-table td:nth-child(3){width:20% !important;min-width:70px !important;white-space:nowrap !important;overflow-wrap:normal !important;word-break:normal !important;}
+
+  /* Closest to Pin: Hole 15%, Winner 60%, Payout 25%. */
+  .results .ctp-table th:nth-child(1),
+  .results .ctp-table td:nth-child(1){width:15% !important;}
+  .results .ctp-table th:nth-child(2),
+  .results .ctp-table td:nth-child(2){width:60% !important;}
+  .results .ctp-table th:nth-child(3),
+  .results .ctp-table td:nth-child(3){width:25% !important;white-space:nowrap;}
+
+  /* Low Gross: Player 70%, Gross 30%. */
+  .results .lowgross-table th:nth-child(1),
+  .results .lowgross-table td:nth-child(1){width:70% !important;white-space:nowrap;}
+  .results .lowgross-table th:nth-child(2),
+  .results .lowgross-table td:nth-child(2){width:30% !important;}
+
+  /* v60: Force mobile column widths at the COL level too.
+     The table colgroups otherwise override the cell widths on phones. */
+  .results .lowgross-table col:nth-child(1){width:55% !important;}
+  .results .lowgross-table col:nth-child(2){width:45% !important;}
+  .results .lowgross-table th:nth-child(1),
+  .results .lowgross-table td:nth-child(1){width:55% !important;white-space:nowrap !important;word-break:keep-all !important;overflow-wrap:normal !important;}
+  .results .lowgross-table th:nth-child(2),
+  .results .lowgross-table td:nth-child(2){width:45% !important;white-space:nowrap !important;word-break:keep-all !important;}
+
+  .results .birdies-table col:nth-child(1){width:40% !important;}
+  .results .birdies-table col:nth-child(2){width:60% !important;}
+  .results .birdies-table th:nth-child(1),
+  .results .birdies-table td:nth-child(1){width:40% !important;white-space:nowrap !important;word-break:keep-all !important;overflow-wrap:normal !important;}
+  .results .birdies-table th:nth-child(2),
+  .results .birdies-table td:nth-child(2){width:60% !important;}
+
+  /* Also lock the Game Results colgroup so Score and Payout stay intact. */
+  .results .format-table col:nth-child(1){width:64% !important;}
+  .results .format-table col:nth-child(2){width:18% !important;}
+  .results .format-table col:nth-child(3){width:18% !important;}
+  .results .format-table th:nth-child(1),
+  .results .format-table td:nth-child(1){width:64% !important;white-space:nowrap !important;word-break:keep-all !important;overflow-wrap:normal !important;}
+  .results .format-table th:nth-child(2),
+  .results .format-table td:nth-child(2){width:18% !important;min-width:60px !important;white-space:nowrap !important;word-break:keep-all !important;overflow-wrap:normal !important;}
+  .results .format-table th:nth-child(3),
+  .results .format-table td:nth-child(3){width:18% !important;min-width:60px !important;white-space:nowrap !important;word-break:keep-all !important;overflow-wrap:normal !important;}
+}
+
+/* v61 FINAL mobile table override */
+@media (max-width:700px){
+  .results table{
+    width:100% !important;
+    min-width:0 !important;
+    table-layout:fixed !important;
+    font-size:14px !important;
+  }
+  .results table th,
+  .results table td{
+    box-sizing:border-box !important;
+    min-width:0 !important;
+    overflow-wrap:normal !important;
+    word-break:normal !important;
+  }
+
+  /* Game Results */
+  .results .format-table col:nth-child(1){width:60% !important;}
+  .results .format-table col:nth-child(2){width:20% !important;}
+  .results .format-table col:nth-child(3){width:20% !important;}
+  .results .format-table th:nth-child(1),
+  .results .format-table td:nth-child(1){width:60% !important;white-space:nowrap !important;}
+  .results .format-table th:nth-child(2),
+  .results .format-table td:nth-child(2){width:20% !important;white-space:nowrap !important;text-align:left !important;}
+  .results .format-table th:nth-child(3),
+  .results .format-table td:nth-child(3){width:20% !important;white-space:nowrap !important;text-align:right !important;}
+
+  /* Closest to Pin */
+  .results .ctp-table col:nth-child(1){width:15% !important;}
+  .results .ctp-table col:nth-child(2){width:60% !important;}
+  .results .ctp-table col:nth-child(3){width:25% !important;}
+  .results .ctp-table th:nth-child(1),
+  .results .ctp-table td:nth-child(1){width:15% !important;white-space:nowrap !important;}
+  .results .ctp-table th:nth-child(2),
+  .results .ctp-table td:nth-child(2){width:60% !important;white-space:nowrap !important;}
+  .results .ctp-table th:nth-child(3),
+  .results .ctp-table td:nth-child(3){width:25% !important;white-space:nowrap !important;text-align:right !important;}
+
+  /* Low Gross */
+  .results .lowgross-table col:nth-child(1){width:65% !important;}
+  .results .lowgross-table col:nth-child(2){width:35% !important;}
+  .results .lowgross-table th:nth-child(1),
+  .results .lowgross-table td:nth-child(1){width:65% !important;white-space:nowrap !important;}
+  .results .lowgross-table th:nth-child(2),
+  .results .lowgross-table td:nth-child(2){width:35% !important;white-space:nowrap !important;}
+
+  /* Birdies or Better */
+  .results .birdies-table col:nth-child(1){width:38% !important;}
+  .results .birdies-table col:nth-child(2){width:62% !important;}
+  .results .birdies-table th:nth-child(1),
+  .results .birdies-table td:nth-child(1){width:38% !important;white-space:nowrap !important;}
+  .results .birdies-table th:nth-child(2),
+  .results .birdies-table td:nth-child(2){width:62% !important;white-space:normal !important;}
+}
+
+.scorecard-controls{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end;margin-bottom:14px}
+.scorecard-select-wrap{min-width:0}.scorecard-select-wrap .label{margin-bottom:5px}
+.scorecard-select{width:100%;box-sizing:border-box;padding:10px 11px;border:1px solid #d8dfd9;border-radius:7px;background:white;color:#17351f;font-size:15px}
+.scorecard-print{border:1px solid #315b3d;background:#315b3d;color:white;border-radius:7px;padding:10px 14px;font-weight:700;cursor:pointer}
+.scorecard-meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.scorecard-meta span{background:#f7f9f7;border-radius:7px;padding:7px 9px;font-size:13px}
+.scorecard-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scorecard-table{min-width:760px}
+.scorecard-table th,.scorecard-table td{text-align:center;white-space:nowrap}
+.scorecard-table th:first-child,.scorecard-table td:first-child{text-align:left;position:sticky;left:0;background:white;z-index:1}
+.scorecard-table .out-col,.scorecard-table .in-col,.scorecard-table .tot-col{font-weight:700;background:#eef3ee}
+.scorecard-table .gross-row td,.scorecard-table .net-row td{font-weight:700}
+@media(max-width:700px){.scorecard-controls{grid-template-columns:1fr}.scorecard-print{width:100%}}
+@media print{
+  body{background:white}.back,.scorecard-controls{display:none!important}.wrap{max-width:none;padding:0}
+  .card{border:0;margin:0;padding:0}.section-card:not(#scorecardSection){display:none!important}
+  #scorecardSection{display:block!important}#scorecardSection h2{display:none}
+  .scorecard-table-wrap{overflow:visible}.scorecard-table{min-width:0;width:100%;font-size:10px}
+  .scorecard-table th:first-child,.scorecard-table td:first-child{position:static}
+}
+
+
+/* v68: Net Skins results — Squabbit-style scorecard layout */
+.net-skins-results-wrap{
+  margin:16px 0 18px;
+}
+.net-skins-results-scroll{
+  width:100%;
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  border-radius:8px;
+}
+.net-skins-results-table{
+  width:max-content;
+  min-width:100%;
+  border-collapse:separate;
+  border-spacing:0 6px;
+  table-layout:auto;
+  font-size:14px;
+}
+.net-skins-results-table th,
+.net-skins-results-table td{
+  border:0;
+  border-bottom:0;
+  padding:0 8px;
+  height:46px;
+  text-align:center;
+  vertical-align:middle;
+  white-space:nowrap;
+  box-sizing:border-box;
+}
+.net-skins-results-table thead th{
+  height:30px;
+  padding-bottom:4px;
+  color:#9a9ca5;
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.05em;
+  background:transparent;
+}
+.net-skins-results-table tbody tr{
+  background:#fff;
+}
+.net-skins-results-table tbody td,
+.net-skins-results-table tbody th{
+  background:#fff;
+}
+.net-skins-results-table tbody tr::after{
+  content:"";
+}
+.net-skins-results-table .skins-player-col{
+  width:190px;
+  min-width:190px;
+  text-align:left;
+  position:sticky;
+  left:0;
+  z-index:3;
+  padding-left:8px;
+  padding-right:10px;
+}
+.net-skins-results-table thead .skins-player-col{
+  background:#fff;
+  z-index:4;
+  color:#30343a;
+  font-size:14px;
+  font-weight:700;
+}
+.net-skins-results-table .skins-total,
+.net-skins-results-table .skins-ph,
+.net-skins-results-table .skins-winnings{
+  width:62px;
+  min-width:62px;
+  font-weight:700;
+}
+.net-skins-results-table .skins-total{
+  color:#177a4b;
+  font-size:14px;
+}
+.net-skins-results-table .skins-winnings{
+  width:82px;
+  min-width:82px;
+  color:#30343a;
+  font-size:14px;
+}
+.net-skins-results-table .skins-ph{
+  color:#5f6670;
+  font-weight:500;
+}
+.net-skins-results-table .skins-hole{
+  width:39px;
+  min-width:39px;
+  padding-left:4px;
+  padding-right:4px;
+}
+.net-skins-results-table .skins-out,
+.net-skins-results-table .skins-in{
+  width:50px;
+  min-width:50px;
+  font-weight:700;
+  background:#f1f3f2 !important;
+}
+.net-skins-results-table tbody tr td:first-of-type,
+.net-skins-results-table tbody tr th:first-of-type{
+  border-radius:12px 0 0 12px;
+}
+.net-skins-results-table tbody tr td:last-child{
+  border-radius:0 12px 12px 0;
+}
+.net-skins-results-table .skins-player{
+  display:flex;
+  align-items:center;
+  min-height:46px;
+}
+.net-skins-results-table .skins-name{
+  min-width:0;
+  line-height:1.15;
+  font-size:14px;
+  font-weight:500;
+  color:#30343a;
+}
+.net-skins-results-table .skins-name-top,
+.net-skins-results-table .skins-name-last{
+  color:#30343a;
+  font-size:14px;
+  font-weight:500;
+  font-style:normal;
+}
+.net-skins-results-table .skins-name-last{
+  display:inline;
+}
+.net-skins-results-table .score{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:25px;
+  height:25px;
+  line-height:25px;
+  border-radius:4px;
+  box-sizing:border-box;
+  font-weight:500;
+}
+.net-skins-results-table .score.par{
+  background:transparent;
+}
+.net-skins-results-table .score.birdie{
+  border:2px solid #35b878;
+  border-radius:50%;
+  color:#17824e;
+}
+.net-skins-results-table .score.eagle{
+  border:1px solid #219b61;
+  border-radius:50%;
+  background:#50b87d;
+  color:#0d5e38;
+}
+.net-skins-results-table .score.bogey{
+  border:2px solid #f39a4d;
+  background:#fff8f0;
+  color:#9a5c23;
+}
+.net-skins-results-table .score.double{
+  border:2px solid #e15a4f;
+  background:#ffe9e7;
+  color:#a5352d;
+}
+.net-skins-results-table td.skins-hole.skin-winner-cell{
+  background:#cfe8d3;
+}
+
+.net-skins-results-table .stroke-dot{
+  display:inline-block;
+  font-size:10px;
+  line-height:1;
+  vertical-align:top;
+  margin-left:1px;
+  position:relative;
+  top:-7px;
+  font-weight:900;
+}
+.net-skins-results-table .skins-note{
+  margin:7px 0 0;
+  color:#68726b;
+  font-size:12px;
+  line-height:1.45;
+  font-weight:400;
+}
+@media(max-width:700px){
+  .net-skins-results-scroll{
+    margin-right:-2px;
+  }
+  .net-skins-results-table{
+    min-width:1000px;
+    font-size:13px;
+  }
+  .net-skins-results-table th,
+  .net-skins-results-table td{
+    height:44px;
+    padding-left:6px;
+    padding-right:6px;
+  }
+  .net-skins-results-table .skins-player-col{
+    width:176px;
+    min-width:176px;
+  }
+  .net-skins-results-table .skins-hole{
+    width:36px;
+    min-width:36px;
+  }
+  .net-skins-results-table .skins-winnings{
+    width:78px;
+    min-width:78px;
+  }
+  .net-skins-results-table .skins-out,
+  .net-skins-results-table .skins-in{
+    width:46px;
+    min-width:46px;
+  }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<a class="back" href="Events_Player_Page_v25.html">← Back to Events</a>
+<h1 id="title">Event Details</h1>
+<div id="meta" class="meta">Loading event information…</div>
+
+<section class="card section-card">
+<h2>Tee Sheet</h2>
+<div class="section-body" id="tee">Loading…</div>
+</section>
+
+<section class="card section-card">
+<h2>Game Information</h2>
+<div class="section-body">
+<div class="payout-summary"><div class="summary-item"><span class="label">Game Format</span><span class="value" id="gameFormat">—</span></div><div class="summary-item"><span class="label">Buy In</span><span class="value" id="buyin">—</span></div><div class="summary-item"><span class="label"># of Players</span><span class="value" id="playerCount">—</span></div><div class="summary-item"><span class="label">Total Pot</span><span class="value" id="totalPot">—</span></div></div>
+<div class="payout-detail-grid">
+<div class="subsection">
+<h3>Game Payouts</h3><div id="payouts">Loading…</div>
+</div>
+<div class="subsection">
+<h3>Closest to Pin</h3><div id="ctpPayouts">Loading…</div>
+</div>
+</div>
+<div id="teamsWrap"><h3>Teams</h3><div id="teams">Loading…</div></div>
+</div>
+</section>
+
+<section class="card section-card">
+<h2>Results</h2><div class="section-body" id="results">Loading…</div>
+</section>
+
+<section class="card section-card" id="scorecardSection">
+<h2>Scorecards</h2><div class="section-body" id="scorecards">Loading…</div>
+</section>
+</div>
+
+<script>
+const API='https://script.google.com/macros/s/AKfycbxtK7gUo6FAbD-tlxrYhDoAx4P5uauKAT5Y8DfTzpxJmDMap2CCzvhIxTM-BzpAwJc5jQ/exec';
+let __teePlayerCount=null;
+const params=new URLSearchParams(location.search);
+let storedEventId='';
+try { storedEventId=sessionStorage.getItem('selectedEventId')||localStorage.getItem('selectedEventId')||''; } catch(e) {}
+const EVENT_ID=(params.get('eventId')||params.get('id')||params.get('event')||storedEventId||'').trim();
+function esc(v){const d=document.createElement('div');d.textContent=v==null?'':String(v);return d.innerHTML}
+function get(r,n){for(const k of n){const key=Object.keys(r).find(x=>x.toLowerCase().replace(/[^a-z0-9]/g,'')===k.toLowerCase().replace(/[^a-z0-9]/g,''));if(key&&r[key]!==undefined&&r[key]!==null&&String(r[key]).trim()!=='')return r[key]}return''}
+function section(rows,name){return rows.filter(r=>String(get(r,['Section'])).trim().toLowerCase()===name.toLowerCase())}
+function sectionAny(rows,names){const wanted=names.map(x=>x.toLowerCase());return rows.filter(r=>{const sec=String(get(r,['Section'])).trim().toLowerCase();return wanted.includes(sec)||wanted.some(w=>sec.includes(w))})}
+function hasAnyText(v,names){const s=String(v||'').toLowerCase();return names.some(n=>s.includes(n.toLowerCase()))}
+
+function isIndividualFormat(formatName){
+ const f=String(formatName||'').toLowerCase().replace(/\s+/g,' ').trim();
+ if(f.includes('team quota')) return false;
+ return f.includes('quota') || f.includes('skins');
+}
+function renderTeams(rows,formatName){
+ const el=document.getElementById('teams');
+ const wrap=document.getElementById('teamsWrap');
+ if(!el || !wrap) return;
+ if(isIndividualFormat(formatName)){ wrap.style.display='none'; return; }
+ wrap.style.display='';
+ const teams=section(rows,'Teams');
+ if(!teams.length){el.innerHTML='<div class="empty">Team details in progress.</div>';return}
+ let h='<div class="team-list">';teams.forEach(r=>{const t=get(r,['Item','Team']),p=get(r,['Value','Players']);if(t||p)h+='<div class="team-card"><div class="team-name">'+esc(t)+'</div><div class="team-players">'+esc(p)+'</div></div>'});
+ h+='</div>';el.innerHTML=h;
+}
+function isCTP(s){return /^ctp\b|^closest\s*to\s*pin/i.test(String(s).trim())}
+function money(v){let s=String(v||'').trim();return s&&/^-?\d+(?:\.\d+)?$/.test(s)?'$'+s:s}
+function renderPayouts(rows){
+ const p=sectionAny(rows,['Payouts','Game Payouts','Format Payouts']), ctpRows=sectionAny(rows,['Closest to Pin','CTP','Closest To Pin']), regular=[];
+ rows.forEach(r=>{
+   const sec=String(get(r,['Section'])).trim();
+   const item=String(get(r,['Item','Place'])).trim();
+   const hole=String(get(r,['Hole'])).trim();
+   const payout=String(get(r,['Payout'])).trim();
+   const value=String(get(r,['Value'])).trim();
+   if((hasAnyText(sec,['closest to pin','ctp']) || isCTP(item) || hole) && (hole||payout||value)) {
+     if(!ctpRows.includes(r)) ctpRows.push(r);
+   }
+ });
+ p.forEach(r=>{
+   const sec=String(get(r,['Section'])).trim();
+   const i=String(get(r,['Item','Place','Payout'])).trim();
+   const v=String(get(r,['Value','Payout'])).trim();
+   const hole=String(get(r,['Hole'])).trim();
+   const winner=String(get(r,['Winner'])).trim();
+   if(isCTP(sec)||isCTP(i)||hole||winner) return;
+   if(i||v){
+     if(/^buy[-\s]?in$/i.test(i)) return;
+     regular.push({i,v});
+   }
+ });
+ const buyInRow = rows.find(r => {
+   const sec=String(get(r,['Section'])).trim().toLowerCase();
+   const item=String(get(r,['Item','Place'])).trim();
+   return (sec==='payouts' || sec.includes('payout')) && /^buy[-\s]?in$/i.test(item);
+ });
+ const buyInValue = buyInRow ? String(get(buyInRow,['Value','Payout'])).trim() : '';
+ document.getElementById('buyin').textContent = buyInValue ? (money(buyInValue)) : '—';
+
+ const pc=__teePlayerCount;
+ document.getElementById('playerCount').textContent=pc!=null?String(pc):'—';
+ const buyInText = document.getElementById('buyin').textContent.trim();
+ const buyInNum = parseFloat(buyInText.replace(/[^0-9.]/g,''));
+ document.getElementById('totalPot').textContent=(pc!=null && !isNaN(buyInNum))?'$'+(pc*buyInNum).toFixed(2):'—';
+
+ let h=regular.length?'<table><thead><tr><th>Place</th><th class="num">Payout</th></tr></thead><tbody>':'';
+ regular.forEach(r=>h+='<tr><td>'+esc(r.i)+'</td><td class="num">'+esc(money(r.v))+'</td></tr>');
+ if(regular.length)h+='</tbody></table>';
+ document.getElementById('payouts').innerHTML=h||'<div class="empty">Game payouts in progress.</div>';
+
+ const uniqueCTP=[];
+ const seenCTP=new Set();
+ ctpRows.forEach(r=>{
+   let hole=String(get(r,['Hole'])).trim();
+   const item=String(get(r,['Item','Place'])).trim();
+   const value=String(get(r,['Value'])).trim();
+   let payout=String(get(r,['Payout'])).trim();
+   if(!hole){
+     const hm=item.match(/(?:ctp|closest\s*to\s*pin)\s*(?:hole\s*)?(\d+)/i);
+     if(hm) hole=hm[1];
+     else {
+       const hm2=item.match(/hole\s*(\d+)/i);
+       if(hm2) hole=hm2[1];
+     }
+   }
+   if(!payout && value){
+     const pm=value.match(/(?:^|[^0-9])(-?\d+(?:\.\d+)?)(?:\s*$)/);
+     if(pm) payout=pm[1];
+   }
+   if(hole && payout){
+     const key=hole+'|'+payout;
+     if(!seenCTP.has(key)){ seenCTP.add(key); uniqueCTP.push({hole,payout}); }
+   }
+ });
+ let c=uniqueCTP.length?'<table><thead><tr><th>Hole</th><th class="num">Payout</th></tr></thead><tbody>':'';
+ uniqueCTP.forEach(r=>{
+   c+='<tr><td>'+esc(r.hole)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>';
+ });
+ if(uniqueCTP.length)c+='</tbody></table>';
+ document.getElementById('ctpPayouts').innerHTML=c||'<div class="empty">CTP payouts in progress.</div>';
+}
+function renderTee(rows,formatName){
+ const el=document.getElementById('tee');if(!rows.length){el.innerHTML='<div class="empty">No tee sheet has been published.</div>';return}
+ const isQuota=String(formatName||'').toLowerCase().includes('quota'), groups={};
+ rows.forEach(r=>{const g=String(get(r,['Group'])||'Other');(groups[g]??=[]).push(r)});
+ const keys=Object.keys(groups).sort((a,b)=>{const na=Number(a),nb=Number(b);if(!Number.isNaN(na)&&!Number.isNaN(nb))return na-nb;return a.localeCompare(b)});
+ const first=rows[0]||{},heading=[get(first,['Date']),get(first,['Course'])].filter(Boolean).join(' — ');
+ let h=heading?'<h3>'+esc(heading)+'</h3>':'';
+ h+='<table><colgroup><col style="width:95px"><col style="width:150px"><col style="width:65px"><col style="width:85px"><col style="width:95px">'+(isQuota?'<col style="width:75px">':'')+'</colgroup><thead><tr><th>Tee Time</th><th>Player</th><th>Tee</th><th>Hcp Index</th><th>Playing Hcp</th>'+(isQuota?'<th>Quota</th>':'')+'</tr></thead><tbody>';
+ keys.forEach((g,gi)=>{if(gi)h+='<tr class="group-gap"><td colspan="'+(isQuota?6:5)+'"></td></tr>';groups[g].forEach((r,idx)=>{const t=get(r,['Tee Time']),p=get(r,['Playing Hcp','Playing Handicap']);h+='<tr><td class="time">'+esc(idx===0?t:'')+'</td><td>'+esc(get(r,['Player']))+'</td><td class="tee">'+esc(get(r,['Tee']))+'</td><td class="hcp">'+esc(get(r,['Hcp Index','Handicap Index']))+'</td><td class="playhcp">'+esc(p)+'</td>';if(isQuota){const n=parseFloat(String(p).replace(/[^0-9.\-+]/g,'')),q=!Number.isNaN(n)?(String(p).trim().startsWith('+')?36+n:36-n):'';h+='<td>'+esc(q)+'</td>'}h+='</tr>'})});
+ h+='</tbody></table>';el.innerHTML=h;
+}
+function toggleGameResults(btn){
+  const table=btn.previousElementSibling;
+  if(!table)return;
+  const rows=table.querySelectorAll('.game-result-extra');
+  const expanded=btn.dataset.expanded==='1';
+  rows.forEach(r=>r.style.display=expanded?'none':'');
+  btn.dataset.expanded=expanded?'0':'1';
+  btn.textContent=expanded?'Show all players':'Hide non-winning players';
+}
+
+function renderNetSkinsResults(scorecardRows, resultRows, eventDetailRows){
+  const rows=Array.isArray(scorecardRows)?scorecardRows:[];
+  const cleanRows=rows.filter(r=>String(get(r,['Player'])).trim());
+  const players=[...new Set(cleanRows.map(r=>String(get(r,['Player'])).trim()).filter(Boolean))];
+
+  // Net Skins winnings are calculated as: Total Pot / Total Skins,
+  // rounded down to a whole dollar per skin. This keeps every skin worth
+  // the same whole-dollar amount (for example, $35 / 6 = $5.83 -> $5).
+  const detailList=Array.isArray(eventDetailRows)?eventDetailRows:[];
+  const cleanText=v=>String(v??'').trim();
+  const normField=(r,name)=>{
+    if(!r)return '';
+    if(r[name]!==undefined&&r[name]!==null&&cleanText(r[name])!=='')return cleanText(r[name]);
+    const wanted=String(name).toLowerCase().replace(/[^a-z0-9]/g,'');
+    const key=Object.keys(r).find(k=>String(k).toLowerCase().replace(/[^a-z0-9]/g,'')===wanted);
+    return key!==undefined?cleanText(r[key]):'';
+  };
+  let totalPot=null;
+  for(const r of detailList){
+    const item=normField(r,'Item');
+    const section=normField(r,'Section');
+    const value=normField(r,'Value');
+    if(/total\s*pot/i.test(item)||/total\s*pot/i.test(section)){
+      const n=parseFloat(value.replace(/[^0-9.\-]/g,''));
+      if(Number.isFinite(n)){totalPot=n;break;}
+    }
+  }
+  // Fallback: if Total Pot is not explicitly present, use the published
+  // player payouts only to estimate the pot; otherwise winnings remain $0.
+  if(totalPot===null){
+    let publishedPot=0;
+    resultList.forEach(r=>{
+      const section=String(get(r,['Section'])??'').toLowerCase().replace(/[^a-z0-9]/g,'');
+      if(section.includes('closesttopin')||section==='ctp'||section.includes('lowgross')||section.includes('birdie')||section.includes('eagle'))return;
+      const payout=parseFloat(String(get(r,['Payout','Value'])??'').replace(/[^0-9.\-]/g,''));
+      if(Number.isFinite(payout)&&payout>0)publishedPot+=payout;
+    });
+    if(publishedPot>0)totalPot=publishedPot;
+  }
+
+  const money=v=>'$'+Math.floor(Number(v)||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});
+  if(!players.length)return '<div class="empty">Net Skins scorecard data is not available for this event.</div>';
+
+  const byPlayer=new Map();
+  const byHole=new Map();
+  players.forEach(p=>byPlayer.set(p,new Map()));
+
+  cleanRows.forEach(r=>{
+    const p=String(get(r,['Player'])).trim();
+    const hole=scorecardNum(get(r,['Hole']));
+    if(!p||hole===null||hole<1||hole>18)return;
+    byPlayer.get(p).set(hole,r);
+    if(!byHole.has(hole))byHole.set(hole,[]);
+    byHole.get(hole).push(r);
+  });
+
+  const winners=new Map();
+  players.forEach(p=>{
+    for(let hole=1;hole<=18;hole++){
+      if(!byPlayer.get(p).has(hole))continue;
+    }
+  });
+
+  // Determine the skin from the actual net score for each hole. Prefer the
+  // published Net value, but calculate it from Gross + Playing Handicap + SI
+  // when Net is missing/unusable. This prevents a valid skin from disappearing
+  // from the hole-by-hole display because one source field is blank.
+  const calculatedNet=(r)=>{
+    const gross=scorecardNum(get(r,['Gross']));
+    const si=scorecardNum(get(r,['SI','Stroke Index','Handicap Hole']));
+    const ph=scorecardNum(get(r,['Playing Handicap','Playing Hcp']));
+    if(gross===null||ph===null)return null;
+    const h=Math.max(1,Math.min(18,Math.round(si??18)));
+    let strokes=0;
+    if(ph>0){
+      const whole=Math.floor(ph/18);
+      const rem=ph%18;
+      strokes=whole+(h<=rem?1:0);
+    }else if(ph<0){
+      const abs=Math.abs(ph);
+      const whole=Math.floor(abs/18);
+      const rem=abs%18;
+      strokes=-(whole+(h<=rem?1:0));
+    }
+    return gross-strokes;
+  };
+  const netForRow=r=>{
+    const published=scorecardNum(get(r,['Net']));
+    return published!==null?published:calculatedNet(r);
+  };
+
+  for(let hole=1;hole<=18;hole++){
+    const candidates=(byHole.get(hole)||[])
+      .map(r=>({player:String(get(r,['Player'])).trim(),net:netForRow(r),row:r}))
+      .filter(x=>x.net!==null);
+    if(!candidates.length)continue;
+    const low=Math.min(...candidates.map(x=>x.net));
+    const lowPlayers=candidates.filter(x=>x.net===low);
+    winners.set(hole,lowPlayers.length===1?lowPlayers[0]:null);
+  }
+
+  // Build totals from the same winner records used to highlight each hole.
+  // Use normalized player names so harmless spacing/case differences cannot
+  // cause the TOT value to fall back to zero.
+  const skinCounts=new Map(players.map(p=>[normalizeName(p),0]));
+  winners.forEach(winner=>{
+    if(winner && winner.player){
+      const key=normalizeName(winner.player);
+      skinCounts.set(key,(skinCounts.get(key)||0)+1);
+    }
+  });
+
+  const totalSkins=[...skinCounts.values()].reduce((sum,n)=>sum+n,0);
+  const perSkinPayout=totalSkins>0 && totalPot!==null ? Math.floor(totalPot/totalSkins) : 0;
+
+  const playerRows=players.map(p=>{
+    const first=byPlayer.get(p).get(1) || byPlayer.get(p).values().next().value || {};
+    return {
+      player:p,
+      total:skinCounts.get(normalizeName(p))||0,
+      ph:scorecardNum(get(first,['Playing Handicap','Playing Hcp']))
+    };
+  }).sort((a,b)=>{
+    if(b.total!==a.total)return b.total-a.total;
+    return a.player.localeCompare(b.player);
+  });
+
+  const splitName=name=>{
+    const s=String(name||'').trim();
+    const parts=s.split(/\s+/);
+    if(parts.length<=1)return {top:s,last:''};
+    return {top:parts.slice(0,-1).join(' '),last:parts[parts.length-1]};
+  };
+  const scoreClass=(gross,par)=>{
+    if(gross===null||par===null)return 'par';
+    const diff=gross-par;
+    if(diff<=-2)return 'eagle';
+    if(diff===-1)return 'birdie';
+    if(diff===1)return 'bogey';
+    if(diff>=2)return 'double';
+    return 'par';
+  };
+  const scoreHtml=(r)=>{
+    if(!r)return '—';
+    const gross=scorecardNum(get(r,['Gross']));
+    const net=scorecardNum(get(r,['Net']));
+    const par=scorecardNum(get(r,['Par']));
+    if(gross===null)return '—';
+    const stroke=gross!==null&&net!==null&&gross>net;
+    return '<span class="score '+scoreClass(gross,par)+'">'+gross+(stroke?'<span class="stroke-dot">•</span>':'')+'</span>';
+  };
+
+  let h='<div class="net-skins-results-wrap">';
+  h+='<div class="net-skins-results-scroll"><table class="net-skins-results-table">';
+  h+='<thead><tr><th class="skins-player-col">Player</th><th class="skins-total">Skins</th><th class="skins-winnings">Winnings</th><th class="skins-ph">PH</th>';
+  for(let hole=1;hole<=9;hole++)h+='<th class="skins-hole">'+hole+'</th>';
+  h+='<th class="skins-out">OUT</th>';
+  for(let hole=10;hole<=18;hole++)h+='<th class="skins-hole">'+hole+'</th>';
+  h+='<th class="skins-in">IN</th></tr></thead><tbody>';
+
+  playerRows.forEach(r=>{
+    const name=splitName(r.player);
+    h+='<tr>';
+    h+='<th class="skins-player-col"><div class="skins-player"><span class="skins-name"><span class="skins-name-top">'+esc(name.top)+'</span>'+ (name.last?' <span class="skins-name-last">'+esc(name.last)+'</span>':'')+'</span></div></th>';
+    h+='<td class="skins-total">'+esc(r.total)+'</td>';
+    const winnings=r.total*perSkinPayout;
+    h+='<td class="skins-winnings">'+esc(money(winnings))+'</td>';
+    h+='<td class="skins-ph">'+esc(r.ph===null?'':r.ph)+'</td>';
+
+    let outSkins=0,inSkins=0;
+    for(let hole=1;hole<=9;hole++){
+      const row=byPlayer.get(r.player).get(hole);
+      const winner=winners.get(hole);
+      const wonSkin=!!winner && winner.player===r.player;
+      const displayRow=wonSkin && winner.row ? winner.row : row;
+      h+='<td class="skins-hole'+(wonSkin?' skin-winner-cell':'')+'">'+scoreHtml(displayRow)+'</td>';
+      if(wonSkin)outSkins++;
+    }
+    h+='<td class="skins-out">'+esc(outSkins)+'</td>';
+    for(let hole=10;hole<=18;hole++){
+      const row=byPlayer.get(r.player).get(hole);
+      const winner=winners.get(hole);
+      const wonSkin=!!winner && winner.player===r.player;
+      const displayRow=wonSkin && winner.row ? winner.row : row;
+      h+='<td class="skins-hole'+(wonSkin?' skin-winner-cell':'')+'">'+scoreHtml(displayRow)+'</td>';
+      if(wonSkin)inSkins++;
+    }
+    h+='<td class="skins-in">'+esc(inSkins)+'</td>';
+    h+='</tr>';
+  });
+  h+='</tbody></table></div>';
+  h+='<div class="skins-note">Gross score shown. A dot indicates a handicap stroke.</div>';
+  h+='</div>';
+  return h;
+}
+
+function renderResults(rows,scorecardRows){
+  const el=document.getElementById('results');
+  if(!Array.isArray(rows)||!rows.length){el.innerHTML='<div class="empty">Results will be published after the round.</div>';return;}
+  const buckets={format:[],lowgross:[],ctp:[],birdies:[]};
+  const clean=v=>String(v??'').trim();
+  const field=(r,name)=>{
+    if(!r)return '';
+    if(r[name]!==undefined&&r[name]!==null&&clean(r[name])!=='')return clean(r[name]);
+    const wanted=String(name).toLowerCase().replace(/[^a-z0-9]/g,'');
+    const key=Object.keys(r).find(k=>String(k).toLowerCase().replace(/[^a-z0-9]/g,'')===wanted);
+    return key!==undefined?clean(r[key]):'';
+  };
+  const skipText=/^(reminder\b|hello everyone\b|results are in\b|thanks for playing\b)/i;
+  rows.forEach(r=>{
+    const section=field(r,'Section').toLowerCase().replace(/[^a-z0-9]/g,'');
+    const item=field(r,'Item');
+    const value=field(r,'Value');
+    const team=field(r,'Team');
+    const place=field(r,'Place');
+    const payout=field(r,'Payout');
+    const hole=field(r,'Hole');
+    const winner=field(r,'Winner');
+    const player=field(r,'Player');
+    if(skipText.test(item)||skipText.test(value)||section==='postroundgroupemail')return;
+    if(section==='format'||section.includes('gameformat')){
+      if(!place || /^(game format|format)$/i.test(item))return;
+      buckets.format.push({place:place,name:team||player||winner,value:value,payout:payout});
+      return;
+    }
+    if(section==='ctp'||section.includes('closesttopin')||/closest\s*to\s*pin/i.test(item)){
+      buckets.ctp.push({hole:hole||item,winner:winner||value||player||team,payout:payout});
+      return;
+    }
+    if(section.includes('lowgross')||/low\s*gross/i.test(item)){
+      buckets.lowgross.push({name:item||player||team||winner,value,payout});
+      return;
+    }
+    if(section.includes('birdie')||section.includes('eagle')||/birdies?\s*or\s*better/i.test(item)){
+      buckets.birdies.push({name:item||player||team||winner,value});
+      return;
+    }
+  });
+  const heading=t=>'<h3><span class="result-heading">'+esc(t)+'</span></h3>';
+  const money=v=>{v=clean(v);if(!v)return '';if(/^\$/.test(v))return '$'+Number(v.replace(/[^0-9.\-]/g,'')).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});if(/^[-+]?\d+(?:\.\d+)?$/.test(v))return '$'+Number(v).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0});return v;};
+  const gameName=(window.__eventGameFormat||'').trim()||'Game Results';
+  const isNetSkins=gameName.toLowerCase().includes('skins');
+  let h=isNetSkins?heading('Net Skins Results'):heading(gameName);
+  if(isNetSkins){
+    h+=renderNetSkinsResults(scorecardRows,rows,window.__eventDetailRows||[]);
+  }else if(buckets.format.length){
+    h+='<table class="format-table"><colgroup><col style="width:55%"><col style="width:22%"><col style="width:23%"></colgroup><thead><tr><th>Player / Team</th><th>Score</th><th class="num">Payout</th></tr></thead><tbody>';
+    const paid=buckets.format.filter(r=>{const n=parseFloat(String(r.payout||'').replace(/[^0-9.\-]/g,''));return !Number.isNaN(n)&&n>0;});
+    const unpaid=buckets.format.filter(r=>!paid.includes(r));
+    paid.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+    unpaid.forEach(r=>h+='<tr class="game-result-extra" style="display:none"><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+    h+='</tbody></table>';
+    if(unpaid.length) h+='<button type="button" class="results-expand" onclick="toggleGameResults(this)">Show all players</button>';
+  }else h+='<div class="empty">No game results entered.</div>';
+  h+=heading('Closest to Pin');
+  if(buckets.ctp.length){
+    h+='<table class="compact-table ctp-table"><colgroup><col style="width:22%"><col style="width:58%"><col style="width:20%"></colgroup><thead><tr><th>Hole</th><th>Winner</th><th class="num">Payout</th></tr></thead><tbody>';
+    buckets.ctp.forEach(r=>h+='<tr><td>'+esc(r.hole)+'</td><td>'+esc(r.winner)+'</td><td class="num">'+esc(money(r.payout))+'</td></tr>');
+    h+='</tbody></table>';
+  }else h+='<div class="empty">No closest to pin results entered.</div>';
+  h+=heading('Low Gross Round');
+  if(buckets.lowgross.length){
+    h+='<table class="compact-table lowgross-table"><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>Player</th><th>Gross</th></tr></thead><tbody>';
+    buckets.lowgross.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td></tr>');
+    h+='</tbody></table>';
+  }else h+='<div class="empty">No low gross result entered.</div>';
+  h+=heading('Birdies or Better');
+  if(buckets.birdies.length){
+    h+='<table class="compact-table birdies-table"><colgroup><col style="width:22%"><col style="width:78%"></colgroup><thead><tr><th>Player</th><th>Birdies / Better</th></tr></thead><tbody>';
+    buckets.birdies.forEach(r=>h+='<tr><td>'+esc(r.name)+'</td><td>'+esc(r.value)+'</td></tr>');
+    h+='</tbody></table>';
+  }else h+='<div class="empty">No birdies or better recorded.</div>';
+  el.innerHTML=h;
+}
+
+/* v64: integrated event scorecards */
+function scorecardNum(v){
+  const n=parseFloat(String(v??'').replace(/[^0-9.\-+]/g,''));
+  return Number.isFinite(n)?n:null;
+}
+function renderScorecards(rows){
+  const el=document.getElementById('scorecards');
+  if(!el)return;
+  if(!Array.isArray(rows)||!rows.length){
+    el.innerHTML='<div class="empty">Scorecards will be available after the round is published.</div>';
+    return;
+  }
+  const cleanRows=rows.filter(r=>String(get(r,['Player'])).trim());
+  if(!cleanRows.length){
+    el.innerHTML='<div class="empty">Scorecard data is not available for this event.</div>';
+    return;
+  }
+  const players=[...new Set(cleanRows.map(r=>String(get(r,['Player'])).trim()))];
+  let h='<div class="scorecard-controls"><div class="scorecard-select-wrap"><span class="label">Player</span><select class="scorecard-select" id="scorecardPlayerSelect">';
+  players.forEach(p=>h+='<option value="'+esc(p)+'">'+esc(p)+'</option>');
+  h+='</select></div><button type="button" class="scorecard-print" onclick="printSelectedScorecard()">Print Scorecard</button></div><div id="scorecardDisplay"></div>';
+  el.innerHTML=h;
+  document.getElementById('scorecardPlayerSelect').addEventListener('change',e=>renderSelectedScorecard(cleanRows,e.target.value));
+  renderSelectedScorecard(cleanRows,players[0]);
+}
+function renderSelectedScorecard(allRows,player){
+  const display=document.getElementById('scorecardDisplay'); if(!display)return;
+  const rows=allRows.filter(r=>String(get(r,['Player'])).trim()===String(player).trim());
+  const byHole=new Map();
+  rows.forEach(r=>{const hole=scorecardNum(get(r,['Hole']));if(hole!==null&&hole>=1&&hole<=18)byHole.set(hole,r)});
+  const holes=[];for(let h=1;h<=18;h++)if(byHole.has(h))holes.push(h);
+  if(!holes.length){display.innerHTML='<div class="empty">No hole-by-hole scorecard data is available for this player.</div>';return;}
+  const first=byHole.get(holes[0]);
+  let meta='';
+  const tee=get(first,['Tee']),hi=get(first,['Handicap Index','Hcp Index']),ph=get(first,['Playing Handicap','Playing Hcp']),round=get(first,['Round']),date=get(first,['Date']),teeTime=get(first,['Tee Time']);
+  if(tee)meta+='<span>Tee: '+esc(tee)+'</span>'; if(hi)meta+='<span>Hcp Index: '+esc(hi)+'</span>';
+  if(ph)meta+='<span>Playing Hcp: '+esc(ph)+'</span>'; if(round)meta+='<span>Round: '+esc(round)+'</span>';
+  if(date)meta+='<span>Date: '+esc(date)+'</span>'; if(teeTime)meta+='<span>Tee Time: '+esc(teeTime)+'</span>';
+  const vals=f=>holes.map(h=>'<td>'+esc(get(byHole.get(h),[f]))+'</td>').join('');
+  const sum=(f,subset)=>subset.reduce((s,h)=>s+(scorecardNum(get(byHole.get(h),[f]))??0),0);
+  const outH=holes.filter(h=>h<=9),inH=holes.filter(h=>h>=10);
+  const parOut=sum('Par',outH),parIn=sum('Par',inH),parTot=sum('Par',holes);
+  const grossOut=sum('Gross',outH),grossIn=sum('Gross',inH),grossTot=sum('Gross',holes);
+  const netOut=sum('Net',outH),netIn=sum('Net',inH),netTot=sum('Net',holes);
+  let t='<div class="scorecard-meta">'+meta+'</div><div class="scorecard-table-wrap"><table class="scorecard-table"><thead><tr><th>Hole</th>';
+  holes.forEach(h=>t+='<th>'+h+'</th>');
+  t+='<th class="out-col">OUT</th><th class="in-col">IN</th><th class="tot-col">TOT</th></tr></thead><tbody>';
+  t+='<tr><th>Par</th>'+vals('Par')+'<td class="out-col">'+parOut+'</td><td class="in-col">'+parIn+'</td><td class="tot-col">'+parTot+'</td></tr>';
+  t+='<tr><th>SI</th>'+holes.map(h=>'<td>'+esc(get(byHole.get(h),['SI','Stroke Index']))+'</td>').join('')+'<td class="out-col">—</td><td class="in-col">—</td><td class="tot-col">—</td></tr>';
+  t+='<tr class="gross-row"><th>Gross</th>'+vals('Gross')+'<td class="out-col">'+grossOut+'</td><td class="in-col">'+grossIn+'</td><td class="tot-col">'+grossTot+'</td></tr>';
+  t+='<tr class="net-row"><th>Net</th>'+vals('Net')+'<td class="out-col">'+netOut+'</td><td class="in-col">'+netIn+'</td><td class="tot-col">'+netTot+'</td></tr>';
+  t+='</tbody></table></div>'; display.innerHTML=t;
+}
+function printSelectedScorecard(){window.print();}
+
+async function load(){
+ try{
+  if(!EVENT_ID)throw new Error('Missing eventId in the event detail link.');
+  const res=await fetch(API+'?action=event&eventId='+encodeURIComponent(EVENT_ID),{cache:'no-store'});if(!res.ok)throw new Error('HTTP '+res.status);
+  const data=await res.json();if(!data.success)throw new Error(data.error||'Event data could not be loaded.');
+  if(!Array.isArray(data.teeSheet)) data.teeSheet=[];
+  if(!Array.isArray(data.eventDetail)) data.eventDetail=[];
+  if(!Array.isArray(data.preRound)) data.preRound=[];
+  if(!Array.isArray(data.scorecard)) data.scorecard=[];
+  const detailRows=Array.isArray(data.eventDetail)?data.eventDetail:[];
+  const preRows=Array.isArray(data.preRound)?data.preRound:[];
+  const detail=detailRows.concat(preRows.filter(pr=>!detailRows.some(dr=>JSON.stringify(dr)===JSON.stringify(pr))));
+  window.__eventDetailRows=detail;
+  const fr=detail.filter(r=>hasAnyText(get(r,['Section']),['format','game format']));
+  const fmt=fr.find(r=>/game\s*format|format/i.test(String(get(r,['Item','Place']))))||fr[0]||{};
+  const formatValue=get(fmt,['Value','Item']); window.__eventGameFormat=formatValue;
+  const teeRows=data.teeSheet||[];
+  __teePlayerCount=new Set(teeRows.map(r=>String(get(r,['Player'])).trim()).filter(Boolean)).size || null;
+  document.getElementById('gameFormat').textContent=formatValue||'—';renderTeams(detail,formatValue);renderPayouts(detail);
+  renderTee(teeRows,formatValue);
+  renderResults(data.results||data.postRoundResults||data.postRound||data.resultRows||[],data.scorecard);
+  renderScorecards(data.scorecard);
+  const er=await fetch(API+'?action=events',{cache:'no-store'});if(er.ok){const ed=await er.json(),ev=(ed.events||[]).find(r=>String(get(r,['Event ID','Event Id'])).trim()===EVENT_ID);if(ev){document.getElementById('title').textContent=get(ev,['Event Name'])||EVENT_ID;let m='';const c=get(ev,['Course']),s=get(ev,['Status']),v=get(ev,['Current Version']);if(c)m+=esc(c);if(s)m+=(m?' · ':'')+esc(s);if(v)m+=(m?' · ':'')+'Version '+esc(v);document.getElementById('meta').innerHTML=m}}
+ }catch(err){
+  const message=err&&err.message?err.message:'Unable to load event information.';
+  const m='<div class="error">'+esc(message)+'</div>';
+  ['format','teams','payouts','tee','results','scorecards'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=m;});
+  const meta=document.getElementById('meta');
+  if(meta)meta.innerHTML='<span class="error">Unable to load event information. '+esc(message)+'</span>';
+ }
+}
+document.querySelectorAll('.section-card').forEach((card,index)=>{
+  if(index!==0) card.classList.add('collapsed');
+});
+document.querySelectorAll('.section-card h2').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('collapsed')));
+load();
+</script>
+</body>
+</html>
