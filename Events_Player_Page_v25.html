@@ -1,6 +1,15 @@
 f<!DOCTYPE html>
 <html lang="en">
 <head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-B7LP15NBQ7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-B7LP15NBQ7');
+</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Saturday Golf League — Events</title>
@@ -60,7 +69,7 @@ h2 { margin-top: 30px; }
 </head>
 <body>
 <div class="wrap">
-  <h1>Saturday Golf Events</h1>
+  <h1>Saturday Golf League — Events</h1>
   <div class="subtitle">Upcoming and completed tournaments</div>
 
   <h2 class="section-toggle" id="upcomingToggle">Upcoming Tournaments</h2>
@@ -112,7 +121,7 @@ function makeEvent(row) {
   if (eventId) {
     // Pass the event ID in both parameter names so either detail-page version
     // can read it, and also preserve it in browser storage as a fallback.
-    const detailUrl = new URL('Event_Detail_Streamlined_v85.html', document.baseURI);
+    const detailUrl = new URL('Event_Detail_Streamlined_v86.html', document.baseURI);
     detailUrl.searchParams.set('eventId', eventId);
     detailUrl.searchParams.set('id', eventId);
     div.href = detailUrl.href;
