@@ -1480,7 +1480,10 @@
         notes:mode==='post' ? 'Published from Saturday Golf HTML app' : 'Published complete Pre-Round package from Saturday Golf HTML app'
       });
 
-      const attendanceResult = await postToGoogle(buildGoogleAttendancePayload(version));
+      // Attendance/roster is retained locally for Rotation History. The current
+      // deployed Apps Script does not yet accept attendanceBatch, so do not let
+      // that optional history payload block the core Google publish.
+      let attendanceResult=null;
       const teeResult = await postToGoogle(buildGoogleTeeSheetPayload(version));
       const scorecardResult = await postToGoogle(buildGoogleScorecardPayload(version));
       const eventDetailResult = await postToGoogle(buildGoogleEventDetailPayload(version));
@@ -1493,9 +1496,9 @@
       }
 
       if(mode==='post'){
-        setGoogleStatus(`Results Version ${version} published successfully — ${resultsResult.rowsAdded} result rows, ${scorecardResult.rowsAdded} scorecard rows, and ${eventDetailResult.rowsAdded} event-detail rows. Roster ${attendanceResult.rowsAdded} players. Event is now Completed.`);
+        setGoogleStatus(`Results Version ${version} published successfully — ${resultsResult.rowsAdded} result rows, ${scorecardResult.rowsAdded} scorecard rows, and ${eventDetailResult.rowsAdded} event-detail rows. Event is now Completed.`);
       }else{
-        setGoogleStatus(`Pre-Round Version ${version} published successfully — ${attendanceResult.rowsAdded} roster players, ${teeResult.rowsAdded} tee-sheet rows, ${scorecardResult.rowsAdded} scorecard rows, ${eventDetailResult.rowsAdded} event-detail rows, and ${preRoundResult.rowsAdded} pre-round items sent to Google Sheets.`);
+        setGoogleStatus(`Pre-Round Version ${version} published successfully — ${teeResult.rowsAdded} tee-sheet rows, ${scorecardResult.rowsAdded} scorecard rows, ${eventDetailResult.rowsAdded} event-detail rows, and ${preRoundResult.rowsAdded} pre-round items sent to Google Sheets.`);
       }
       return {eventResult, versionResult, attendanceResult, teeResult, scorecardResult, eventDetailResult, preRoundResult, resultsResult};
     }catch(err){
