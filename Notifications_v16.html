@@ -385,6 +385,31 @@
     <div id="skinsScorecardWrap" style="margin-top:14px;overflow-x:auto;"></div>
   </div>
 
+  <div class="panel" id="rotationHistoryPanel" style="display:none;">
+    <h2>Rotation History</h2>
+    <div class="hint">Builds up automatically every time you upload an event — tracks who's grouped with whom, tee-time slot rotation, and attendance across the season.</div>
+
+    <details class="summary-box" open>
+      <summary>Attendance</summary>
+      <div id="attendanceWrap" style="margin-top:8px;overflow-x:auto;"></div>
+    </details>
+
+    <details class="summary-box">
+      <summary>Repeat Pairings (same group)</summary>
+      <div id="pairingsWrap" style="margin-top:8px;overflow-x:auto;"></div>
+    </details>
+
+    <details class="summary-box">
+      <summary>Tee-Time Slot Distribution</summary>
+      <div id="slotsWrap" style="margin-top:8px;overflow-x:auto;"></div>
+    </details>
+
+    <div style="margin-top:16px;">
+      <button class="btn btn-secondary" id="resetHistoryBtn">Reset History</button>
+      <span id="historyEventCountLabel" style="font-size:12px;color:var(--ink-soft);margin-left:10px;"></span>
+    </div>
+  </div>
+
   <div class="panel" id="ctpPanel" style="display:none;">
     <h2>Payouts & Contests</h2>
     <div class="hint">Buy-in is pulled from the CSV; payout structure and closest-to-pin are set up manually since Squabbit doesn't export them. This is saved automatically for this event, so it carries over between the pre-round and post-round upload.</div>
@@ -848,6 +873,12 @@
   const teeSheetCopiedFlag=document.getElementById('teeSheetCopiedFlag');
   const skinsScorecardPanel=document.getElementById('skinsScorecardPanel');
   const skinsScorecardWrap=document.getElementById('skinsScorecardWrap');
+  const rotationHistoryPanel=document.getElementById('rotationHistoryPanel');
+  const attendanceWrap=document.getElementById('attendanceWrap');
+  const pairingsWrap=document.getElementById('pairingsWrap');
+  const slotsWrap=document.getElementById('slotsWrap');
+  const resetHistoryBtn=document.getElementById('resetHistoryBtn');
+  const historyEventCountLabel=document.getElementById('historyEventCountLabel');
   const ctpPanel=document.getElementById('ctpPanel');
   const ctpRowsEl=document.getElementById('ctpRows');
   const addCtpRowBtn=document.getElementById('addCtpRow');
@@ -879,7 +910,7 @@
   const googleConnectionStatus=document.getElementById('googleConnectionStatus');
 
   function initCollapsiblePanels(){
-    const ids = ['googleConnectionPanel','dataPanel','scoringOptionsPanel','teeSheetPanel','skinsScorecardPanel','ctpPanel','matchPanel'];
+    const ids = ['googleConnectionPanel','dataPanel','scoringOptionsPanel','teeSheetPanel','skinsScorecardPanel','rotationHistoryPanel','ctpPanel','matchPanel'];
     ids.forEach(id=>{
       const panel=document.getElementById(id);
       if(!panel || panel.dataset.collapsibleReady==='yes') return;
@@ -1449,10 +1480,9 @@
         notes:mode==='post' ? 'Published from Saturday Golf HTML app' : 'Published complete Pre-Round package from Saturday Golf HTML app'
       });
 
-      // Attendance/roster is retained locally for Rotation History. The current
-      // deployed Apps Script does not yet accept attendanceBatch, so do not let
-      // that optional history payload block the core Google publish.
-      let attendanceResult=null;
+      // Publish the Squabbit CSV roster to the Attendance sheet.
+      // Apps Script uses this roster as the source for player attendance history.
+      const attendanceResult = await postToGoogle(buildGoogleAttendancePayload(version));
       const teeResult = await postToGoogle(buildGoogleTeeSheetPayload(version));
       const scorecardResult = await postToGoogle(buildGoogleScorecardPayload(version));
       const eventDetailResult = await postToGoogle(buildGoogleEventDetailPayload(version));
@@ -1695,6 +1725,7 @@
     renderSkinsScorecard();
     renderPayoutsPanel();
     renderCards();
+    updateRotationHistoryForCurrentEvent();
   }
 
   function detectBuyIn(){
@@ -1843,6 +1874,133 @@
     const parts = name.trim().split(/\s+/);
     return ((parts[0]||'')[0]||'') + ((parts[1]||'')[0]||'');
   }
+
+  // ---------- Rotation History (tracked across all uploaded events) ----------
+  const ROTATION_HISTORY_KEY = 'rotationHistory';
+
+  async function loadRotationHistory(){
+    try{
+      const res = await window.storage.get(ROTATION_HISTORY_KEY);
+      if(res && res.value) return JSON.parse(res.value);
+    }catch(err){ /* nothing saved yet */ }
+    return { events:{}, pairCounts:{}, slotCounts:{}, attendance:{} };
+  }
+  async function saveRotationHistory(hist){
+    try{ await window.storage.set(ROTATION_HISTORY_KEY, JSON.stringify(hist)); }catch(err){ /* fail silently */ }
+  }
+  function pairKey(a,b){ return [a,b].sort().join(' & '); }
+
+  async function updateRotationHistoryForCurrentEvent(){
+    if(!eventData || !eventData.groups || !eventData.groups.length) return;
+    const eventKey = sanitizeKey(eventData.eventDateShort + '-' + eventData.eventDateLong);
+    const hist = await loadRotationHistory();
+    if(hist.events[eventKey]) { renderRotationHistory(hist); return; } // already logged, avoid double-count on re-upload
+
+    const rounds = [...new Set(eventData.groups.map(g=>g.round))].sort((a,b)=>a-b);
+    const playersSeen = new Set();
+
+    rounds.forEach(rnd=>{
+      const roundGroups = eventData.groups
+        .filter(g=>g.round===rnd)
+        .sort((a,b)=> new Date(a.teeTime) - new Date(b.teeTime));
+      roundGroups.forEach((group, idx)=>{
+        const slot = idx+1;
+        const names = group.players.map(p=>p.name);
+        names.forEach(n=>{
+          playersSeen.add(n);
+          hist.slotCounts[n] = hist.slotCounts[n] || {};
+          hist.slotCounts[n][slot] = (hist.slotCounts[n][slot]||0) + 1;
+        });
+        for(let i=0;i<names.length;i++){
+          for(let j=i+1;j<names.length;j++){
+            const key = pairKey(names[i], names[j]);
+            hist.pairCounts[key] = (hist.pairCounts[key]||0) + 1;
+          }
+        }
+      });
+    });
+
+    playersSeen.forEach(n=>{ hist.attendance[n] = (hist.attendance[n]||0) + 1; });
+    hist.events[eventKey] = { dateLabel: eventData.eventDateLong || eventData.eventDateShort || eventKey };
+
+    await saveRotationHistory(hist);
+    renderRotationHistory(hist);
+  }
+
+  function renderRotationHistory(hist){
+    if(!hist){ rotationHistoryPanel.style.display='none'; return; }
+    rotationHistoryPanel.style.display='block';
+
+    const eventCount = Object.keys(hist.events).length;
+    historyEventCountLabel.textContent = `Tracked across ${eventCount} event${eventCount===1?'':'s'} so far — use this to start fresh for a new season.`;
+
+    // Attendance table
+    const attendanceNames = Object.keys(hist.attendance).sort((a,b)=> hist.attendance[b]-hist.attendance[a]);
+    let attHtml = '<table class="sum-table"><thead><tr><th>Player</th><th>Events Played</th></tr></thead><tbody>';
+    attendanceNames.forEach(n=>{
+      attHtml += `<tr><td>${n}</td><td>${hist.attendance[n]}</td></tr>`;
+    });
+    attHtml += '</tbody></table>';
+    attendanceWrap.innerHTML = attendanceNames.length ? attHtml : '<div class="hint">No events tracked yet.</div>';
+
+    // Repeat pairings table (sorted by count desc, only show pairs seen more than once)
+    const pairKeys = Object.keys(hist.pairCounts).filter(k=>hist.pairCounts[k]>1).sort((a,b)=> hist.pairCounts[b]-hist.pairCounts[a]);
+    let pairHtml = '<table class="sum-table"><thead><tr><th>Pair</th><th>Times in Same Group</th></tr></thead><tbody>';
+    pairKeys.forEach(k=>{
+      pairHtml += `<tr><td>${k}</td><td>${hist.pairCounts[k]}</td></tr>`;
+    });
+    pairHtml += '</tbody></table>';
+    pairingsWrap.innerHTML = pairKeys.length ? pairHtml : '<div class="hint">No repeat pairings yet.</div>';
+
+    // Tee-time slot distribution table
+    const slotNames = Object.keys(hist.slotCounts).sort();
+    const maxSlot = slotNames.reduce((m,n)=> Math.max(m, ...Object.keys(hist.slotCounts[n]).map(Number)), 1);
+    let slotHtml = '<table class="sum-table"><thead><tr><th>Player</th>';
+    for(let s=1; s<=maxSlot; s++) slotHtml += `<th>${s===1?'1st':s===2?'2nd':s===3?'3rd':s+'th'} off</th>`;
+    slotHtml += '</tr></thead><tbody>';
+    slotNames.forEach(n=>{
+      slotHtml += `<tr><td>${n}</td>`;
+      for(let s=1; s<=maxSlot; s++) slotHtml += `<td>${hist.slotCounts[n][s]||0}</td>`;
+      slotHtml += '</tr>';
+    });
+    slotHtml += '</tbody></table>';
+    slotsWrap.innerHTML = slotNames.length ? slotHtml : '<div class="hint">No data yet.</div>';
+  }
+
+  let historyResetArmed = false;
+  let historyResetTimer = null;
+  resetHistoryBtn.addEventListener('click', async ()=>{
+    if(!historyResetArmed){
+      historyResetArmed = true;
+      resetHistoryBtn.textContent = 'Click again to confirm';
+      resetHistoryBtn.style.background = 'var(--red)';
+      resetHistoryBtn.style.color = '#fff';
+      resetHistoryBtn.style.borderColor = 'var(--red)';
+      clearTimeout(historyResetTimer);
+      historyResetTimer = setTimeout(()=>{
+        historyResetArmed = false;
+        resetHistoryBtn.textContent = 'Reset History';
+        resetHistoryBtn.style.background = '';
+        resetHistoryBtn.style.color = '';
+        resetHistoryBtn.style.borderColor = '';
+      }, 4000);
+      return;
+    }
+    clearTimeout(historyResetTimer);
+    historyResetArmed = false;
+    resetHistoryBtn.textContent = 'Reset History';
+    resetHistoryBtn.style.background = '';
+    resetHistoryBtn.style.color = '';
+    resetHistoryBtn.style.borderColor = '';
+    const empty = { events:{}, pairCounts:{}, slotCounts:{}, attendance:{} };
+    await saveRotationHistory(empty);
+    renderRotationHistory(empty);
+  });
+
+  (async function initRotationHistory(){
+    const hist = await loadRotationHistory();
+    renderRotationHistory(hist);
+  })();
 
   function renderSkinsScorecard(){
     const isSkins = /skins/i.test((eventData && eventData.formatName) || '');
