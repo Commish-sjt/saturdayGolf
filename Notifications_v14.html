@@ -80,6 +80,23 @@
   }
   .panel .hint{font-size:13px;color:var(--ink-soft);margin-bottom:16px;}
 
+  /* Collapsible section panels */
+  .panel.collapsible-panel{padding:0;overflow:hidden;}
+  .panel.collapsible-panel > h2{
+    margin:0; padding:17px 22px; cursor:pointer; position:relative;
+    display:flex; align-items:center; justify-content:space-between;
+    user-select:none;
+  }
+  .panel.collapsible-panel > h2::after{
+    content:'−'; font-family:Arial,sans-serif; font-size:20px;
+    font-weight:400; color:var(--green-mid); line-height:1;
+  }
+  .panel.collapsible-panel.collapsed > h2::after{content:'+';}
+  .panel.collapsible-panel > h2:hover{background:var(--paper);}
+  .panel.collapsible-panel .panel-body{padding:0 22px 22px;}
+  .panel.collapsible-panel.collapsed .panel-body{display:none;}
+  .panel.collapsible-panel > h2:focus-visible{outline:2px solid var(--gold);outline-offset:-2px;}
+
   .drop{
     border:2px dashed var(--line);
     border-radius:var(--radius);
@@ -294,7 +311,7 @@
 
   <div class="panel" id="googleConnectionPanel">
     <h2>Google Sheets Connection</h2>
-    <div class="hint">Paste your Google Apps Script Web App URL once. It will be remembered on this device. Use the Publish button below to send the current event and tee sheet to your Google Sheet.</div>
+    <div class="hint">Paste your Google Apps Script Web App URL once. It will be remembered on this device. Once the Google Apps Script URL is saved, uploading a Squabbit CSV will automatically publish the event and tee sheet to your Google Sheet. The button below remains available for a manual re-publish.</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
       <input type="text" id="googleScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:260px;padding:9px 12px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
       <input type="number" id="publishVersionInput" min="1" step="1" value="1" style="width:90px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;" title="Event version">
@@ -814,6 +831,7 @@
 
   const GOOGLE_SCRIPT_URL_KEY = 'googleAppsScriptUrl';
   const GOOGLE_VERSION_KEY = 'googlePublishVersion';
+  const DEFAULT_GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtK7gUo6FAbD-tlxrYhDoAx4P5uauKAT5Y8DfTzpxJmDMap2CCzvhIxTM-BzpAwJc5jQ/exec';
 
   function sanitizeKey(str){
     return String(str||'').replace(/[^a-zA-Z0-9]+/g,'-').replace(/^-+|-+$/g,'') || 'event';
@@ -891,6 +909,37 @@
   const publishGoogleBtn=document.getElementById('publishGoogleBtn');
   const googleConnectionStatus=document.getElementById('googleConnectionStatus');
 
+  function initCollapsiblePanels(){
+    const ids = ['googleConnectionPanel','dataPanel','scoringOptionsPanel','teeSheetPanel','skinsScorecardPanel','rotationHistoryPanel','ctpPanel','matchPanel'];
+    ids.forEach(id=>{
+      const panel=document.getElementById(id);
+      if(!panel || panel.dataset.collapsibleReady==='yes') return;
+      const heading=panel.querySelector(':scope > h2');
+      if(!heading) return;
+
+      const body=document.createElement('div');
+      body.className='panel-body';
+      while(heading.nextSibling) body.appendChild(heading.nextSibling);
+      panel.appendChild(body);
+      panel.classList.add('collapsible-panel','collapsed');
+      panel.dataset.collapsibleReady='yes';
+      heading.setAttribute('role','button');
+      heading.setAttribute('tabindex','0');
+      heading.setAttribute('aria-expanded','false');
+
+      const toggle=()=>{
+        const collapsed=panel.classList.toggle('collapsed');
+        heading.setAttribute('aria-expanded', String(!collapsed));
+      };
+      heading.addEventListener('click',toggle);
+      heading.addEventListener('keydown',e=>{
+        if(e.key==='Enter' || e.key===' '){ e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
+  initCollapsiblePanels();
+
   function setGoogleStatus(message, isError=false){
     googleConnectionStatus.textContent = message;
     googleConnectionStatus.style.color = isError ? 'var(--red)' : 'var(--green-mid)';
@@ -908,7 +957,7 @@
 
   function loadGoogleConnectionSettings(){
     try{
-      const url = window.localStorage.getItem(GOOGLE_SCRIPT_URL_KEY) || '';
+      const url = window.localStorage.getItem(GOOGLE_SCRIPT_URL_KEY) || DEFAULT_GOOGLE_SCRIPT_URL;
       const version = window.localStorage.getItem(GOOGLE_VERSION_KEY) || '1';
       googleScriptUrlInput.value = url;
       publishVersionInput.value = version;
@@ -978,6 +1027,24 @@
       version:version,
       resultsAvailable: mode==='post' ? 'Yes' : 'No'
     };
+  }
+
+  function buildGoogleAttendancePayload(version){
+    // The Squabbit CSV Players table is the event roster. Save that roster
+    // separately so later history can distinguish registered/rostered players
+    // from players who actually appeared on the Tee Sheet.
+    const rows=[];
+    (eventData.playerOrder||[]).forEach(name=>{
+      const p=eventData.players[name] || {};
+      const team=lookups && lookups.playerTeam[name] ? lookups.playerTeam[name].name : '';
+      rows.push({
+        player:name,
+        team:team,
+        handicapIndex:p.handicap || '',
+        regularFillIn:p.regularFillIn || ''
+      });
+    });
+    return {type:'attendanceBatch',eventId:getGoogleEventId(),version:version,rows:rows};
   }
 
   function buildGoogleTeeSheetPayload(version){
@@ -1221,17 +1288,9 @@
           skinsByPlayer[winner.name].push({hole:h+1,netScore});
         }
       }
-      const skinNames=Object.keys(skinsByPlayer);
-      const totalSkins=skinNames.reduce((sum,name)=>sum+skinsByPlayer[name].length,0);
-      const buyIn=parseMoney(buyInValue);
-      const pot=buyIn*(eventData.playerOrder||[]).length;
-      const ctpTotal=(ctpEntries||[]).reduce((sum,e)=>sum+parseMoney(e.payout),0);
-      const remaining=pot-ctpTotal;
-      const perSkin=totalSkins>0?Math.floor(remaining/totalSkins):0;
-      skinNames.forEach(name=>{
+      Object.keys(skinsByPlayer).forEach(name=>{
         const detail=skinsByPlayer[name].map(s=>`Hole ${s.hole} (${s.netScore})`).join(', ');
-        const payout=perSkin*skinsByPlayer[name].length;
-        rows.push({section:'Skins',item:name,player:name,value:detail,payout:payout?formatDollar(payout):''});
+        rows.push({section:'Scores',item:name,value:detail});
       });
     }
 
@@ -1389,7 +1448,7 @@
     };
   }
 
-  async function publishCurrentEventToGoogle(){
+  async function publishCurrentEventToGoogle(autoTriggered=false){
     if(!eventData){
       setGoogleStatus('Upload a Squabbit CSV first.', true);
       return;
@@ -1406,7 +1465,7 @@
 
     publishGoogleBtn.disabled=true;
     testGoogleConnectionBtn.disabled=true;
-    setGoogleStatus(mode==='post' ? 'Publishing event, results, and current tee sheet…' : 'Publishing complete Pre-Round package and current tee sheet…');
+    setGoogleStatus(autoTriggered ? (mode==='post' ? 'CSV uploaded — automatically publishing event, results, and tee sheet…' : 'CSV uploaded — automatically publishing event and tee sheet…') : (mode==='post' ? 'Publishing event, results, and current tee sheet…' : 'Publishing complete Pre-Round package and current tee sheet…'));
 
     try{
       const eventResult = await postToGoogle(buildGoogleEventPayload(version));
@@ -1422,6 +1481,9 @@
         notes:mode==='post' ? 'Published from Saturday Golf HTML app' : 'Published complete Pre-Round package from Saturday Golf HTML app'
       });
 
+      // Publish the Squabbit CSV roster to the Attendance sheet.
+      // Apps Script uses this roster as the source for player attendance history.
+      const attendanceResult = await postToGoogle(buildGoogleAttendancePayload(version));
       const teeResult = await postToGoogle(buildGoogleTeeSheetPayload(version));
       const scorecardResult = await postToGoogle(buildGoogleScorecardPayload(version));
       const eventDetailResult = await postToGoogle(buildGoogleEventDetailPayload(version));
@@ -1438,7 +1500,7 @@
       }else{
         setGoogleStatus(`Pre-Round Version ${version} published successfully — ${teeResult.rowsAdded} tee-sheet rows, ${scorecardResult.rowsAdded} scorecard rows, ${eventDetailResult.rowsAdded} event-detail rows, and ${preRoundResult.rowsAdded} pre-round items sent to Google Sheets.`);
       }
-      return {eventResult, versionResult, teeResult, scorecardResult, eventDetailResult, preRoundResult, resultsResult};
+      return {eventResult, versionResult, attendanceResult, teeResult, scorecardResult, eventDetailResult, preRoundResult, resultsResult};
     }catch(err){
       setGoogleStatus('Publish failed: ' + err.message, true);
       throw err;
@@ -1569,6 +1631,19 @@
         fileBadge.style.display='flex';
         await detectModeAndRender();
         saveLastUpload(file.name, e.target.result);
+
+        // Automatically publish the uploaded Squabbit CSV when a Google Apps
+        // Script URL has already been saved on this device. The normal Publish
+        // button remains available for a manual re-publish after any edits.
+        if(googleScriptUrlInput.value.trim()){
+          try{
+            await publishCurrentEventToGoogle(true);
+          }catch(err){
+            // publishCurrentEventToGoogle already reports the error in the status area.
+          }
+        } else {
+          setGoogleStatus('CSV loaded. Save your Google Apps Script URL above and this event will publish automatically on the next upload.');
+        }
       }catch(err){
         alert('Could not parse this CSV. Make sure it is an unmodified Squabbit export.\n\n'+err.message);
       }
@@ -2657,7 +2732,7 @@
         const rawPayoutPerSkin = totalSkinsWon>0 ? remainingPost / totalSkinsWon : 0;
         const payoutPerSkin = Math.floor(rawPayoutPerSkin);
         const skinsLeftover = totalSkinsWon>0 ? remainingPost - (payoutPerSkin * totalSkinsWon) : 0;
-        // Skins rounding remainder is intentionally not redistributed to CTP.
+        payoutRoundingLeftover += skinsLeftover;
 
         lines.push('');
         lines.push('Net Skins Detail:');
