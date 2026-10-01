@@ -2162,6 +2162,9 @@
     lines.push('');
     if(eventData.formatName){
       lines.push(`Format: ${eventData.formatName}`);
+      if(handicapPercentage !== '' && handicapPercentage != null){
+        lines.push(`% of Handicap: ${handicapPercentage}%`);
+      }
     }
     const isQuotaPre = /quota/i.test(eventData.formatName||'');
     if(isQuotaPre){
@@ -2207,7 +2210,7 @@
       lines.push('');
       lines.push('Teams:');
       eventData.teams.forEach(team=>{
-        lines.push(`  ${team.name}: ${team.members.map(m=>m.name).join(' & ')}`);
+        lines.push(`  ${team.name}`);
       });
     }
 
