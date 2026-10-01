@@ -2162,9 +2162,12 @@
     lines.push('');
     if(eventData.formatName){
       lines.push(`Format: ${eventData.formatName}`);
-      if(handicapPercentage !== '' && handicapPercentage != null){
-        lines.push(`% of Handicap: ${handicapPercentage}%`);
-      }
+    }
+    if(useNetScores==='yes'){
+      const usageLabel = handicapUsage==='lowest'
+        ? 'Compare to Lowest'
+        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
+      lines.push(`Scoring: Net Scores — ${usageLabel}`);
     }
     const isQuotaPre = /quota/i.test(eventData.formatName||'');
     if(isQuotaPre){
@@ -2172,12 +2175,6 @@
     }
     if(formatNotes && formatNotes.trim()){
       formatNotes.split('\n').forEach(l=>lines.push(l));
-    }
-    if(useNetScores==='yes'){
-      const usageLabel = handicapUsage==='lowest'
-        ? 'Compare to Lowest'
-        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
-      lines.push(`Scoring: Net Scores — ${usageLabel}`);
     }
 
     const isTeamFormat = (eventData.teams||[]).some(t=>t.members.length>1);
@@ -2359,6 +2356,12 @@
     lines.push('');
     if(eventData.formatName){
       lines.push(`Format: ${eventData.formatName}`);
+    }
+    if(useNetScores==='yes'){
+      const usageLabel = handicapUsage==='lowest'
+        ? 'Compare to Lowest'
+        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
+      lines.push(`Scoring: Net Scores — ${usageLabel}`);
     }
     if(formatNotes && formatNotes.trim()){
       formatNotes.split('\n').forEach(l=>lines.push(l));
@@ -2668,7 +2671,7 @@
     heading.style.fontSize='19px';
     heading.style.margin='4px 4px 12px';
     heading.style.color='var(--green-deep)';
-    heading.textContent = mode==='pre' ? '3. Pre-Round Group Email' : '3. Post-Round Group Email';
+    heading.textContent = mode==='pre' ? 'Pre-Round Group Email' : 'Post-Round Group Email';
     cardsPanel.appendChild(heading);
 
     if(mode==='pre'){
