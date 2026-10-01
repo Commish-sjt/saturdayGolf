@@ -325,6 +325,15 @@
     <h2>Confirm Details</h2>
     <div class="event-meta" id="eventMeta"></div>
 
+    <div style="margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Percentage of Playing Handicap</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="number" id="handicapPercentageInput" min="0" max="100" step="1" placeholder="90" style="max-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+        <span style="font-size:13px;color:var(--ink-soft);">%</span>
+      </div>
+      <div class="hint" style="margin-top:6px;">Enter the handicap allowance used for the game, such as 90%.</div>
+    </div>
+
     <div class="tabs" style="margin-top:16px;">
       <button class="tab-btn" id="tabPre">Pre-Round Notifications</button>
       <button class="tab-btn" id="tabPost">Post-Round Results</button>
@@ -809,6 +818,7 @@
   const clearFileBtn=document.getElementById('clearFile');
   const dataPanel=document.getElementById('dataPanel');
   const eventMeta=document.getElementById('eventMeta');
+  const handicapPercentageInput=document.getElementById('handicapPercentageInput');
   const summaryBody=document.getElementById('summaryBody');
   const tabPre=document.getElementById('tabPre');
   const tabPost=document.getElementById('tabPost');
@@ -1475,7 +1485,15 @@
     }catch(err){ /* status already shown above */ }
   });
 
-  function renderScoringOptions(){}
+  function renderScoringOptions(){
+    handicapPercentageInput.value = handicapPercentage || '';
+  }
+
+  handicapPercentageInput.addEventListener('input', e=>{
+    handicapPercentage = e.target.value;
+    renderCards();
+    schedulePayoutSave();
+  });
 
   formatNotesInput.addEventListener('input', e=>{
     formatNotes = e.target.value;
@@ -1614,12 +1632,14 @@
       buyInInput.value = buyInValue;
       formatNotesInput.value = formatNotes;
       if(ryderRoundFilterInput) ryderRoundFilterInput.value = ryderRoundFilter;
+      handicapPercentageInput.value = handicapPercentage;
       if(!buyInValue) detectBuyIn();
     } else {
       placePayouts=[]; ctpEntries=[]; placeIdCounter=0; ctpIdCounter=0; formatNotes=''; ryderRoundFilter='both';
       useNetScores='no'; handicapUsage='percentage'; handicapPercentage='';
       formatNotesInput.value='';
       if(ryderRoundFilterInput) ryderRoundFilterInput.value='both';
+      handicapPercentageInput.value='';
       detectBuyIn();
       matchPairings = /ryder/i.test(eventData.formatName||'') ? autoGenerateMatchPairings() : {1:[],2:[]};
     }
