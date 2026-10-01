@@ -295,7 +295,7 @@
   </header>
 
   <div class="panel">
-    <h2>1. Upload event CSV</h2>
+    <h2>Upload event CSV</h2>
     <div class="hint">Works with either the pre-event planning export or the post-round results export — the tool figures out which one it is.</div>
     <div class="drop" id="dropZone">
       <input type="file" id="fileInput" accept=".csv">
@@ -322,7 +322,7 @@
   </div>
 
   <div class="panel" id="dataPanel" style="display:none;">
-    <h2>3. Confirm details</h2>
+    <h2>Confirm Details</h2>
     <div class="event-meta" id="eventMeta"></div>
 
     <div class="tabs" style="margin-top:16px;">
@@ -337,11 +337,6 @@
         <tbody id="summaryBody"></tbody>
       </table>
     </details>
-  </div>
-
-  <div class="panel" id="section2Panel">
-    <h2>2. Tee Sheet &amp; Payouts / Contests</h2>
-    <div class="hint">Review the tee sheet and set the event payout and contest information.</div>
   </div>
 
   <div class="panel" id="teeSheetPanel" style="display:none;">
@@ -1530,7 +1525,7 @@
   function resetAll(){
     eventData=null; lookups=null; mode=null; ctpEntries=[]; placePayouts=[]; buyInValue=''; formatNotes=''; matchPairings={1:[],2:[]}; ryderRoundFilter='both'; useNetScores='no'; handicapUsage='percentage'; handicapPercentage=''; currentStorageKey=null;
     fileBadge.style.display='none'; fileInput.value='';
-    dataPanel.style.display='none'; ctpPanel.style.display='none'; teeSheetPanel.style.display='none'; document.getElementById('section2Panel').style.display='none'; skinsScorecardPanel.style.display='none';
+    dataPanel.style.display='none'; ctpPanel.style.display='none'; teeSheetPanel.style.display='none'; skinsScorecardPanel.style.display='none';
     cardsPanel.innerHTML=''; footerNote.style.display='none';
   }
 
@@ -1634,7 +1629,6 @@
     renderSummary();
     renderTabs();
     dataPanel.style.display='block';
-    document.getElementById('section2Panel').style.display='block';
     footerNote.style.display='block';
     renderTeeSheet();
     renderSkinsScorecard();
