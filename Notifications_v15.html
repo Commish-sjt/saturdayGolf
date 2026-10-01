@@ -325,13 +325,34 @@
     <h2>Confirm Details</h2>
     <div class="event-meta" id="eventMeta"></div>
 
-    <div style="margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);">
+    <div id="handicapPercentageWrap" style="margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);display:none;">
       <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Percentage of Playing Handicap</label>
       <div style="display:flex;align-items:center;gap:8px;">
         <input type="number" id="handicapPercentageInput" min="0" max="100" step="1" placeholder="90" style="max-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
         <span style="font-size:13px;color:var(--ink-soft);">%</span>
       </div>
       <div class="hint" style="margin-top:6px;">Enter the handicap allowance used for the game, such as 90%.</div>
+    </div>
+
+    <div id="scoringOptionsPanel" style="margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;">Scoring Options</div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+        <div>
+          <label style="font-size:13px;color:var(--ink-soft);display:block;margin-bottom:6px;">Use Net Scores</label>
+          <select id="useNetScoresInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div id="handicapUsageWrap" style="display:none;">
+          <label style="font-size:13px;color:var(--ink-soft);display:block;margin-bottom:6px;">Handicap Usage</label>
+          <select id="handicapUsageInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+            <option value="percentage">Percentage of Handicap</option>
+            <option value="lowest">Compare to Lowest</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px;">When Net Scores is enabled, the selected scoring method is included in the pre- and post-round group emails.</div>
     </div>
 
     <div class="tabs" style="margin-top:16px;">
@@ -818,6 +839,11 @@
   const clearFileBtn=document.getElementById('clearFile');
   const dataPanel=document.getElementById('dataPanel');
   const eventMeta=document.getElementById('eventMeta');
+  const scoringOptionsPanel=document.getElementById('scoringOptionsPanel');
+  const useNetScoresInput=document.getElementById('useNetScoresInput');
+  const handicapUsageWrap=document.getElementById('handicapUsageWrap');
+  const handicapUsageInput=document.getElementById('handicapUsageInput');
+  const handicapPercentageWrap=document.getElementById('handicapPercentageWrap');
   const handicapPercentageInput=document.getElementById('handicapPercentageInput');
   const summaryBody=document.getElementById('summaryBody');
   const tabPre=document.getElementById('tabPre');
@@ -1486,8 +1512,27 @@
   });
 
   function renderScoringOptions(){
+    if(!scoringOptionsPanel) return;
+    useNetScoresInput.value = useNetScores;
+    handicapUsageInput.value = handicapUsage;
     handicapPercentageInput.value = handicapPercentage || '';
+    handicapUsageWrap.style.display = useNetScores === 'yes' ? 'block' : 'none';
+    handicapPercentageWrap.style.display = (useNetScores === 'yes' && handicapUsage === 'percentage') ? 'block' : 'none';
   }
+
+  useNetScoresInput.addEventListener('change', e=>{
+    useNetScores = e.target.value;
+    renderScoringOptions();
+    renderCards();
+    schedulePayoutSave();
+  });
+
+  handicapUsageInput.addEventListener('change', e=>{
+    handicapUsage = e.target.value;
+    renderScoringOptions();
+    renderCards();
+    schedulePayoutSave();
+  });
 
   handicapPercentageInput.addEventListener('input', e=>{
     handicapPercentage = e.target.value;
