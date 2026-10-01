@@ -2276,36 +2276,10 @@
         lines.push('');
         lines.push(`Tee Time: ${formatTeeTime(group.teeTime)}`);
         if(!isRyderCupPre){
-          const isBestBall = /^best ball$/i.test((eventData.formatName||'').trim());
-          const isSkinsPre = /skins/i.test(eventData.formatName||'');
-          const isQuota = /quota/i.test(eventData.formatName||'');
           group.players.forEach(gp=>{
-            const p=eventData.players[gp.name];
             const playingLabel = gp.playingHandicap;
-            if(isBestBall){
-              const adjHcp = parseHandicapAdjusted(playingLabel);
-              const strokesLabel = !isNaN(adjHcp) ? `Strokes: ${adjHcp}` : '';
-              lines.push(strokesLabel ? `  • ${gp.name} (${strokesLabel})` : `  • ${gp.name}`);
-            } else if(isSkinsPre){
-              const strokesLabel = playingLabel ? `Strokes: ${playingLabel}` : '';
-              lines.push(strokesLabel ? `  • ${gp.name} (${strokesLabel})` : `  • ${gp.name}`);
-            } else if(isQuota){
-              const idxLabel = p ? p.handicap : '';
-              const hcpNum = parseHandicapAdjusted(playingLabel);
-              const quotaLabel = !isNaN(hcpNum) ? `Quota: ${36 - hcpNum}` : '';
-              const parts = [];
-              if(idxLabel) parts.push(`Handicap Index: ${idxLabel}`);
-              if(playingLabel) parts.push(`Playing Handicap: ${playingLabel}`);
-              if(quotaLabel) parts.push(quotaLabel);
-              lines.push(parts.length ? `  • ${gp.name} (${parts.join(', ')})` : `  • ${gp.name}`);
-            } else {
-              const teeLabel = gp.tee || (p ? p.tee : '');
-              const idxLabel = p ? p.handicap : '';
-              const hcpLabel = playingLabel
-                ? `Handicap Index: ${idxLabel}, Playing Handicap: ${playingLabel}`
-                : `Handicap Index: ${idxLabel}`;
-              lines.push(`  • ${gp.name} (${teeLabel} — ${hcpLabel})`);
-            }
+            const playingHcpText = playingLabel ? `Playing HCP: ${playingLabel}` : '';
+            lines.push(playingHcpText ? `  • ${gp.name} (${playingHcpText})` : `  • ${gp.name}`);
           });
         }
 
