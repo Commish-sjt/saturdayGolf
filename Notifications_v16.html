@@ -295,7 +295,7 @@
   </header>
 
   <div class="panel">
-    <h2>1. Upload event CSV</h2>
+    <h2>Upload event CSV</h2>
     <div class="hint">Works with either the pre-event planning export or the post-round results export — the tool figures out which one it is.</div>
     <div class="drop" id="dropZone">
       <input type="file" id="fileInput" accept=".csv">
@@ -322,8 +322,38 @@
   </div>
 
   <div class="panel" id="dataPanel" style="display:none;">
-    <h2>2. Confirm details</h2>
+    <h2>Confirm Details</h2>
     <div class="event-meta" id="eventMeta"></div>
+
+    <div id="handicapPercentageWrap" style="margin-top:16px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);display:none;">
+      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Percentage of Playing Handicap</label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="number" id="handicapPercentageInput" min="0" max="100" step="1" placeholder="90" style="max-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+        <span style="font-size:13px;color:var(--ink-soft);">%</span>
+      </div>
+      <div class="hint" style="margin-top:6px;">Enter the handicap allowance used for the game, such as 90%.</div>
+    </div>
+
+    <div id="scoringOptionsPanel" style="margin-top:12px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--paper);">
+      <div style="font-size:13px;font-weight:600;color:var(--ink-soft);margin-bottom:10px;">Scoring Options</div>
+      <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;">
+        <div>
+          <label style="font-size:13px;color:var(--ink-soft);display:block;margin-bottom:6px;">Use Net Scores</label>
+          <select id="useNetScoresInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+            <option value="no">No</option>
+            <option value="yes">Yes</option>
+          </select>
+        </div>
+        <div id="handicapUsageWrap" style="display:none;">
+          <label style="font-size:13px;color:var(--ink-soft);display:block;margin-bottom:6px;">Handicap Usage</label>
+          <select id="handicapUsageInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
+            <option value="percentage">Percentage of Handicap</option>
+            <option value="lowest">Compare to Lowest</option>
+          </select>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:8px;">When Net Scores is enabled, the selected scoring method is included in the pre- and post-round group emails.</div>
+    </div>
 
     <div class="tabs" style="margin-top:16px;">
       <button class="tab-btn" id="tabPre">Pre-Round Notifications</button>
@@ -337,35 +367,6 @@
         <tbody id="summaryBody"></tbody>
       </table>
     </details>
-  </div>
-
-  <div class="panel" id="scoringOptionsPanel" style="display:none;">
-    <h2>Scoring Options</h2>
-    <div class="hint">Applies to all formats — saved per event and included in the pre-round group email.</div>
-
-    <div style="margin-top:14px;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Use Net Scores</label>
-      <select id="useNetScoresInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
-        <option value="no">No</option>
-        <option value="yes">Yes</option>
-      </select>
-    </div>
-
-    <div id="handicapUsageWrap" style="margin-top:14px;display:none;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Handicap Usage</label>
-      <select id="handicapUsageInput" style="padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
-        <option value="percentage">Percentage of Handicap</option>
-        <option value="lowest">Compare to Lowest</option>
-      </select>
-    </div>
-
-    <div id="handicapPercentageWrap" style="margin-top:14px;display:none;">
-      <label style="font-size:13px;font-weight:600;color:var(--ink-soft);display:block;margin-bottom:6px;">Percentage of Playing Handicap</label>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input type="text" id="handicapPercentageInput" placeholder="90" style="max-width:100px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;font-size:13.5px;">
-        <span style="font-size:13px;color:var(--ink-soft);">%</span>
-      </div>
-    </div>
   </div>
 
   <div class="panel" id="teeSheetPanel" style="display:none;">
@@ -383,31 +384,6 @@
     <h2>Net Skins Scorecard</h2>
     <div class="hint">Net score on every hole for every player, with the hole highlighted for whoever won the net skin. This is a reference view only — it isn't included in the copyable group email.</div>
     <div id="skinsScorecardWrap" style="margin-top:14px;overflow-x:auto;"></div>
-  </div>
-
-  <div class="panel" id="rotationHistoryPanel" style="display:none;">
-    <h2>Rotation History</h2>
-    <div class="hint">Builds up automatically every time you upload an event — tracks who's grouped with whom, tee-time slot rotation, and attendance across the season.</div>
-
-    <details class="summary-box" open>
-      <summary>Attendance</summary>
-      <div id="attendanceWrap" style="margin-top:8px;overflow-x:auto;"></div>
-    </details>
-
-    <details class="summary-box">
-      <summary>Repeat Pairings (same group)</summary>
-      <div id="pairingsWrap" style="margin-top:8px;overflow-x:auto;"></div>
-    </details>
-
-    <details class="summary-box">
-      <summary>Tee-Time Slot Distribution</summary>
-      <div id="slotsWrap" style="margin-top:8px;overflow-x:auto;"></div>
-    </details>
-
-    <div style="margin-top:16px;">
-      <button class="btn btn-secondary" id="resetHistoryBtn">Reset History</button>
-      <span id="historyEventCountLabel" style="font-size:12px;color:var(--ink-soft);margin-left:10px;"></span>
-    </div>
   </div>
 
   <div class="panel" id="ctpPanel" style="display:none;">
@@ -863,6 +839,12 @@
   const clearFileBtn=document.getElementById('clearFile');
   const dataPanel=document.getElementById('dataPanel');
   const eventMeta=document.getElementById('eventMeta');
+  const scoringOptionsPanel=document.getElementById('scoringOptionsPanel');
+  const useNetScoresInput=document.getElementById('useNetScoresInput');
+  const handicapUsageWrap=document.getElementById('handicapUsageWrap');
+  const handicapUsageInput=document.getElementById('handicapUsageInput');
+  const handicapPercentageWrap=document.getElementById('handicapPercentageWrap');
+  const handicapPercentageInput=document.getElementById('handicapPercentageInput');
   const summaryBody=document.getElementById('summaryBody');
   const tabPre=document.getElementById('tabPre');
   const tabPost=document.getElementById('tabPost');
@@ -873,12 +855,6 @@
   const teeSheetCopiedFlag=document.getElementById('teeSheetCopiedFlag');
   const skinsScorecardPanel=document.getElementById('skinsScorecardPanel');
   const skinsScorecardWrap=document.getElementById('skinsScorecardWrap');
-  const rotationHistoryPanel=document.getElementById('rotationHistoryPanel');
-  const attendanceWrap=document.getElementById('attendanceWrap');
-  const pairingsWrap=document.getElementById('pairingsWrap');
-  const slotsWrap=document.getElementById('slotsWrap');
-  const resetHistoryBtn=document.getElementById('resetHistoryBtn');
-  const historyEventCountLabel=document.getElementById('historyEventCountLabel');
   const ctpPanel=document.getElementById('ctpPanel');
   const ctpRowsEl=document.getElementById('ctpRows');
   const addCtpRowBtn=document.getElementById('addCtpRow');
@@ -895,12 +871,6 @@
   const addRound1MatchBtn=document.getElementById('addRound1Match');
   const addRound2MatchBtn=document.getElementById('addRound2Match');
   const ryderRoundFilterInput=document.getElementById('ryderRoundFilterInput');
-  const scoringOptionsPanel=document.getElementById('scoringOptionsPanel');
-  const useNetScoresInput=document.getElementById('useNetScoresInput');
-  const handicapUsageWrap=document.getElementById('handicapUsageWrap');
-  const handicapUsageInput=document.getElementById('handicapUsageInput');
-  const handicapPercentageWrap=document.getElementById('handicapPercentageWrap');
-  const handicapPercentageInput=document.getElementById('handicapPercentageInput');
   const cardsPanel=document.getElementById('cardsPanel');
   const footerNote=document.getElementById('footerNote');
   const googleScriptUrlInput=document.getElementById('googleScriptUrlInput');
@@ -910,7 +880,7 @@
   const googleConnectionStatus=document.getElementById('googleConnectionStatus');
 
   function initCollapsiblePanels(){
-    const ids = ['googleConnectionPanel','dataPanel','scoringOptionsPanel','teeSheetPanel','skinsScorecardPanel','rotationHistoryPanel','ctpPanel','matchPanel'];
+    const ids = ['googleConnectionPanel','dataPanel','teeSheetPanel','skinsScorecardPanel','ctpPanel','matchPanel'];
     ids.forEach(id=>{
       const panel=document.getElementById(id);
       if(!panel || panel.dataset.collapsibleReady==='yes') return;
@@ -1040,6 +1010,7 @@
       rows.push({
         player:name,
         team:team,
+        handicapIndex:p.handicap || '',
         regularFillIn:p.regularFillIn || ''
       });
     });
@@ -1541,13 +1512,12 @@
   });
 
   function renderScoringOptions(){
-    if(!eventData){ scoringOptionsPanel.style.display='none'; return; }
-    scoringOptionsPanel.style.display='block';
+    if(!scoringOptionsPanel) return;
     useNetScoresInput.value = useNetScores;
     handicapUsageInput.value = handicapUsage;
-    handicapPercentageInput.value = handicapPercentage;
-    handicapUsageWrap.style.display = useNetScores==='yes' ? 'block' : 'none';
-    handicapPercentageWrap.style.display = (useNetScores==='yes' && handicapUsage==='percentage') ? 'block' : 'none';
+    handicapPercentageInput.value = handicapPercentage || '';
+    handicapUsageWrap.style.display = useNetScores === 'yes' ? 'block' : 'none';
+    handicapPercentageWrap.style.display = (useNetScores === 'yes' && handicapUsage === 'percentage') ? 'block' : 'none';
   }
 
   useNetScoresInput.addEventListener('change', e=>{
@@ -1556,12 +1526,14 @@
     renderCards();
     schedulePayoutSave();
   });
+
   handicapUsageInput.addEventListener('change', e=>{
     handicapUsage = e.target.value;
     renderScoringOptions();
     renderCards();
     schedulePayoutSave();
   });
+
   handicapPercentageInput.addEventListener('input', e=>{
     handicapPercentage = e.target.value;
     renderCards();
@@ -1616,7 +1588,7 @@
   function resetAll(){
     eventData=null; lookups=null; mode=null; ctpEntries=[]; placePayouts=[]; buyInValue=''; formatNotes=''; matchPairings={1:[],2:[]}; ryderRoundFilter='both'; useNetScores='no'; handicapUsage='percentage'; handicapPercentage=''; currentStorageKey=null;
     fileBadge.style.display='none'; fileInput.value='';
-    dataPanel.style.display='none'; ctpPanel.style.display='none'; teeSheetPanel.style.display='none'; skinsScorecardPanel.style.display='none'; scoringOptionsPanel.style.display='none';
+    dataPanel.style.display='none'; ctpPanel.style.display='none'; teeSheetPanel.style.display='none'; skinsScorecardPanel.style.display='none';
     cardsPanel.innerHTML=''; footerNote.style.display='none';
   }
 
@@ -1705,12 +1677,14 @@
       buyInInput.value = buyInValue;
       formatNotesInput.value = formatNotes;
       if(ryderRoundFilterInput) ryderRoundFilterInput.value = ryderRoundFilter;
+      handicapPercentageInput.value = handicapPercentage;
       if(!buyInValue) detectBuyIn();
     } else {
       placePayouts=[]; ctpEntries=[]; placeIdCounter=0; ctpIdCounter=0; formatNotes=''; ryderRoundFilter='both';
       useNetScores='no'; handicapUsage='percentage'; handicapPercentage='';
       formatNotesInput.value='';
       if(ryderRoundFilterInput) ryderRoundFilterInput.value='both';
+      handicapPercentageInput.value='';
       detectBuyIn();
       matchPairings = /ryder/i.test(eventData.formatName||'') ? autoGenerateMatchPairings() : {1:[],2:[]};
     }
@@ -1725,7 +1699,6 @@
     renderSkinsScorecard();
     renderPayoutsPanel();
     renderCards();
-    updateRotationHistoryForCurrentEvent();
   }
 
   function detectBuyIn(){
@@ -1874,133 +1847,6 @@
     const parts = name.trim().split(/\s+/);
     return ((parts[0]||'')[0]||'') + ((parts[1]||'')[0]||'');
   }
-
-  // ---------- Rotation History (tracked across all uploaded events) ----------
-  const ROTATION_HISTORY_KEY = 'rotationHistory';
-
-  async function loadRotationHistory(){
-    try{
-      const res = await window.storage.get(ROTATION_HISTORY_KEY);
-      if(res && res.value) return JSON.parse(res.value);
-    }catch(err){ /* nothing saved yet */ }
-    return { events:{}, pairCounts:{}, slotCounts:{}, attendance:{} };
-  }
-  async function saveRotationHistory(hist){
-    try{ await window.storage.set(ROTATION_HISTORY_KEY, JSON.stringify(hist)); }catch(err){ /* fail silently */ }
-  }
-  function pairKey(a,b){ return [a,b].sort().join(' & '); }
-
-  async function updateRotationHistoryForCurrentEvent(){
-    if(!eventData || !eventData.groups || !eventData.groups.length) return;
-    const eventKey = sanitizeKey(eventData.eventDateShort + '-' + eventData.eventDateLong);
-    const hist = await loadRotationHistory();
-    if(hist.events[eventKey]) { renderRotationHistory(hist); return; } // already logged, avoid double-count on re-upload
-
-    const rounds = [...new Set(eventData.groups.map(g=>g.round))].sort((a,b)=>a-b);
-    const playersSeen = new Set();
-
-    rounds.forEach(rnd=>{
-      const roundGroups = eventData.groups
-        .filter(g=>g.round===rnd)
-        .sort((a,b)=> new Date(a.teeTime) - new Date(b.teeTime));
-      roundGroups.forEach((group, idx)=>{
-        const slot = idx+1;
-        const names = group.players.map(p=>p.name);
-        names.forEach(n=>{
-          playersSeen.add(n);
-          hist.slotCounts[n] = hist.slotCounts[n] || {};
-          hist.slotCounts[n][slot] = (hist.slotCounts[n][slot]||0) + 1;
-        });
-        for(let i=0;i<names.length;i++){
-          for(let j=i+1;j<names.length;j++){
-            const key = pairKey(names[i], names[j]);
-            hist.pairCounts[key] = (hist.pairCounts[key]||0) + 1;
-          }
-        }
-      });
-    });
-
-    playersSeen.forEach(n=>{ hist.attendance[n] = (hist.attendance[n]||0) + 1; });
-    hist.events[eventKey] = { dateLabel: eventData.eventDateLong || eventData.eventDateShort || eventKey };
-
-    await saveRotationHistory(hist);
-    renderRotationHistory(hist);
-  }
-
-  function renderRotationHistory(hist){
-    if(!hist){ rotationHistoryPanel.style.display='none'; return; }
-    rotationHistoryPanel.style.display='block';
-
-    const eventCount = Object.keys(hist.events).length;
-    historyEventCountLabel.textContent = `Tracked across ${eventCount} event${eventCount===1?'':'s'} so far — use this to start fresh for a new season.`;
-
-    // Attendance table
-    const attendanceNames = Object.keys(hist.attendance).sort((a,b)=> hist.attendance[b]-hist.attendance[a]);
-    let attHtml = '<table class="sum-table"><thead><tr><th>Player</th><th>Events Played</th></tr></thead><tbody>';
-    attendanceNames.forEach(n=>{
-      attHtml += `<tr><td>${n}</td><td>${hist.attendance[n]}</td></tr>`;
-    });
-    attHtml += '</tbody></table>';
-    attendanceWrap.innerHTML = attendanceNames.length ? attHtml : '<div class="hint">No events tracked yet.</div>';
-
-    // Repeat pairings table (sorted by count desc, only show pairs seen more than once)
-    const pairKeys = Object.keys(hist.pairCounts).filter(k=>hist.pairCounts[k]>1).sort((a,b)=> hist.pairCounts[b]-hist.pairCounts[a]);
-    let pairHtml = '<table class="sum-table"><thead><tr><th>Pair</th><th>Times in Same Group</th></tr></thead><tbody>';
-    pairKeys.forEach(k=>{
-      pairHtml += `<tr><td>${k}</td><td>${hist.pairCounts[k]}</td></tr>`;
-    });
-    pairHtml += '</tbody></table>';
-    pairingsWrap.innerHTML = pairKeys.length ? pairHtml : '<div class="hint">No repeat pairings yet.</div>';
-
-    // Tee-time slot distribution table
-    const slotNames = Object.keys(hist.slotCounts).sort();
-    const maxSlot = slotNames.reduce((m,n)=> Math.max(m, ...Object.keys(hist.slotCounts[n]).map(Number)), 1);
-    let slotHtml = '<table class="sum-table"><thead><tr><th>Player</th>';
-    for(let s=1; s<=maxSlot; s++) slotHtml += `<th>${s===1?'1st':s===2?'2nd':s===3?'3rd':s+'th'} off</th>`;
-    slotHtml += '</tr></thead><tbody>';
-    slotNames.forEach(n=>{
-      slotHtml += `<tr><td>${n}</td>`;
-      for(let s=1; s<=maxSlot; s++) slotHtml += `<td>${hist.slotCounts[n][s]||0}</td>`;
-      slotHtml += '</tr>';
-    });
-    slotHtml += '</tbody></table>';
-    slotsWrap.innerHTML = slotNames.length ? slotHtml : '<div class="hint">No data yet.</div>';
-  }
-
-  let historyResetArmed = false;
-  let historyResetTimer = null;
-  resetHistoryBtn.addEventListener('click', async ()=>{
-    if(!historyResetArmed){
-      historyResetArmed = true;
-      resetHistoryBtn.textContent = 'Click again to confirm';
-      resetHistoryBtn.style.background = 'var(--red)';
-      resetHistoryBtn.style.color = '#fff';
-      resetHistoryBtn.style.borderColor = 'var(--red)';
-      clearTimeout(historyResetTimer);
-      historyResetTimer = setTimeout(()=>{
-        historyResetArmed = false;
-        resetHistoryBtn.textContent = 'Reset History';
-        resetHistoryBtn.style.background = '';
-        resetHistoryBtn.style.color = '';
-        resetHistoryBtn.style.borderColor = '';
-      }, 4000);
-      return;
-    }
-    clearTimeout(historyResetTimer);
-    historyResetArmed = false;
-    resetHistoryBtn.textContent = 'Reset History';
-    resetHistoryBtn.style.background = '';
-    resetHistoryBtn.style.color = '';
-    resetHistoryBtn.style.borderColor = '';
-    const empty = { events:{}, pairCounts:{}, slotCounts:{}, attendance:{} };
-    await saveRotationHistory(empty);
-    renderRotationHistory(empty);
-  });
-
-  (async function initRotationHistory(){
-    const hist = await loadRotationHistory();
-    renderRotationHistory(hist);
-  })();
 
   function renderSkinsScorecard(){
     const isSkins = /skins/i.test((eventData && eventData.formatName) || '');
@@ -2350,7 +2196,8 @@
 
   function generateGroupPreEmail(){
     const eventDateLabel = getEventDateLabel();
-    const subject = `Saturday Golf – ${eventDateLabel} – Tee Times & Groups`;
+    const hasTeeTimes = Array.isArray(eventData.groups) && eventData.groups.length > 0;
+    const subject = `Saturday Golf – ${eventDateLabel} – ${hasTeeTimes ? 'Tee Times & Groups' : 'Player Roster'}`;
     let lines=[];
     lines.push('Hey everyone,');
     lines.push('');
@@ -2362,18 +2209,18 @@
     if(eventData.formatName){
       lines.push(`Format: ${eventData.formatName}`);
     }
+    if(useNetScores==='yes'){
+      const usageLabel = handicapUsage==='lowest'
+        ? 'Compare to Lowest'
+        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
+      lines.push(`Scoring: Net Scores — ${usageLabel}`);
+    }
     const isQuotaPre = /quota/i.test(eventData.formatName||'');
     if(isQuotaPre){
       lines.push(QUOTA_RULES_TEXT);
     }
     if(formatNotes && formatNotes.trim()){
       formatNotes.split('\n').forEach(l=>lines.push(l));
-    }
-    if(useNetScores==='yes'){
-      const usageLabel = handicapUsage==='lowest'
-        ? 'Compare to Lowest'
-        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
-      lines.push(`Scoring: Net Scores — ${usageLabel}`);
     }
 
     const isTeamFormat = (eventData.teams||[]).some(t=>t.members.length>1);
@@ -2385,6 +2232,9 @@
         if(!filteredRoundsForRoster.includes(g.round)) return;
         g.players.forEach(p=>playersInRounds.add(p.name));
       });
+      if(!playersInRounds.size && !hasTeeTimes){
+        (eventData.playerOrder||[]).forEach(name=>playersInRounds.add(name));
+      }
       const firstNameCounts = {};
       eventData.playerOrder.filter(n=>playersInRounds.has(n)).forEach(n=>{
         const first = n.trim().split(/\s+/)[0];
@@ -2406,8 +2256,24 @@
       lines.push('');
       lines.push('Teams:');
       eventData.teams.forEach(team=>{
-        lines.push(`  ${team.name}: ${team.members.map(m=>m.name).join(' & ')}`);
+        lines.push(`  ${team.name}`);
       });
+    }
+
+    // If Squabbit has the registered roster but tee times have not yet been
+    // created, use the roster for the pre-round email instead of producing
+    // an email with no player lineup. The roster establishes registration;
+    // it does not imply that these players ultimately played the round.
+    if(!hasTeeTimes){
+      const rosterNames = (eventData.playerOrder || []).slice();
+      if(rosterNames.length){
+        lines.push('');
+        lines.push('Tee times have not been created yet.');
+        lines.push('Registered Players:');
+        rosterNames.forEach(name=>{
+          lines.push(`  • ${name}`);
+        });
+      }
     }
 
     const roundFormatLabels = {1:'2-Man Teams/Best Ball Matchplay', 2:'Singles Matchplay'};
@@ -2430,36 +2296,10 @@
         lines.push('');
         lines.push(`Tee Time: ${formatTeeTime(group.teeTime)}`);
         if(!isRyderCupPre){
-          const isBestBall = /^best ball$/i.test((eventData.formatName||'').trim());
-          const isSkinsPre = /skins/i.test(eventData.formatName||'');
-          const isQuota = /quota/i.test(eventData.formatName||'');
           group.players.forEach(gp=>{
-            const p=eventData.players[gp.name];
             const playingLabel = gp.playingHandicap;
-            if(isBestBall){
-              const adjHcp = parseHandicapAdjusted(playingLabel);
-              const strokesLabel = !isNaN(adjHcp) ? `Strokes: ${adjHcp}` : '';
-              lines.push(strokesLabel ? `  • ${gp.name} (${strokesLabel})` : `  • ${gp.name}`);
-            } else if(isSkinsPre){
-              const strokesLabel = playingLabel ? `Strokes: ${playingLabel}` : '';
-              lines.push(strokesLabel ? `  • ${gp.name} (${strokesLabel})` : `  • ${gp.name}`);
-            } else if(isQuota){
-              const idxLabel = p ? p.handicap : '';
-              const hcpNum = parseHandicapAdjusted(playingLabel);
-              const quotaLabel = !isNaN(hcpNum) ? `Quota: ${36 - hcpNum}` : '';
-              const parts = [];
-              if(idxLabel) parts.push(`Handicap Index: ${idxLabel}`);
-              if(playingLabel) parts.push(`Playing Handicap: ${playingLabel}`);
-              if(quotaLabel) parts.push(quotaLabel);
-              lines.push(parts.length ? `  • ${gp.name} (${parts.join(', ')})` : `  • ${gp.name}`);
-            } else {
-              const teeLabel = gp.tee || (p ? p.tee : '');
-              const idxLabel = p ? p.handicap : '';
-              const hcpLabel = playingLabel
-                ? `Handicap Index: ${idxLabel}, Playing Handicap: ${playingLabel}`
-                : `Handicap Index: ${idxLabel}`;
-              lines.push(`  • ${gp.name} (${teeLabel} — ${hcpLabel})`);
-            }
+            const playingHcpText = playingLabel ? `Playing Handicap: ${playingLabel}` : '';
+            lines.push(playingHcpText ? `  • ${gp.name} (${playingHcpText})` : `  • ${gp.name}`);
           });
         }
 
@@ -2555,6 +2395,12 @@
     lines.push('');
     if(eventData.formatName){
       lines.push(`Format: ${eventData.formatName}`);
+    }
+    if(useNetScores==='yes'){
+      const usageLabel = handicapUsage==='lowest'
+        ? 'Compare to Lowest'
+        : `Percentage of Handicap${handicapPercentage ? ` (${handicapPercentage}%)` : ''}`;
+      lines.push(`Scoring: Net Scores — ${usageLabel}`);
     }
     if(formatNotes && formatNotes.trim()){
       formatNotes.split('\n').forEach(l=>lines.push(l));
@@ -2864,7 +2710,7 @@
     heading.style.fontSize='19px';
     heading.style.margin='4px 4px 12px';
     heading.style.color='var(--green-deep)';
-    heading.textContent = mode==='pre' ? '3. Pre-Round Group Email' : '3. Post-Round Group Email';
+    heading.textContent = mode==='pre' ? 'Pre-Round Group Email' : 'Post-Round Group Email';
     cardsPanel.appendChild(heading);
 
     if(mode==='pre'){
