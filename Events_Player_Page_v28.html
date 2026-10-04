@@ -1,0 +1,315 @@
+f<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Saturday Golf League — Events</title>
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7f4;
+  color: #17351f;
+}
+.wrap {
+  max-width: 900px;
+  margin: auto;
+  padding: 30px 20px 50px;
+}
+h1 { margin-bottom: 6px; }
+.subtitle { color: #5f6962; margin-bottom: 30px; }
+h2 { margin-top: 30px; }
+.section-toggle { cursor:pointer; display:flex; align-items:center; justify-content:space-between; user-select:none; }
+.section-toggle::after { content:"▾"; font-size:14px; color:#68726b; }
+.section-toggle.collapsed::after { content:"▸"; }
+.section-body.collapsed { display:none; }
+.event {
+  display: block;
+  background: white;
+  border: 1px solid #d8dfd9;
+  border-radius: 10px;
+  padding: 18px;
+  margin: 12px 0;
+  text-decoration: none;
+  color: inherit;
+}
+.event:hover { border-color: #8ca292; }
+.event[href] { cursor: pointer; }
+.name { font-size: 19px; font-weight: bold; }
+.course { margin-top: 7px; }
+.date { margin-top: 4px; color: #626b65; }
+.badges { margin-top: 10px; }
+.badge {
+  display: inline-block;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  margin-right: 6px;
+  background: #e7eee9;
+}
+.results { background: #e0eee4; }
+.empty { color: #68726b; padding: 8px 0; }
+.completed-tools { margin: 0 0 14px; }
+.completed-tools label { display:block; font-weight:bold; margin-bottom:7px; }
+.completed-tools input { width:100%; box-sizing:border-box; padding:12px 13px; border:1px solid #cbd5ce; border-radius:9px; font-size:16px; background:white; color:#17351f; }
+.completed-tools input:focus { outline:2px solid #8ca292; outline-offset:1px; }
+.date-range { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+.date-range label { font-weight:normal; margin-bottom:5px; }
+@media(max-width:520px){ .date-range { grid-template-columns:1fr; } }
+.error {
+  background: #fff4f4;
+  border: 1px solid #e3caca;
+  color: #8a3333;
+  padding: 14px;
+  border-radius: 8px;
+}
+</style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-B7LP15NBQ7"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-B7LP15NBQ7');
+</script>
+</head>
+<body>
+<div class="wrap">
+  <h1>Saturday Golf League — Events</h1>
+  <div class="subtitle">Upcoming and completed tournaments</div>
+
+  <h2 class="section-toggle" id="upcomingToggle">Upcoming Tournaments</h2>
+  <div id="upcoming" class="section-body">Loading…</div>
+
+  <h2 class="section-toggle" id="completedToggle">Completed Tournaments</h2>
+  <div class="completed-tools">
+    <label for="completedSearch">Find a completed event</label>
+    <input id="completedSearch" type="search" placeholder="Search by event name, course, or date">
+    <div class="date-range">
+      <div><label for="completedFrom">From</label><input id="completedFrom" type="date"></div>
+      <div><label for="completedTo">To</label><input id="completedTo" type="date"></div>
+    </div>
+  </div>
+  <div id="completed" class="section-body">Loading…</div>
+</div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbxtK7gUo6FAbD-tlxrYhDoAx4P5uauKAT5Y8DfTzpxJmDMap2CCzvhIxTM-BzpAwJc5jQ/exec?action=events';
+
+function normalizeKey(value) {
+  return String(value ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+function get(row, names) {
+  const keys = Object.keys(row || {});
+  for (const name of names) {
+    const wanted = normalizeKey(name);
+    const key = keys.find(k => normalizeKey(k) === wanted);
+    if (key && row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== '') {
+      return row[key];
+    }
+  }
+  return '';
+}
+
+function getEventId(row) {
+  // Accept all common spellings returned by Apps Script / Google Sheets.
+  const value = get(row, [
+    'Event ID', 'Event Id', 'eventId', 'EventID',
+    'Event_Id', 'Event-Id', 'ID', 'Id'
+  ]);
+  return String(value ?? '').trim();
+}
+
+function makeEvent(row) {
+  const eventId = getEventId(row);
+  const name = get(row, ['Event Name']) || 'Golf Event';
+  const date = get(row, ['Event Date']);
+  const course = get(row, ['Course']);
+  const status = get(row, ['Status']);
+  const version = get(row, ['Current Version']);
+  const results = String(get(row, ['Results Available'])).toLowerCase() === 'yes';
+
+  const div = document.createElement(eventId ? 'a' : 'div');
+  div.className = 'event';
+  if (eventId) {
+    // Pass the event ID in both parameter names so either detail-page version
+    // can read it, and also preserve it in browser storage as a fallback.
+    const detailUrl = new URL('Event_Detail_Streamlined_v94.html', document.baseURI);
+    detailUrl.searchParams.set('eventId', eventId);
+    detailUrl.searchParams.set('id', eventId);
+    div.href = detailUrl.href;
+
+    div.dataset.eventId = eventId;
+    div.addEventListener('click', () => {
+      try { sessionStorage.setItem('selectedEventId', eventId); } catch(e) {}
+      try { localStorage.setItem('selectedEventId', eventId); } catch(e) {}
+    });
+  }
+
+  div.innerHTML = `
+    <div class="name"></div>
+    <div class="course"></div>
+    <div class="date"></div>
+    <div class="badges"></div>
+  `;
+
+  div.querySelector('.name').textContent = name;
+  div.querySelector('.course').textContent = course;
+  div.querySelector('.date').textContent = date;
+
+  const badges = div.querySelector('.badges');
+
+  if (status) {
+    const b = document.createElement('span');
+    b.className = 'badge';
+    b.textContent = status;
+    badges.appendChild(b);
+  }
+
+  if (version) {
+    const b = document.createElement('span');
+    b.className = 'badge';
+    b.textContent = 'Version ' + version;
+    badges.appendChild(b);
+  }
+
+  if (results) {
+    const b = document.createElement('span');
+    b.className = 'badge results';
+    b.textContent = 'Results Available';
+    badges.appendChild(b);
+  }
+
+  // Every event, including completed events, opens its Event Detail page.
+  // The event ID is carried in the link so the detail page loads the correct event.
+
+  return div;
+}
+
+async function loadEvents() {
+  const upcoming = document.getElementById('upcoming');
+  const completed = document.getElementById('completed');
+
+  try {
+    const response = await fetch(API_URL, { cache: 'no-store' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'The Events endpoint returned an error.');
+    }
+
+    const events = Array.isArray(data.events) ? data.events : [];
+
+    const upcomingEvents = events.filter(row =>
+      String(get(row, ['Status'])).toLowerCase() !== 'completed'
+    );
+
+    const completedEvents = events.filter(row =>
+      String(get(row, ['Status'])).toLowerCase() === 'completed'
+    );
+
+    // Show the newest completed events first. The search box can reveal any
+    // older completed event without changing the data stored in Sheets.
+    const eventTime = row => {
+      const raw = get(row, ['Event Date']);
+      const t = Date.parse(String(raw || ''));
+      if (!Number.isNaN(t)) return t;
+      const id = getEventId(row);
+      const idTime = Date.parse(String(id || ''));
+      return Number.isNaN(idTime) ? 0 : idTime;
+    };
+    completedEvents.sort((a, b) => eventTime(b) - eventTime(a));
+
+    upcoming.innerHTML = '';
+    completed.innerHTML = '';
+
+    if (!upcomingEvents.length) {
+      upcoming.innerHTML = '<div class="empty">No upcoming tournaments.</div>';
+    } else {
+      upcomingEvents.forEach(row => upcoming.appendChild(makeEvent(row)));
+    }
+
+    window.__completedEvents = completedEvents;
+    renderCompletedEvents(completedEvents);
+
+  } catch (error) {
+    const message =
+      '<div class="error">Unable to load events: ' +
+      String(error.message).replace(/</g, '&lt;') +
+      '</div>';
+
+    upcoming.innerHTML = message;
+    completed.innerHTML = message;
+  }
+}
+
+function parseEventDate(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return null;
+  let t = Date.parse(raw);
+  if (!Number.isNaN(t)) return new Date(t);
+  const m = raw.match(/^(\d{1,2})[-\/ ]([A-Za-z]{3,9})[-\/ ](\d{2,4})$/);
+  if (m) {
+    const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+    const month = months.findIndex(x => m[2].toLowerCase().startsWith(x));
+    let year = Number(m[3]);
+    if (year < 100) year += 2000;
+    if (month >= 0) return new Date(year, month, Number(m[1]));
+  }
+  return null;
+}
+
+function renderCompletedEvents(allCompletedEvents) {
+  const completed = document.getElementById('completed');
+  const search = String(document.getElementById('completedSearch')?.value || '').trim().toLowerCase();
+  const fromValue = document.getElementById('completedFrom')?.value || '';
+  const toValue = document.getElementById('completedTo')?.value || '';
+  const from = fromValue ? new Date(fromValue + 'T00:00:00') : null;
+  const to = toValue ? new Date(toValue + 'T23:59:59') : null;
+
+  const matches = allCompletedEvents.filter(row => {
+    const eventDate = parseEventDate(get(row, ['Event Date'])) || parseEventDate(getEventId(row));
+    if (from && (!eventDate || eventDate < from)) return false;
+    if (to && (!eventDate || eventDate > to)) return false;
+    if (!search) return true;
+    const text = [get(row, ['Event Name']), get(row, ['Event Date']), get(row, ['Course']), getEventId(row)].join(' ').toLowerCase();
+    return text.includes(search);
+  });
+
+  const filtering = !!(search || fromValue || toValue);
+  const visible = filtering ? matches : matches.slice(0, 5);
+
+  completed.innerHTML = '';
+  if (!visible.length) {
+    completed.innerHTML = '<div class="empty">No completed tournaments match your search or date range.</div>';
+    return;
+  }
+
+  visible.forEach(row => completed.appendChild(makeEvent(row)));
+
+  if (!filtering && matches.length > 5) {
+    const note = document.createElement('div');
+    note.className = 'empty';
+    note.textContent = 'Showing the 5 most recent completed tournaments. Use the search or date range above to find an older event.';
+    completed.appendChild(note);
+  }
+}
+
+document.getElementById("upcomingToggle").addEventListener("click",()=>{
+  document.getElementById("upcoming").classList.toggle("collapsed");
+  document.getElementById("upcomingToggle").classList.toggle("collapsed");
+});
+document.getElementById("completedToggle").addEventListener("click",()=>{
+  document.getElementById("completed").classList.toggle("collapsed");
+  document.getElementById("completedToggle").classList.toggle("collapsed");
+});
+document.getElementById('completedSearch').addEventListener('input', () => renderCompletedEvents(window.__completedEvents || []));
+document.getElementById('completedFrom').addEventListener('change', () => renderCompletedEvents(window.__completedEvents || []));
+document.getElementById('completedTo').addEventListener('change', () => renderCompletedEvents(window.__completedEvents || []));
+loadEvents();
+</script>
+</body>
+</html>
