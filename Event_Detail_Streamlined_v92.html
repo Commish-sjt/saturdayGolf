@@ -12,7 +12,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Saturday Golf — Event Details v89</title>
+<title>Saturday Golf — Event Details v93</title>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f5f7f4;color:#17351f}
 .wrap{max-width:980px;margin:auto;padding:28px 18px 50px}
@@ -817,9 +817,29 @@ function renderTee(rows,formatName,registeredRows){
       h+='<div class="ryder-tee-head"><span>'+esc(teeTime)+'</span></div>';
       if(groupMatches.length){
         groupMatches.forEach((match,idx)=>{
+          const matchNames=(match.blue+' & '+match.red).split(/\s+&\s+/).map(v=>String(v).trim()).filter(Boolean);
+          const rowsForMatch=scoreRows.filter(r=>{
+            const rRound=String(get(r,['Round'])).trim();
+            const rDate=String(get(r,['Date'])).trim();
+            const player=String(get(r,['Player'])).trim();
+            return rRound===String(round) && rDate===date && matchNames.some(n=>n.toLowerCase()===player.toLowerCase());
+          });
+          const hcpValues=rowsForMatch.map(r=>parseFloat(String(get(r,['Playing Handicap','Playing Hcp'])).replace(/[^0-9.\-+]/g,''))).filter(Number.isFinite);
+          const lowHcp=hcpValues.length?Math.min(...hcpValues):null;
+          const playerStroke=(name)=>{
+            const row=rowsForMatch.find(r=>String(get(r,['Player'])).trim().toLowerCase()===String(name).trim().toLowerCase());
+            if(!row)return '';
+            const ph=parseFloat(String(get(row,['Playing Handicap','Playing Hcp'])).replace(/[^0-9.\-+]/g,''));
+            if(!Number.isFinite(ph)||lowHcp===null)return '';
+            return Math.max(0,Math.round(ph-lowHcp));
+          };
+          const formatSide=(side)=>String(side||'').split(/\s+&\s+/).map(name=>{
+            const strokes=playerStroke(name);
+            return esc(name)+(strokes!==''?' ('+esc(strokes)+')':'');
+          }).join(' & ');
           h+='<div class="ryder-match">';
-          h+='<div class="ryder-side blue">'+esc(match.blue)+'</div>';
-          h+='<div class="ryder-side red">'+esc(match.red)+'</div>';
+          h+='<div class="ryder-side blue">'+formatSide(match.blue)+'</div>';
+          h+='<div class="ryder-side red">'+formatSide(match.red)+'</div>';
           h+='</div>';
         });
       } else {
@@ -1123,17 +1143,84 @@ function renderResults(rows,scorecardRows){
     const scoreRows=rows.filter(r=>field(r,'Section').toLowerCase()==='scores');
     const matchRows=scoreRows.filter(r=>/^Round\s*\d+\s*Match$/i.test(field(r,'Item')));
     const finalRow=scoreRows.find(r=>/^Final$/i.test(field(r,'Item')));
-    const byRound={};
-    matchRows.forEach(r=>{const rd=field(r,'Round')||((field(r,'Item').match(/Round\s*(\d+)/i)||[])[1]||'');(byRound[rd]??=[]).push(r)});
+
+    const normalizeName=v=>String(v||'').trim().toLowerCase().replace(/\s+/g,' ');
+    const parseTeams=r=>{
+      const team=field(r,'Team');
+      const m=team.match(/^Blue:\s*(.*?)\s+vs\s+Red:\s+(.*)$/i);
+      return {blue:m?m[1]:team,red:m?m[2]:''};
+    };
+    const matchRound=r=>field(r,'Round')||((field(r,'Item').match(/Round\s*(\d+)/i)||[])[1]||'');
+    const matchPlayers=r=>{
+      const t=parseTeams(r);
+      return (t.blue+' '+t.red).split(/\s+&\s+/).map(normalizeName).filter(Boolean);
+    };
+
+    // Rebuild match order from the Tee Sheet so Results follows the same
+    // date/tee-time order shown above. Round 2 groups can contain two singles.
+    const teeRows=Array.isArray(window.__teeRows)?window.__teeRows:[];
+    const scRows=Array.isArray(scorecardRows)?scorecardRows:[];
+    const dateRound={};
+    scRows.forEach(r=>{
+      const rd=field(r,'Round'),dt=field(r,'Date');
+      if(rd&&dt)dateRound[dt]=rd;
+    });
+    const teeMinutes=t=>{
+      const m=String(t||'').trim().toUpperCase().match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/);
+      if(!m)return Number.POSITIVE_INFINITY;
+      let hh=Number(m[1]),mm=Number(m[2]);
+      if(m[3]==='AM'&&hh===12)hh=0;
+      if(m[3]==='PM'&&hh<12)hh+=12;
+      return hh*60+mm;
+    };
+    const dateValue=d=>{
+      const s=String(d||'').trim();
+      if(!s)return Number.POSITIVE_INFINITY;
+      const t=Date.parse(s);
+      return Number.isFinite(t)?t:Number.POSITIVE_INFINITY;
+    };
+    const groups={};
+    teeRows.forEach(r=>{
+      const g=String(field(r,'Group')||'Other').trim()||'Other';
+      (groups[g]??=[]).push(r);
+    });
+    const groupKeys=Object.keys(groups).sort((a,b)=>{
+      const ga=groups[a][0]||{},gb=groups[b][0]||{};
+      const da=dateValue(field(ga,'Date')),db=dateValue(field(gb,'Date'));
+      if(da!==db)return da-db;
+      const ta=teeMinutes(field(ga,'Tee Time')),tb=teeMinutes(field(gb,'Tee Time'));
+      return ta!==tb?ta-tb:a.localeCompare(b);
+    });
+    const orderedByRound={};
+    const used=new Set();
+    groupKeys.forEach(g=>{
+      const gr=groups[g];
+      const date=field(gr[0],'Date');
+      const rd=String(dateRound[date]||'').trim();
+      if(!rd)return;
+      const names=gr.map(r=>normalizeName(field(r,'Player'))).filter(Boolean);
+      matchRows.forEach((r,i)=>{
+        if(String(matchRound(r))!==rd||used.has(i))return;
+        const players=matchPlayers(r);
+        if(players.some(p=>names.includes(p))){
+          (orderedByRound[rd]??=[]).push(r);
+          used.add(i);
+        }
+      });
+    });
+    // Keep any unmatched match rows rather than dropping published results.
+    matchRows.forEach((r,i)=>{
+      if(used.has(i))return;
+      const rd=matchRound(r);(orderedByRound[rd]??=[]).push(r);
+    });
+
     let h='';
-    Object.keys(byRound).sort((a,b)=>Number(a)-Number(b)).forEach(rd=>{
+    Object.keys(orderedByRound).sort((a,b)=>Number(a)-Number(b)).forEach(rd=>{
       const label=rd==='1'?'Best Ball':rd==='2'?'Singles':'Match Play';
       h+='<h3><span class="result-heading">Round '+esc(rd)+' — '+esc(label)+'</span></h3>';
       h+='<table class="ryder-results-table"><thead><tr><th>Match</th><th>Team Blue</th><th>Result</th><th>Team Red</th></tr></thead><tbody>';
-      byRound[rd].forEach((r,idx)=>{
-        const team=field(r,'Team');
-        const m=team.match(/^Blue:\s*(.*?)\s+vs\s+Red:\s+(.*)$/i);
-        const blue=m?m[1]:team, red=m?m[2]:'';
+      orderedByRound[rd].forEach((r,idx)=>{
+        const teams=parseTeams(r), blue=teams.blue, red=teams.red;
         const rawResult=field(r,'Value');
         const scoreMatch=rawResult.match(/wins\s+(.+)$/i);
         const score=scoreMatch?scoreMatch[1].trim():(/halved/i.test(rawResult)?'AS':rawResult.replace(/^Team\s+(Blue|Red)\s*/i,'').trim());
@@ -1253,7 +1340,7 @@ async function load(){
   const formatValue=get(fmt,['Value','Item']); window.__eventGameFormat=formatValue;
   const teeRows=data.teeSheet||[];
   __teePlayerCount=new Set(teeRows.map(r=>String(get(r,['Player'])).trim()).filter(Boolean)).size || null;
-  window.__scorecardRows=data.scorecard||[]; window.__resultRows=data.results||data.postRoundResults||data.postRound||data.resultRows||[];
+  window.__scorecardRows=data.scorecard||[]; window.__resultRows=data.results||data.postRoundResults||data.postRound||data.resultRows||[]; window.__teeRows=teeRows;
   document.getElementById('gameFormat').textContent=formatValue||'—';renderRyderRounds(window.__scorecardRows,formatValue);renderTeams(detail,formatValue);renderPayouts(detail);
   renderTee(teeRows,formatValue,data.attendance);
   renderResults(window.__resultRows,window.__scorecardRows);
