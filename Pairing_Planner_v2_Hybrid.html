@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saturday Golf — Pairing Planner v2</title>
+<style>
+:root{--green:#1f3b2c;--gold:#a9812f;--paper:#f5f7f4;--line:#d9e0d8;--muted:#5f6c63}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:#17351f;font-family:Inter,Arial,sans-serif}
+.wrap{max-width:1000px;margin:auto;padding:22px 15px 48px}.top{background:var(--green);color:#fff;border-radius:16px;padding:22px;margin-bottom:16px}
+h1{font-size:25px;margin:0 0 6px}.sub{opacity:.9;font-size:14px;line-height:1.5}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0}
+h2{font-size:18px;margin:0 0 12px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+label{display:block;font-weight:650;font-size:13px;margin:0 0 6px}input,select,textarea{font:inherit;color:#17351f;background:#fff;border:1px solid #bac8bc;border-radius:8px;padding:10px;width:100%;min-width:0}
+textarea{min-height:135px;resize:vertical;line-height:1.45}.hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:6px}
+button{border:0;border-radius:9px;background:var(--green);color:white;padding:11px 15px;font-weight:700;font-size:14px;cursor:pointer;margin:5px 5px 0 0}
+button.secondary{background:#e9eee8;color:var(--green);border:1px solid #cad6ca}button.gold{background:var(--gold);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{font-size:13px;padding:9px 11px;border-radius:8px;background:#eef3ed;margin-top:10px;white-space:pre-wrap}
+table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-bottom:1px solid #e0e6df;text-align:left;padding:9px 7px;vertical-align:top}th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#526256}td input{padding:7px}
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.group{border:1px solid var(--line);border-radius:11px;padding:12px;background:#fbfcfa}.group h3{margin:0 0 9px;font-size:15px}.player{padding:7px 0;border-bottom:1px solid #e8ece7}.player:last-child{border-bottom:0}.metric{font-size:12px;color:var(--muted);margin-top:8px}.rank{font-weight:800;color:var(--gold)}
+.small{font-size:12px;color:var(--muted)}.hidden{display:none!important}
+@media(max-width:600px){.wrap{padding:12px 10px 32px}.top{padding:18px}.grid{grid-template-columns:1fr}.card{padding:13px}h1{font-size:22px}table{font-size:12px}th,td{padding:7px 4px}}
+</style>
+</head>
+<body><main class="wrap">
+<header class="top"><h1>Saturday Golf — Pairing Planner</h1><div class="sub">Build groups from a Squabbit roster, use current-season history from Google Sheets when online, and export the selected tee groups. For Best Ball, balance each group using the three lowest Handicap Index values.</div></header>
+<section class="card">
+<h2>1. Event setup</h2>
+<div class="grid">
+<div><label for="eventDate">Event date</label><input type="date" id="eventDate"></div>
+<div><label for="format">Game format</label><select id="format"><option>Quota</option><option>Team Quota</option><option>Best Ball</option><option>Other</option></select></div>
+<div><label for="seasonStart">Current season starts</label><input type="date" id="seasonStart" value="2026-09-01"></div>
+<div><label for="groupSize">Preferred group size</label><select id="groupSize"><option value="4" selected>4 players (foursomes)</option><option value="3">3 players</option><option value="2">2 players</option></select></div>
+</div>
+<div class="row"><button id="loadHistory">Load current-season pairing history</button><button class="secondary" id="useSample">Load sample players</button></div>
+<div class="hint">When online, history is refreshed from Google Sheets and cached on this device for offline use. The planner uses completed-event tee-group history from September 1, 2026 onward.</div>
+<div id="apiStatus" class="status">History not loaded yet. The planner will request the existing Saturday Golf history API and count only rounds on or after September 1, 2026.</div>
+</section>
+<section class="card">
+<h2>2. Players attending</h2>
+<p class="small">Import the upcoming Squabbit CSV roster, or paste one player per line as <b>Player Name, Handicap Index</b>. Best Ball balance uses Handicap Index (not Playing Handicap). The CSV importer looks for player/name and handicap index/handicap columns; you can review and correct values before generating groups.</p>
+<div class="grid"><div><label for="rosterFile">Import Squabbit roster CSV</label><input id="rosterFile" type="file" accept=".csv,text/csv"></div><div><label for="roster">Or paste roster</label><textarea id="roster" placeholder="Example:&#10;Alex Smith, 8.4&#10;Jamie Jones, 14.2&#10;Taylor Brown, 21.0"></textarea></div></div>
+<div class="row"><button id="parseRoster">Review player list</button><button class="secondary" id="clearRoster">Clear list</button></div>
+<div id="rosterReview"></div>
+</section>
+<section class="card">
+<h2>3. Generate group options</h2>
+<div class="grid">
+<div><label for="candidateCount">Options to generate</label><select id="candidateCount"><option value="3">3 options</option><option value="5" selected>5 options</option><option value="10">10 options</option><option value="15">15 options</option></select></div>
+<div><label for="pairWeight">Repeat-pairing priority</label><select id="pairWeight"><option value="high" selected>High (Quota / Team Quota)</option><option value="balanced">Balanced (Best Ball)</option></select></div>
+</div>
+<div class="row"><button class="gold" id="generate">Generate best groupings</button><button class="secondary" id="copyAll">Copy selected grouping</button><button class="secondary" id="downloadCsv">Download pairings CSV</button><button class="secondary" id="downloadTxt">Download pairings TXT</button></div>
+<div class="hint">For Best Ball, each foursome is assessed by the sum of its three lowest Handicap Index values. The planner aims to keep those sums close across groups while avoiding repeat pairings. It does not treat this as a team-vs-team pairing rule.</div>
+<div id="results"></div>
+</section>
+</main>
+<script>
+const API='https://script.google.com/macros/s/AKfycbxtK7gUo6FAbD-tlxrYhDoAx4P5uauKAT5Y8DfTzpxJmDMap2CCzvhIxTM-BzpAwJc5jQ/exec';
+const $=id=>document.getElementById(id);let historyData=null, pairCounts=new Map(), candidates=[], selectedCandidate=0, players=[];
+const CACHE_KEY='saturdayGolfPairingHistory_v2';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function dateKey(v){let s=String(v??'').trim();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;m=s.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})/);if(m){let y=+m[3];if(y<100)y+=2000;return `${y}-${String(+m[1]).padStart(2,'0')}-${String(+m[2]).padStart(2,'0')}`}let d=new Date(s);return Number.isNaN(+d)?'':`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function pairKey(a,b){return [a.toLowerCase().trim(),b.toLowerCase().trim()].sort().join('|||')}
+function getPairCount(a,b){return pairCounts.get(pairKey(a,b))||0}
+function setStatus(t){$('apiStatus').textContent=t}
+async function loadHistory(){
+ setStatus('Loading pairing history from the existing Saturday Golf API…');
+ try{const r=await fetch(API+'?action=history',{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();if(!d.success)throw Error(d.error||'History API returned an error.');
+ historyData=d;try{localStorage.setItem(CACHE_KEY,JSON.stringify({savedAt:new Date().toISOString(),data:d}));}catch(_){}pairCounts=new Map();const start=$('seasonStart').value||'2026-09-01';const details=Array.isArray(d.details)?d.details:[];
+ const events=new Map();
+ for(const x of details){const date=dateKey(x.datePlayed??x.date_played??x.date??x.eventDate??x.event_date??'');if(!date||date<start)continue;const status=String(x.status||'').toLowerCase();if(status&&status!=='played'&&status!=='attended')continue;const name=String(x.player||x.playerName||x.player_name||'').trim(),group=String(x.teeTime??x.tee_time??x.tee??x.startTime??x.start_time??x.time??x.group??'').trim();if(!name||!group)continue;const event=String(x.eventId??x.event_id??x.eventName??x.event??'')+'|'+date+'|'+String(x.roundNumber??x.round??x.roundName??'');const k=event+'|'+group;if(!events.has(k))events.set(k,new Set());events.get(k).add(name)}
+ let pairRows=0;for(const members of events.values()){const a=[...members];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){const k=pairKey(a[i],a[j]);pairCounts.set(k,(pairCounts.get(k)||0)+1);pairRows++}}
+ setStatus(`History loaded. ${events.size} current-season groups and ${pairCounts.size} distinct player pairs found on/after ${start}. Older-season pairings are excluded.`);
+ }catch(e){pairCounts=new Map();let cached=null;try{cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null')}catch(_){}if(cached&&cached.data){historyData=cached.data;buildPairCounts(cached.data);setStatus('Live history unavailable ('+e.message+'). Using locally cached history saved '+(cached.savedAt||'previously')+'. Confirm the cache is current before relying on the pairing scores.')}else{historyData=null;setStatus('Could not load history: '+e.message+'\nYou can still generate groups, but repeat-pairing warnings will be unavailable until a history cache is available.')}}
+}
+function buildPairCounts(d){pairCounts=new Map();const start=$('seasonStart').value||'2026-09-01',details=Array.isArray(d.details)?d.details:[],events=new Map();for(const x of details){const date=dateKey(x.datePlayed??x.date_played??x.playedDate??x.roundDate??x.eventDate??x.event_date??x.date??'');if(!date||date<start)continue;const status=String(x.status||'').toLowerCase();if(status&&status!=='played'&&status!=='attended')continue;const name=String(x.player||x.playerName||x.player_name||'').trim(),group=String(x.teeTime??x.tee_time??x.tee??x.startTime??x.start_time??x.time??x.group??'').trim();if(!name||!group)continue;const event=String(x.eventId??x.event_id??x.eventName??x.event??'')+'|'+date+'|'+String(x.roundNumber??x.round??x.roundName??'');const k=event+'|'+group;if(!events.has(k))events.set(k,new Set());events.get(k).add(name)}for(const members of events.values()){const a=[...members];for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){const k=pairKey(a[i],a[j]);pairCounts.set(k,(pairCounts.get(k)||0)+1)}}
+}
+function parseCsv(text){const rows=[];let row=[],field='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i];if(quoted){if(c==='"'&&text[i+1]==='"'){field+='"';i++}else if(c==='"')quoted=false;else field+=c;}else if(c==='"')quoted=true;else if(c===','){row.push(field);field='';}else if(c==='\n'){row.push(field);rows.push(row);row=[];field='';}else if(c!=='\r')field+=c;}if(field.length||row.length){row.push(field);rows.push(row)}return rows.filter(r=>r.some(v=>String(v).trim()!==''))}
+function normHeader(v){return String(v||'').toLowerCase().replace(/[^a-z0-9]/g,'')}
+function importRosterCsv(text){const rows=parseCsv(text);if(rows.length<2)throw Error('The CSV does not contain a header and player rows.');const headers=rows[0].map(normHeader);const find=names=>headers.findIndex(h=>names.includes(h));let ni=find(['player','playername','name','golfer','golfername','membername']);let hi=find(['handicapindex','index','handicap','hi','handicapidx']);if(ni<0)ni=headers.findIndex(h=>h.includes('player')||h==='name');if(hi<0)hi=headers.findIndex(h=>h.includes('handicap')||h==='index');if(ni<0)throw Error('Could not identify a Player/Name column. You can paste the roster manually instead.');const out=[];for(const row of rows.slice(1)){const name=String(row[ni]||'').trim();if(!name)continue;const raw=hi>=0?String(row[hi]||'').trim():'';const num=raw===''?null:Number(raw.replace(/[+]/g,''));out.push(`${name}${num!==null&&Number.isFinite(num)?', '+num:''}`)}if(!out.length)throw Error('No player names were found in the CSV.');$('roster').value=out.join('\n');parseRoster();setStatus(`Imported ${out.length} player rows from CSV. Review the names and Handicap Index values before generating groups.`)}
+function parseRoster(){
+ const lines=$('roster').value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean), out=[],seen=new Set(),errors=[];
+ for(let i=0;i<lines.length;i++){const parts=lines[i].split(/[,;\t]/).map(s=>s.trim());const name=parts[0];const h=parts.length>1&&parts[1]!==''?Number(parts[1].replace(/[+]/g,'')):null;if(!name){continue}if(seen.has(name.toLowerCase())){errors.push(`Line ${i+1}: duplicate player "${name}" ignored.`);continue}if(h!==null&&!Number.isFinite(h)){errors.push(`Line ${i+1}: invalid Handicap Index for ${name}; left blank.`)}seen.add(name.toLowerCase());out.push({name,hcp:h!==null&&Number.isFinite(h)?h:null})}
+ players=out;renderRosterReview(errors);return out;
+}
+function renderRosterReview(errors=[]){$('rosterReview').innerHTML=players.length?`<div class="status">${players.length} player(s) ready. ${players.filter(p=>p.hcp===null).length} missing Playing Handicap(s). ${errors.map(esc).join(' ')}</div><div style="overflow:auto;margin-top:10px"><table><thead><tr><th>Player</th><th>Handicap Index</th></tr></thead><tbody>${players.map((p,i)=>`<tr><td>${esc(p.name)}</td><td><input aria-label="Playing Handicap for ${esc(p.name)}" type="number" step="0.1" value="${p.hcp??''}" data-hcp="${i}" placeholder="Optional"></td></tr>`).join('')}</tbody></table></div>`:'<div class="hint">No players reviewed yet.</div>'}
+function syncHandicaps(){document.querySelectorAll('[data-hcp]').forEach(el=>{const i=+el.dataset.hcp;const v=el.value.trim();players[i].hcp=v===''?null:Number(v)})}
+function makeGroupSizes(n,size){const sizes=[];while(n>0){if(n<=size){if(n===1&&sizes.length&&sizes[sizes.length-1]>2){sizes[sizes.length-1]--;sizes.push(2)}else sizes.push(n);break}sizes.push(size);n-=size}return sizes}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function scoreGrouping(groups,format){
+ let repeats=0,pairSum=0;for(const g of groups)for(let i=0;i<g.length;i++)for(let j=i+1;j<g.length;j++){const c=getPairCount(g[i].name,g[j].name);repeats+=c>0?1:0;pairSum+=c}
+ let balance=0,valid=0,sums=[];if(format==='Best Ball'){for(const g of groups){const hs=g.map(p=>p.hcp).filter(Number.isFinite).sort((a,b)=>a-b);if(hs.length===g.length&&hs.length>=3){sums.push(hs.slice(0,3).reduce((a,b)=>a+b,0));valid++}}if(sums.length>1){const avg=sums.reduce((a,b)=>a+b,0)/sums.length;balance=sums.reduce((s,x)=>s+(x-avg)**2,0)/sums.length}}
+ const weight=$('pairWeight').value;const repeatCost=(format==='Quota'||format==='Team Quota'||weight==='high')?100:45;const missingPenalty=format==='Best Ball'?players.filter(p=>!Number.isFinite(p.hcp)).length*5:0;
+ return {score:repeats*repeatCost+pairSum*8+balance*2+missingPenalty,repeats,pairSum,balance,sums,valid}
+}
+function createCandidates(){
+ syncHandicaps();if(players.length<2){$('results').innerHTML='<div class="status">Add at least two players first.</div>';return}
+ const format=$('format').value,size=+$('groupSize').value,n=players.length,sizes=makeGroupSizes(n,size);if(sizes.some(s=>s===1)){$('results').innerHTML='<div class="status">The attendance count leaves one player without a group. Add another player or adjust group size.</div>';return}
+ const wanted=+$('candidateCount').value,iterations=Math.min(5000,Math.max(500,wanted*500)),found=new Map();
+ for(let it=0;it<iterations;it++){const arr=shuffle([...players]),groups=[];let pos=0;for(const sz of sizes){groups.push(arr.slice(pos,pos+sz));pos+=sz}
+  // For Best Ball, random ordering is enough to explore partitions; score sums balance between groups.
+  const scored=scoreGrouping(groups,format);const signature=groups.map(g=>g.map(p=>p.name).sort().join('|')).sort().join('::');if(!found.has(signature)||scored.score<found.get(signature).scored.score)found.set(signature,{groups,scored,signature})
+ }
+ candidates=[...found.values()].sort((a,b)=>a.scored.score-b.scored.score).slice(0,wanted);selectedCandidate=0;renderCandidates()
+}
+function renderCandidates(){
+ if(!candidates.length){$('results').innerHTML='';return}
+ const fmt=$('format').value;
+ $('results').innerHTML=candidates.map((c,idx)=>`<div class="card" style="margin:14px 0;border-color:${idx===selectedCandidate?'#a9812f':'#d9e0d8'}"><div class="row"><h2 style="margin:0;flex:1"><span class="rank">Option ${idx+1}</span> ${idx===0?'— Best score':''}</h2><button class="secondary" data-select="${idx}">${idx===selectedCandidate?'Selected':'Select this option'}</button></div><div class="metric">Repeat pairs: <b>${c.scored.repeats}</b> · Repeat event-count total: <b>${c.scored.pairSum}</b>${fmt==='Best Ball'?` · Three-low sums: <b>${c.scored.sums.length?c.scored.sums.map(x=>x.toFixed(1)).join(', '):'not enough Playing Handicaps'}</b> · Balance spread: <b>${c.scored.valid===c.groups.length?Math.sqrt(c.scored.balance).toFixed(2):'incomplete'}</b>`:''}</div><div class="groups" style="margin-top:12px">${c.groups.map((g,gi)=>`<div class="group"><h3>Group ${gi+1}</h3>${g.map((p,pi)=>`<div class="player"><select data-move="${idx},${gi},${pi}" aria-label="Move player ${esc(p.name)}">${c.groups.flatMap((gg,g2)=>gg.map((pp,p2)=>`<option value="${g2},${p2}" ${g2===gi&&p2===pi?'selected':''}>${esc(pp.name)} — Group ${g2+1}</option>`)).join('')}</select><div class="small">${p.hcp===null?'Handicap Index not entered':'Index '+p.hcp}</div></div>`).join('')}</div>`).join('')}</div><div class="hint">Choose an option to make it the one copied below. Use the player selectors to swap a player with another group; swaps preserve group sizes.</div></div>`).join('');
+ $('results').querySelectorAll('[data-select]').forEach(b=>b.addEventListener('click',()=>{selectedCandidate=+b.dataset.select;renderCandidates()}));
+ $('results').querySelectorAll('[data-move]').forEach(sel=>sel.addEventListener('change',()=>{const [ci,gi,pi]=sel.dataset.move.split(',').map(Number),[gj,pj]=sel.value.split(',').map(Number);if(gi===gj&&pi===pj)return;const c=candidates[ci],a=c.groups[gi][pi],b=c.groups[gj][pj];c.groups[gi][pi]=b;c.groups[gj][pj]=a;c.scored=scoreGrouping(c.groups,fmt);selectedCandidate=ci;renderCandidates()}))
+}
+function copySelected(){if(!candidates.length){alert('Generate groups first.');return}const c=candidates[selectedCandidate];const lines=[`Saturday Golf — ${$('eventDate').value||'Event date not set'} — ${$('format').value}`,''];c.groups.forEach((g,i)=>{lines.push(`Group ${i+1}`);g.forEach(p=>lines.push(`${p.name}${Number.isFinite(p.hcp)?` (${p.hcp} Handicap Index)`:''}`));lines.push('')});const text=lines.join('\n');if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(text).then(()=>alert('Selected grouping copied.')).catch(()=>prompt('Copy the grouping below:',text));else prompt('Copy the grouping below:',text)}
+$('loadHistory').addEventListener('click',loadHistory);
+$('rosterFile').addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{importRosterCsv(await file.text())}catch(err){alert('Could not import CSV: '+err.message)}e.target.value='';});$('parseRoster').addEventListener('click',parseRoster);$('clearRoster').addEventListener('click',()=>{$('roster').value='';players=[];renderRosterReview()});$('generate').addEventListener('click',()=>{if(!players.length)parseRoster();createCandidates()});$('copyAll').addEventListener('click',copySelected);
+function selectedText(){if(!candidates.length)throw Error('Generate groups first.');const c=candidates[selectedCandidate];const lines=[`Saturday Golf — ${$('eventDate').value||'Event date not set'} — ${$('format').value}`,''];c.groups.forEach((g,i)=>{lines.push(`Group ${i+1}`);g.forEach(p=>lines.push(`${p.name}${Number.isFinite(p.hcp)?` (Handicap Index ${p.hcp})`:''}`));lines.push('')});return {c,lines,text:lines.join('\n')}}
+function downloadFile(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+$('downloadTxt').addEventListener('click',()=>{try{const o=selectedText();downloadFile(`Saturday_Golf_Pairings_${$('eventDate').value||'event'}.txt`,o.text,'text/plain;charset=utf-8')}catch(e){alert(e.message)}});
+$('downloadCsv').addEventListener('click',()=>{try{const o=selectedText(),rows=[['Event Date','Game Format','Group','Player','Handicap Index']];o.c.groups.forEach((g,i)=>g.forEach(p=>rows.push([$('eventDate').value,$('format').value,`Group ${i+1}`,p.name,Number.isFinite(p.hcp)?p.hcp:''])));const csv=rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');downloadFile(`Saturday_Golf_Pairings_${$('eventDate').value||'event'}.csv`,csv,'text/csv;charset=utf-8')}catch(e){alert(e.message)}});
+$('useSample').addEventListener('click',()=>{$('roster').value='Alex Smith, 4.2\nJamie Jones, 7.1\nTaylor Brown, 10.5\nMorgan Lee, 12.3\nChris Davis, 14.7\nJordan Wilson, 16.2\nCasey Miller, 18.4\nRiley Moore, 22.0';parseRoster()});
+$('format').addEventListener('change',()=>{$('pairWeight').value=$('format').value==='Best Ball'?'balanced':'high'});
+$('eventDate').value=`${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+try{const cached=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(cached&&cached.data){historyData=cached.data;buildPairCounts(cached.data);setStatus('Loaded saved local history cache from '+(cached.savedAt||'an earlier session')+'. Select Load current-season pairing history to refresh from Google Sheets when online.')}}catch(_){}
+</script></body></html>
