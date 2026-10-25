@@ -127,7 +127,7 @@ function makeEvent(row) {
   const date = get(row, ['Event Date']);
   const course = get(row, ['Course']);
   const status = get(row, ['Status']);
-  const version = get(row, ['Current Version']);
+  const version = get(row, ['Current Version']);f
   const results = String(get(row, ['Results Available'])).toLowerCase() === 'yes';
 
   const div = document.createElement(eventId ? 'a' : 'div');
@@ -135,7 +135,7 @@ function makeEvent(row) {
   if (eventId) {
     // Pass the event ID in both parameter names so either detail-page version
     // can read it, and also preserve it in browser storage as a fallback.
-    const detailUrl = new URL('Event_Detail_Streamlined_v104_Scorecard_Layout.html', document.baseURI);
+    const detailUrl = new URL('Event_Detail_Streamlined_v105_Scorecard_Fix.html', document.baseURI);
     detailUrl.searchParams.set('eventId', eventId);
     detailUrl.searchParams.set('id', eventId);
     div.href = detailUrl.href;
