@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Squabbit — Scorecard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F5F1E6;
+    --paper-line: #DCD3B8;
+    --fairway: #1F3B2C;
+    --fairway-light: #2E5540;
+    --brass: #A9812F;
+    --brass-light: #C9A24A;
+    --ink: #232019;
+    --ink-soft: #6b6455;
+    --clay: #9C4A34;
+    --white: #FFFDF8;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    padding:28px 16px 60px;
+    background-image:
+      radial-gradient(ellipse at top left, rgba(31,59,44,0.05), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(169,129,47,0.06), transparent 55%);
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* Header */
+  header{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    border-bottom:3px solid var(--fairway);
+    padding-bottom:14px;
+    margin-bottom:22px;
+  }
+  .brand-eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--brass);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  h1{
+    font-family:'Fraunces',serif;
+    font-weight:700;
+    font-size:34px;
+    margin:0;
+    color:var(--fairway);
+    line-height:1.05;
+  }
+  .subhead{font-size:13px;color:var(--ink-soft);margin-top:4px;}
+  .custom-heading-field{margin-top:10px;}
+  .custom-heading-field label{
+    display:block;font-family:'Space Mono',monospace;font-size:10px;color:var(--ink-soft);
+    letter-spacing:.03em;margin-bottom:4px;
+  }
+  .custom-heading-field input{
+    font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);
+    border:1px solid var(--paper-line);border-radius:3px;
+    padding:7px 10px;width:280px;max-width:100%;background:var(--white);
+  }
+  .custom-heading-field input:focus{outline:2px solid var(--brass-light);outline-offset:1px;}
+  .custom-heading-field textarea{
+    font-family:'Inter',sans-serif;font-size:13px;color:var(--ink);
+    border:1px solid var(--paper-line);border-radius:3px;
+    padding:7px 10px;width:280px;max-width:100%;background:var(--white);
+    resize:vertical;line-height:1.4;overflow:hidden;
+  }
+  .custom-heading-field textarea:focus{outline:2px solid var(--brass-light);outline-offset:1px;}
+
+  /* Upload state */
+  #dropzone{
+    border:2px dashed var(--paper-line);
+    border-radius:4px;
+    background:var(--white);
+    padding:48px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  #dropzone:hover, #dropzone.drag{
+    border-color:var(--brass);
+    background:#FFFBF0;
+  }
+  #dropzone .icon{font-size:30px;margin-bottom:10px;color:var(--fairway-light);}
+  #dropzone .main{font-family:'Fraunces',serif;font-size:19px;color:var(--fairway);margin-bottom:4px;}
+  #dropzone .sub{font-size:12.5px;color:var(--ink-soft);}
+  input[type=file]{display:none;}
+  #err{
+    display:none;
+    margin-top:14px;
+    background:#FBEDE8;
+    border:1px solid var(--clay);
+    color:#7A3421;
+    padding:12px 14px;
+    border-radius:3px;
+    font-size:13px;
+  }
+  #lastFileBanner{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+    background:#EFF5F0;
+    border:1px solid #C7DBCB;
+    color:var(--fairway);
+    padding:11px 14px;
+    border-radius:3px;
+    font-size:12.5px;
+    margin-bottom:16px;
+  }
+  #lastFileBanner button{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    background:none;
+    border:1px solid var(--fairway);
+    color:var(--fairway);
+    border-radius:3px;
+    padding:6px 10px;
+    cursor:pointer;
+  }
+
+  /* Controls */
+  #controls{
+    display:none;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .tabs{display:flex;gap:6px;flex-wrap:wrap;}
+  .tab-btn{
+    font-family:'Space Mono',monospace;
+    font-size:11.5px;
+    letter-spacing:.02em;
+    padding:9px 14px;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    color:var(--ink-soft);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:var(--fairway);
+    border-color:var(--fairway);
+    color:var(--white);
+  }
+  .right-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+  .toggle-label{
+    display:flex;align-items:center;gap:8px;
+    font-size:12.5px;color:var(--ink-soft);
+    font-weight:500;
+    user-select:none;
+    cursor:pointer;
+  }
+  .switch{
+    position:relative;width:36px;height:20px;background:#CFC5A8;border-radius:20px;transition:background .15s;
+  }
+  .switch::after{
+    content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:var(--white);border-radius:50%;transition:left .15s;
+  }
+  input.switch-input{display:none;}
+  input.switch-input:checked + .switch{background:var(--fairway);}
+  input.switch-input:checked + .switch::after{left:18px;}
+  .new-file-btn{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    background:none;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:8px 12px;
+    cursor:pointer;
+  }
+
+  /* Legend */
+  .legend{
+    display:none;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin:-6px 0 20px;
+    padding:10px 14px;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+  }
+  .legend .item{display:flex;align-items:center;gap:7px;}
+  .legend .swatch{width:26px;height:26px;border:1px solid var(--paper-line);border-radius:2px;position:relative;background:var(--white);}
+  .legend .dot{position:absolute;top:2px;right:2px;width:6px;height:6px;border-radius:50%;background:var(--brass);box-shadow:-4px 0 0 var(--brass);}
+  .legend .dot.single{box-shadow:none;}
+  .legend .net-num{color:var(--fairway-light);font-weight:700;}
+
+  /* Scorecard block per course/tee-time */
+  .round-block{
+    display:none;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    overflow:hidden;
+    margin-bottom:26px;
+    box-shadow:0 1px 2px rgba(0,0,0,0.04);
+  }
+  .round-block.active{display:block;}
+  .round-title-bar{
+    background:var(--fairway);
+    color:var(--white);
+    padding:14px 20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .round-title-bar .course{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+  }
+  .round-title-bar .time{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    color:#D9CFA9;
+  }
+
+  .card-scroll{overflow-x:auto;}
+  table.scorecard{
+    border-collapse:collapse;
+    width:100%;
+    min-width:920px;
+    font-family:'Space Mono',monospace;
+  }
+  table.scorecard th, table.scorecard td{
+    border:1px solid var(--paper-line);
+    text-align:center;
+    padding:0;
+    font-variant-numeric:tabular-nums;
+  }
+  table.scorecard th.rowlabel, table.scorecard td.rowlabel{
+    text-align:left;
+    padding-left:12px;
+    font-family:'Inter',sans-serif;
+  }
+  .hole-header th{
+    background:#EFE9D6;
+    color:var(--ink-soft);
+    font-size:11px;
+    padding:7px 4px;
+    font-weight:700;
+  }
+  .hole-header th.out-in{background:#E3DAB9;color:var(--fairway);}
+  .row-si td, .row-si th{
+    background:#FAF7EE;
+    color:var(--brass);
+    font-size:10.5px;
+    padding:4px 2px;
+  }
+  .row-par td, .row-par th{
+    background:#F2EEE0;
+    color:var(--ink-soft);
+    font-size:11px;
+    padding:5px 2px;
+    font-weight:700;
+  }
+  .player-group{border-top:2px solid var(--fairway);}
+  .player-group:first-of-type{border-top:none;}
+  .row-gross td.rowlabel{
+    font-weight:700;
+    color:var(--fairway);
+    font-size:13.5px;
+    padding-top:10px;
+  }
+  .row-gross .meta{
+    display:block;
+    font-family:'Space Mono',monospace;
+    font-weight:400;
+    font-size:10.5px;
+    color:var(--ink-soft);
+    margin-top:1px;
+  }
+  .row-gross td, .row-gross th{padding-top:10px;}
+  .row-net td.rowlabel, .row-net th.rowlabel{
+    color:var(--ink-soft);
+    font-size:10.5px;
+    padding-bottom:10px;
+  }
+  .row-net td, .row-net th{padding-bottom:10px;}
+  .score-cell{
+    position:relative;
+    font-size:13.5px;
+    color:var(--ink);
+    min-width:34px;
+  }
+  .score-cell .dots{
+    position:absolute;
+    top:3px;right:3px;
+    display:flex;gap:2px;
+  }
+  .score-cell .dots span{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--brass-light);
+    display:inline-block;
+  }
+  .score-cell.birdie{position:relative;}
+  .score-cell.birdie::before{
+    content:'';position:absolute;inset:5px;border:1.5px solid var(--fairway-light);border-radius:50%;
+  }
+  .score-cell.bogey::before{
+    content:'';position:absolute;inset:6px;border:1.5px solid var(--clay);
+  }
+  .out-in-cell{
+    font-weight:700;
+    background:#FBF8ED;
+  }
+  .total-cell{
+    font-weight:700;
+    background:var(--fairway);
+    color:var(--white);
+  }
+  .net-val{color:var(--fairway-light);font-weight:700;}
+  .net-val.under{color:var(--clay);}
+  .net-total{font-weight:700;color:var(--fairway-light);background:#EAF1EC;}
+
+  footer{
+    text-align:center;
+    font-size:11px;
+    color:var(--ink-soft);
+    margin-top:30px;
+    font-family:'Space Mono',monospace;
+  }
+
+  /* Tee S.I. modal */
+  .modal-overlay{
+    display:none;
+    position:fixed;inset:0;
+    background:rgba(35,32,25,0.55);
+    z-index:50;
+    align-items:center;justify-content:center;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--white);
+    border-radius:5px;
+    max-width:720px;
+    width:100%;
+    max-height:86vh;
+    overflow-y:auto;
+    padding:24px 26px 20px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.25);
+  }
+  .modal h2{
+    font-family:'Fraunces',serif;
+    color:var(--fairway);
+    font-size:21px;
+    margin:0 0 4px;
+  }
+  .modal .modal-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:18px;}
+  .tee-section{
+    border:1px solid var(--paper-line);
+    border-radius:4px;
+    padding:14px 16px;
+    margin-bottom:14px;
+  }
+  .tee-section-head{
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .tee-section-head .name{
+    font-family:'Space Mono',monospace;
+    font-weight:700;
+    font-size:13px;
+    color:var(--fairway);
+  }
+  .tee-section-head .name .course-sub{
+    display:block;font-weight:400;color:var(--ink-soft);font-size:11px;margin-top:2px;
+  }
+  .custom-badge{
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    background:var(--brass-light);
+    color:var(--white);
+    padding:2px 7px;
+    border-radius:10px;
+    letter-spacing:.03em;
+  }
+  .si-grid{
+    display:grid;
+    grid-template-columns:repeat(9,1fr);
+    gap:6px;
+  }
+  .si-grid .si-input-wrap{text-align:center;}
+  .si-grid label{
+    display:block;font-size:9.5px;color:var(--ink-soft);margin-bottom:2px;font-family:'Space Mono',monospace;
+  }
+  .si-grid input{
+    width:100%;
+    text-align:center;
+    font-family:'Space Mono',monospace;
+    font-size:12.5px;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:5px 2px;
+    color:var(--ink);
+  }
+  .si-grid input:focus{outline:2px solid var(--brass-light);outline-offset:1px;}
+  .tee-section-actions{
+    display:flex;gap:8px;margin-top:12px;
+  }
+  .tee-section-actions button{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    padding:7px 12px;
+    border-radius:3px;
+    cursor:pointer;
+  }
+  .btn-save{background:var(--fairway);color:var(--white);border:1px solid var(--fairway);}
+  .btn-reset{background:none;color:var(--ink-soft);border:1px solid var(--paper-line);}
+  .modal-close-row{text-align:right;margin-top:6px;}
+  .modal-close-row button{
+    font-family:'Space Mono',monospace;font-size:11.5px;
+    background:none;border:1px solid var(--paper-line);border-radius:3px;
+    padding:8px 14px;cursor:pointer;color:var(--ink-soft);
+  }
+  .edit-si-btn{
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    color:var(--white);
+    background:var(--brass);
+    border:1px solid var(--brass);
+    border-radius:3px;
+    padding:8px 12px;
+    cursor:pointer;
+  }
+  .custom-si-tag{color:var(--brass);}
+
+  .rating-fields{ display:flex; gap:12px; flex-wrap:wrap; }
+  .rating-fields label{ display:block; font-family:'Space Mono',monospace; font-size:10px; color:var(--ink-soft); margin-bottom:3px; }
+  .rating-fields input{
+    width:110px; font-family:'Space Mono',monospace; font-size:13px; color:var(--ink);
+    border:1px solid var(--paper-line); border-radius:3px; padding:6px 8px; background:var(--white);
+  }
+  .rating-fields input:focus{ outline:2px solid var(--brass-light); outline-offset:1px; }
+
+  .ctp-grid{
+    display:grid;
+    grid-template-columns:repeat(9,1fr);
+    gap:6px;
+  }
+  .ctp-grid .ctp-hole-wrap{
+    text-align:center;
+    border:1px solid var(--paper-line);
+    border-radius:3px;
+    padding:6px 2px;
+    cursor:pointer;
+  }
+  .ctp-grid .ctp-hole-wrap.checked{
+    border-color:var(--brass);
+    background:#FFF8E8;
+  }
+  .ctp-grid .ctp-hole-wrap label{
+    display:block;font-size:9.5px;color:var(--ink-soft);margin-bottom:2px;font-family:'Space Mono',monospace;
+    cursor:pointer;
+  }
+  .ctp-grid .ctp-par{
+    display:block;font-size:9px;color:var(--brass);margin-top:1px;
+  }
+  .ctp-grid .ctp-hole-wrap input{ cursor:pointer; }
+
+  .hole-header th.ctp-hole{ background:#F4C95D; color:var(--fairway); }
+  .ctp-footer-note{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    padding:8px 4px 0;
+  }
+  .ctp-footer-note strong{ color:var(--fairway); }
+  .view-switch{ display:flex; gap:6px; padding:10px 14px; background:#F6F2E4; border-bottom:1px solid var(--paper-line); }
+  .vs-btn{ font-family:'Space Mono',monospace; font-size:11px; padding:6px 12px; background:var(--white); border:1px solid var(--paper-line); border-radius:3px; color:var(--ink-soft); cursor:pointer; }
+  .vs-btn.active{ background:var(--fairway); border-color:var(--fairway); color:var(--white); }
+  .score-cell.pts-0{ color:#b3ab95; }
+  .score-cell.pts-4{ color:var(--fairway-light); font-weight:700; background:#EAF1EC; }
+  .score-cell.pts-8{ color:var(--white); font-weight:700; background:var(--brass); }
+  .pm-cell{ font-weight:700; background:#FBF8ED; min-width:46px; }
+  .pm-cell.pm-pos{ color:var(--fairway-light); }
+  .pm-cell.pm-neg{ color:var(--clay); }
+
+  /* ---- Printable cards (blank & scored) — rendered into #printArea and printed
+         directly from this page, no popup window involved ---- */
+  #printArea{ display:none; }
+  @page { size: landscape; margin: 0.5in; }
+  #printArea .page{ page-break-after: always; padding: 4px 2px; max-width: 7.5in; font-family: Georgia, 'Times New Roman', serif; color:#111; }
+  #printArea .page:last-child{ page-break-after: auto; }
+  #printArea .pagetop{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  #printArea .pageheading{ font-size:9.5px; color:#777; text-transform:uppercase; letter-spacing:.05em; text-align:right; white-space:nowrap; }
+  #printArea .cardhead{ font-size:12px; font-weight:700; }
+  #printArea table.cardtable{ border-collapse:collapse; width:100%; table-layout:fixed; }
+  #printArea .namecol{ width:150px; }
+  #printArea .turncol{ width:26px; }
+  #printArea .th{ border:1px solid #999; background:#eee; font-weight:700; font-size:9px; padding:2px 1px; text-align:center; }
+  #printArea .th.ctp-hole{ background:#F4C95D; }
+  #printArea .th.turn{ background:#d8d8d8; }
+  #printArea .nameHead{ text-align:left; padding-left:5px; }
+  #printArea .pname{ border:1px solid #999; font-size:8.5px; font-weight:700; text-align:left; padding:2px 5px; white-space:nowrap; vertical-align:middle; }
+  #printArea .pmeta{ font-weight:400; color:#555; }
+  #printArea .netlabel{ font-weight:400; font-style:italic; color:#666; font-size:7.5px; }
+  #printArea .blankbox{ border:1px solid #999; font-size:9px; padding:4px 1px; text-align:center; height:34px; position:relative; }
+  #printArea .blankbox.sum{ background:#f4f4f4; font-weight:700; }
+  #printArea .blankbox.tot{ background:#e2e2e2; font-weight:700; }
+  #printArea .blankbox.birdie::after{ content:''; position:absolute; inset:2px; border:1px solid #2E5540; border-radius:50%; pointer-events:none; }
+  #printArea .blankbox.bogey::after{ content:''; position:absolute; inset:3px; border:1px solid #9C4A34; pointer-events:none; }
+  #printArea .netrow .netbox{ border:1px solid #ccc; font-size:7.5px; padding:1px; text-align:center; color:#2E5540; background:#F7FAF8; }
+  #printArea .netrow .netbox.sum, #printArea .netrow .netbox.tot{ font-weight:700; background:#EAF1EC; }
+  #printArea .netrow .pname{ border-left:1px solid #999; border-right:1px solid #999; border-bottom:1px solid #999; border-top:none; }
+  #printArea .pdots{ position:absolute; top:2px; right:2px; display:flex; gap:1px; }
+  #printArea .pdots i{ width:3px; height:3px; border-radius:50%; background:#333; border:0.4px solid #333; display:inline-block; }
+  #printArea .cardkey{ font-size:7.5px; color:#555; margin-top:3px; }
+  #printArea .formatfooter{ font-size:7.5px; color:#555; margin-top:2px; }
+  #printArea .teefooter{ font-size:7.5px; color:#555; margin-top:2px; }
+  #printArea .teamsfooter{ font-size:8px; color:#333; margin-top:3px; }
+  #printArea .teamsfooter strong{ color:#111; }
+  #printArea .initcol{ width:30px; }
+  #printArea .blankbox.init{ font-weight:700; font-size:9px; background:#fff; }
+  #printArea .pmcol{ width:34px; }
+  #printArea .ptsrow .netbox{ font-size:8.5px; font-weight:700; color:#111; background:#F6F6F6; border:1px solid #bbb; }
+  #printArea .ptsrow .netbox.pt0{ color:#aaa; font-weight:400; }
+  #printArea .ptsrow .netbox.pt4{ background:#E2EBE5; }
+  #printArea .ptsrow .netbox.sum{ background:#EAEAEA; }
+  #printArea .ptsrow .netbox.pm{ font-size:10px; background:#fff; }
+  #printArea .ptsrow .netbox.pm.pos{ color:#1F5C3A; }
+  #printArea .ptsrow .netbox.pm.neg{ color:#9C4A34; }
+  #printArea .blankbox.diag{ background-image:linear-gradient(to top left, transparent calc(50% - 0.6px), #8c8c8c calc(50% - 0.6px), #8c8c8c calc(50% + 0.6px), transparent calc(50% + 0.6px)); }
+  #printArea .blankbox.diag .pdots{ left:2px; right:auto; }
+  #printArea .blankbox .sc{ position:absolute; right:3px; bottom:3px; width:15px; height:15px; line-height:15px; text-align:center; font-size:9px; }
+  #printArea .blankbox .sc.birdie::after{ content:''; position:absolute; top:0; left:0; right:0; bottom:0; border:1px solid #2E5540; border-radius:50%; }
+  #printArea .blankbox .sc.bogey::after{ content:''; position:absolute; top:0; left:0; right:0; bottom:0; border:1px solid #9C4A34; }
+  #printArea .stdmsg{ margin-top:8px; padding:5px 8px; border:1.5px solid #111; font-size:13px; font-weight:700; color:#111; text-align:center; }
+  #printArea .gamedetails{ font-size:8px; color:#333; margin-top:3px; border-top:1px solid #ccc; padding-top:3px; white-space:pre-wrap; }
+  #printArea .ctpfooter{ font-size:8px; color:#333; margin-top:3px; }
+  #printArea .ctpfooter strong{ color:#111; }
+
+  @media print{
+    *{ -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact; }
+    body{background:#fff;padding:0;margin:0;}
+    body > *{ display:none !important; }
+    #printArea{ display:block !important; }
+    #printArea .page{ display:block !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <div class="brand-eyebrow">Squabbit</div>
+      <h1>Scorecard</h1>
+      <div class="subhead" id="eventSubhead">Upload a Squabbit event export to get started</div>
+      <div class="custom-heading-field">
+        <label for="customHeadingInput">Custom heading for printed cards (optional)</label>
+        <input type="text" id="customHeadingInput" placeholder="e.g. league name, sponsor, event title">
+      </div>
+      <div class="custom-heading-field">
+        <label for="gameDetailsInput">Custom footer for printed cards (optional)</label>
+        <textarea id="gameDetailsInput" rows="1" placeholder="e.g. format, stakes, skins rules"></textarea>
+      </div>
+    </div>
+  </header>
+
+  <div id="dropzone">
+    <div class="icon">⛳</div>
+    <div class="main">Drop a Squabbit CSV export here</div>
+    <div class="sub">or click to browse — event details CSV with hole-by-hole scores</div>
+    <input type="file" id="fileInput" accept=".csv,text/csv">
+  </div>
+  <div id="lastFileBanner" style="display:none;"></div>
+  <div id="err"></div>
+
+  <div id="controls">
+    <div class="tabs" id="roundTabs"></div>
+    <div class="right-controls">
+      <label class="toggle-label">
+        <input type="checkbox" class="switch-input" id="netToggle" checked>
+        <span class="switch"></span>
+        Show net strokes
+      </label>
+      <button class="edit-si-btn" id="editSiBtn">Edit tee S.I.</button>
+      <button class="edit-si-btn" id="editCtpBtn">Closest to pin</button>
+      <button class="edit-si-btn" id="editRatingBtn">Tee rating/slope</button>
+      <button class="edit-si-btn" id="printBlankBtn" style="background:var(--fairway);border-color:var(--fairway);">Print blank cards</button>
+      <button class="edit-si-btn" id="printScoredBtn" style="background:var(--brass);border-color:var(--brass);">Print scorecards (with scores)</button>
+      <button class="edit-si-btn" id="exportPlayerViewBtn" style="background:#4A3B6B;border-color:#4A3B6B;">Export player view</button>
+      <button class="new-file-btn" id="newFileBtn">Load different file</button>
+    </div>
+  </div>
+
+  <div class="legend" id="legend">
+    <div class="item"><div class="swatch"><span class="dots" style="position:absolute;top:2px;right:2px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A24A;display:inline-block;"></span></span></div> 1 stroke hole</div>
+    <div class="item"><div class="swatch"><span style="position:absolute;top:2px;right:2px;display:flex;gap:2px;"><span style="width:5px;height:5px;border-radius:50%;background:#C9A24A;display:inline-block;"></span><span style="width:5px;height:5px;border-radius:50%;background:#C9A24A;display:inline-block;"></span></span></div> 2 stroke hole</div>
+    <div class="item"><div class="swatch" style="display:flex;align-items:center;justify-content:center;"><span style="width:16px;height:16px;border:1.5px solid #2E5540;border-radius:50%;"></span></div> Birdie or better (gross)</div>
+    <div class="item"><div class="swatch" style="display:flex;align-items:center;justify-content:center;"><span style="width:16px;height:16px;border:1.5px solid #9C4A34;"></span></div> Bogey or worse (gross)</div>
+    <div class="item"><span class="net-num">Green</span> = net score row</div>
+    <div class="item"><div class="swatch" style="background:#F4C95D;"></div> Shaded hole = closest to pin</div>
+  </div>
+
+  <div id="roundsContainer"></div>
+
+  <footer>Parsed locally in your browser — nothing is uploaded anywhere</footer>
+</div>
+
+<div id="printArea"></div>
+
+<div class="modal-overlay" id="siModalOverlay">
+  <div class="modal">
+    <h2>Tee stroke index</h2>
+    <div class="modal-sub">Ladies and forward tees often rank holes differently than the card's default S.I. row. Set a custom ranking per tee here — it's remembered on this device for this course.</div>
+    <div id="teeSectionsContainer"></div>
+    <div class="modal-close-row"><button id="closeSiModal">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ratingModalOverlay">
+  <div class="modal">
+    <h2>Tee rating &amp; slope</h2>
+    <div class="modal-sub">Enter the course rating and slope for each tee. They print in the footer of the printed cards and are remembered on this device per course.</div>
+    <div id="ratingSectionsContainer"></div>
+    <div class="modal-close-row"><button id="closeRatingModal">Close</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="ctpModalOverlay">
+  <div class="modal">
+    <h2>Closest to pin holes</h2>
+    <div class="modal-sub">Mark which hole(s) have a closest-to-pin contest this round. Remembered on this device per course.</div>
+    <div id="ctpSectionsContainer"></div>
+    <div class="modal-close-row"><button id="closeCtpModal">Close</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const dropzone = document.getElementById('dropzone');
+  const fileInput = document.getElementById('fileInput');
+  const errBox = document.getElementById('err');
+  const controls = document.getElementById('controls');
+  const legend = document.getElementById('legend');
+  const roundTabs = document.getElementById('roundTabs');
+  const roundsContainer = document.getElementById('roundsContainer');
+  const netToggle = document.getElementById('netToggle');
+  const newFileBtn = document.getElementById('newFileBtn');
+  const eventSubhead = document.getElementById('eventSubhead');
+  const editSiBtn = document.getElementById('editSiBtn');
+  const siModalOverlay = document.getElementById('siModalOverlay');
+  const teeSectionsContainer = document.getElementById('teeSectionsContainer');
+  const closeSiModal = document.getElementById('closeSiModal');
+  const editCtpBtn = document.getElementById('editCtpBtn');
+  const editRatingBtn = document.getElementById('editRatingBtn');
+  const ratingModalOverlay = document.getElementById('ratingModalOverlay');
+  const ratingSectionsContainer = document.getElementById('ratingSectionsContainer');
+  const closeRatingModal = document.getElementById('closeRatingModal');
+  const ctpModalOverlay = document.getElementById('ctpModalOverlay');
+  const ctpSectionsContainer = document.getElementById('ctpSectionsContainer');
+  const closeCtpModal = document.getElementById('closeCtpModal');
+  const customHeadingInput = document.getElementById('customHeadingInput');
+  const gameDetailsInput = document.getElementById('gameDetailsInput');
+
+  let parsedRounds = [];
+  let currentData = null;
+  let activeRoundIndex = 0;
+
+  // ---------- Custom heading (persisted, shown on printed cards) ----------
+  const CUSTOM_HEADING_KEY = 'sgScorecardCustomHeading';
+  try {
+    const savedHeading = localStorage.getItem(CUSTOM_HEADING_KEY);
+    if (savedHeading) customHeadingInput.value = savedHeading;
+  } catch (e) { /* storage unavailable */ }
+  customHeadingInput.addEventListener('input', () => {
+    try { localStorage.setItem(CUSTOM_HEADING_KEY, customHeadingInput.value); }
+    catch (e) { /* storage unavailable — value still works for this session */ }
+  });
+
+  // ---------- Game details (persisted, shown at the bottom of printed cards) ----------
+  const GAME_DETAILS_KEY = 'sgScorecardGameDetails';
+  function autoGrowGameDetails(){
+    gameDetailsInput.style.height = 'auto';
+    gameDetailsInput.style.height = gameDetailsInput.scrollHeight + 'px';
+  }
+  try {
+    const savedDetails = localStorage.getItem(GAME_DETAILS_KEY);
+    if (savedDetails) gameDetailsInput.value = savedDetails;
+  } catch (e) { /* storage unavailable */ }
+  autoGrowGameDetails();
+  gameDetailsInput.addEventListener('input', () => {
+    autoGrowGameDetails();
+    try { localStorage.setItem(GAME_DETAILS_KEY, gameDetailsInput.value); }
+    catch (e) { /* storage unavailable — value still works for this session */ }
+  });
+
+
+  // ---------- Per-tee S.I. overrides (persisted locally per browser) ----------
+  const SI_STORAGE_KEY = 'sgScorecardSiOverrides';
+  function loadOverrides(){
+    try { return JSON.parse(localStorage.getItem(SI_STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveOverridesToStorage(){
+    try { localStorage.setItem(SI_STORAGE_KEY, JSON.stringify(siOverrides)); }
+    catch (e) { /* storage unavailable — overrides still work for this session */ }
+  }
+  let siOverrides = loadOverrides();
+  function overrideKey(course, tee){ return course + '::' + (tee || 'Default'); }
+  function effectiveSi(round, tee){
+    const key = overrideKey(round.courseName, tee);
+    const ov = siOverrides[key];
+    if (ov && ov.length === round.numHoles) return ov;
+    return round.si;
+  }
+  function hasOverride(round, tee){
+    const ov = siOverrides[overrideKey(round.courseName, tee)];
+    return !!(ov && ov.length === round.numHoles);
+  }
+  function distinctTees(round){
+    const seen = [];
+    round.players.forEach(p => {
+      const t = p.tee || 'Default';
+      if (!seen.includes(t)) seen.push(t);
+    });
+    return seen;
+  }
+
+  // Build the set of S.I. reference rows to display: a single "Mens HCP" row for every
+  // tee that matches the card's baseline S.I., plus one extra labeled row per tee (or
+  // group of tees) whose S.I. actually differs from that baseline.
+  function computeSiRowGroups(round, teesInRound){
+    const arraysEqual = (a, b) => a.length === b.length && a.every((v, i) => v === b[i]);
+    const baseline = round.si;
+    const matching = [];
+    const diffGroups = {};
+    teesInRound.forEach(tee => {
+      const si = effectiveSi(round, tee);
+      if (arraysEqual(si, baseline)){
+        matching.push(tee);
+      } else {
+        const key = si.join(',');
+        if (!diffGroups[key]) diffGroups[key] = { si, tees: [] };
+        diffGroups[key].tees.push(tee);
+      }
+    });
+    const rows = [];
+    if (matching.length > 0 || Object.keys(diffGroups).length === 0){
+      rows.push({ label: 'Mens HCP', si: baseline });
+    }
+    Object.values(diffGroups).forEach(g => {
+      rows.push({ label: g.tees.join(' / '), si: g.si });
+    });
+    return rows;
+  }
+
+  function collectTees(rounds){
+    const map = {};
+    rounds.forEach(r => {
+      r.players.forEach(p => {
+        const key = overrideKey(r.courseName, p.tee);
+        if (!map[key]) map[key] = { course: r.courseName, tee: p.tee || 'Default', numHoles: r.numHoles, defaultSi: r.si, holeCols: r.holeCols };
+      });
+    });
+    return Object.values(map);
+  }
+
+  function openSiModal(){
+    if (!currentData) return;
+    const tees = collectTees(currentData.rounds);
+    teeSectionsContainer.innerHTML = '';
+    tees.forEach(t => {
+      const key = overrideKey(t.course, t.tee);
+      const active = hasOverride({ courseName: t.course, numHoles: t.numHoles }, t.tee);
+      const values = active ? siOverrides[key] : t.defaultSi;
+
+      const section = document.createElement('div');
+      section.className = 'tee-section';
+      section.innerHTML = `
+        <div class="tee-section-head">
+          <div class="name">${escapeHtml(/\btee$/i.test(t.tee) ? t.tee : t.tee + ' tee')} <span class="course-sub">${escapeHtml(t.course)}</span></div>
+          ${active ? '<span class="custom-badge">Custom</span>' : ''}
+        </div>
+        <div class="si-grid">
+          ${t.holeCols.map((c, i) => `
+            <div class="si-input-wrap">
+              <label>Hole ${c.label}</label>
+              <input type="number" min="1" max="${t.numHoles}" data-idx="${i}" value="${values[i]}">
+            </div>`).join('')}
+        </div>
+        <div class="tee-section-actions">
+          <button class="btn-save">Save</button>
+          <button class="btn-reset">Reset to card default</button>
+        </div>
+      `;
+      section.querySelector('.btn-save').addEventListener('click', () => {
+        const inputs = section.querySelectorAll('.si-grid input');
+        const arr = Array.from(inputs).map(inp => parseInt(inp.value, 10) || 0);
+        siOverrides[key] = arr;
+        saveOverridesToStorage();
+        rerenderKeepingTab();
+        openSiModal();
+      });
+      section.querySelector('.btn-reset').addEventListener('click', () => {
+        delete siOverrides[key];
+        saveOverridesToStorage();
+        rerenderKeepingTab();
+        openSiModal();
+      });
+      teeSectionsContainer.appendChild(section);
+    });
+    siModalOverlay.classList.add('open');
+  }
+  editSiBtn.addEventListener('click', openSiModal);
+  closeSiModal.addEventListener('click', () => siModalOverlay.classList.remove('open'));
+  siModalOverlay.addEventListener('click', e => { if (e.target === siModalOverlay) siModalOverlay.classList.remove('open'); });
+
+  // ---------- Closest-to-pin hole markers (persisted per course, like S.I. overrides) ----------
+  const CTP_STORAGE_KEY = 'sgScorecardCtpHoles';
+  function loadCtpHoles(){
+    try { return JSON.parse(localStorage.getItem(CTP_STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveCtpHolesToStorage(){
+    try { localStorage.setItem(CTP_STORAGE_KEY, JSON.stringify(ctpHoles)); }
+    catch (e) { /* storage unavailable — still works for this session */ }
+  }
+  let ctpHoles = loadCtpHoles();
+  function ctpHolesForCourse(courseName){
+    return ctpHoles[courseName] || [];
+  }
+  function isCtpHole(courseName, holeLabel){
+    return ctpHolesForCourse(courseName).includes(holeLabel);
+  }
+
+  function openCtpModal(){
+    if (!currentData) return;
+    const courses = [];
+    currentData.rounds.forEach(r => {
+      if (!courses.find(c => c.courseName === r.courseName)){
+        courses.push({ courseName: r.courseName, holeCols: r.holeCols, numHoles: r.numHoles, par: r.par });
+      }
+    });
+    ctpSectionsContainer.innerHTML = '';
+    courses.forEach(c => {
+      const selected = ctpHolesForCourse(c.courseName);
+      const section = document.createElement('div');
+      section.className = 'tee-section';
+      section.innerHTML = `
+        <div class="tee-section-head">
+          <div class="name">${escapeHtml(c.courseName)}</div>
+          ${selected.length ? '<span class="custom-badge">' + selected.length + ' hole' + (selected.length > 1 ? 's' : '') + '</span>' : ''}
+        </div>
+        <div class="ctp-grid">
+          ${c.holeCols.map((h, i) => `
+            <div class="ctp-hole-wrap${selected.includes(h.label) ? ' checked' : ''}" data-hole="${h.label}">
+              <label>Hole ${h.label}<span class="ctp-par">Par ${c.par[i]}</span><br><input type="checkbox" data-hole="${h.label}" ${selected.includes(h.label) ? 'checked' : ''}></label>
+            </div>`).join('')}
+        </div>
+      `;
+      section.querySelectorAll('.ctp-hole-wrap').forEach(wrap => {
+        wrap.addEventListener('click', e => {
+          if (e.target.tagName !== 'INPUT'){
+            const cb = wrap.querySelector('input');
+            cb.checked = !cb.checked;
+          }
+          wrap.classList.toggle('checked', wrap.querySelector('input').checked);
+          const holeLabel = wrap.getAttribute('data-hole');
+          let arr = ctpHoles[c.courseName] || [];
+          if (wrap.querySelector('input').checked){
+            if (!arr.includes(holeLabel)) arr = [...arr, holeLabel];
+          } else {
+            arr = arr.filter(h => h !== holeLabel);
+          }
+          ctpHoles[c.courseName] = arr;
+          saveCtpHolesToStorage();
+          rerenderKeepingTab();
+        });
+      });
+      ctpSectionsContainer.appendChild(section);
+    });
+    ctpModalOverlay.classList.add('open');
+  }
+  // ---------- Tee rating / slope (persisted per course + tee, printed in card footer) ----------
+  const RATING_STORAGE_KEY = 'sgScorecardTeeRatings';
+  function loadTeeRatings(){
+    try { return JSON.parse(localStorage.getItem(RATING_STORAGE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveTeeRatingsToStorage(){
+    try { localStorage.setItem(RATING_STORAGE_KEY, JSON.stringify(teeRatings)); }
+    catch (e) { /* storage unavailable — still works for this session */ }
+  }
+  let teeRatings = loadTeeRatings();
+
+  // "Tees: White 70.1/125 · Gold 68.0/118" for the tees in this round that have both values.
+  function teeRatingFooterText(round){
+    const parts = [];
+    distinctTees(round).forEach(tee => {
+      const r = teeRatings[overrideKey(round.courseName, tee)];
+      if (r && r.rating && r.slope) parts.push(tee + ' ' + r.rating + '/' + r.slope);
+    });
+    return parts.length ? 'Tees: ' + parts.join(' \u00b7 ') : '';
+  }
+
+  // Teams for everyone on this card, in card order, partners included even if they play in another group.
+  function teamsFooterText(round){
+    const teams = (currentData && currentData.teams) || [];
+    const labels = [];
+    round.players.forEach(p => {
+      const t = teams.find(t => t.members.includes(p.name));
+      if (t && !labels.includes(t.label)) labels.push(t.label);
+    });
+    return labels.join(' \u00b7 ');
+  }
+
+  function openRatingModal(){
+    if (!currentData) return;
+    const tees = collectTees(currentData.rounds);
+    ratingSectionsContainer.innerHTML = '';
+    tees.forEach(t => {
+      const key = overrideKey(t.course, t.tee);
+      const existing = teeRatings[key] || {};
+      const section = document.createElement('div');
+      section.className = 'tee-section';
+      section.innerHTML = `
+        <div class="tee-section-head">
+          <div class="name">${escapeHtml(/\btee$/i.test(t.tee) ? t.tee : t.tee + ' tee')} <span class="course-sub">${escapeHtml(t.course)}</span></div>
+        </div>
+        <div class="rating-fields">
+          <div><label>Course rating</label><input type="text" inputmode="decimal" data-field="rating" placeholder="70.1" value="${escapeHtml(existing.rating || '')}"></div>
+          <div><label>Slope</label><input type="text" inputmode="numeric" data-field="slope" placeholder="125" value="${escapeHtml(existing.slope || '')}"></div>
+        </div>
+      `;
+      section.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', () => {
+          const rating = section.querySelector('[data-field="rating"]').value.trim();
+          const slope = section.querySelector('[data-field="slope"]').value.trim();
+          if (rating || slope) teeRatings[key] = { rating, slope };
+          else delete teeRatings[key];
+          saveTeeRatingsToStorage();
+          rerenderKeepingTab();
+        });
+      });
+      ratingSectionsContainer.appendChild(section);
+    });
+    ratingModalOverlay.classList.add('open');
+  }
+  editRatingBtn.addEventListener('click', openRatingModal);
+  closeRatingModal.addEventListener('click', () => ratingModalOverlay.classList.remove('open'));
+  ratingModalOverlay.addEventListener('click', e => { if (e.target === ratingModalOverlay) ratingModalOverlay.classList.remove('open'); });
+
+  editCtpBtn.addEventListener('click', openCtpModal);
+  closeCtpModal.addEventListener('click', () => ctpModalOverlay.classList.remove('open'));
+  ctpModalOverlay.addEventListener('click', e => { if (e.target === ctpModalOverlay) ctpModalOverlay.classList.remove('open'); });
+
+  const printBlankBtn = document.getElementById('printBlankBtn');
+  printBlankBtn.addEventListener('click', () => { printAllBlankCards(); });
+
+  const printScoredBtn = document.getElementById('printScoredBtn');
+  printScoredBtn.addEventListener('click', () => { printAllScoredCards(); });
+
+  const exportPlayerViewBtn = document.getElementById('exportPlayerViewBtn');
+  exportPlayerViewBtn.addEventListener('click', () => { exportPlayerView(); });
+
+  const VIEWER_TEMPLATE_B64 = "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KPGhlYWQ+CjxtZXRhIGNoYXJzZXQ9IlVURi04Ij4KPG1ldGEgbmFtZT0idmlld3BvcnQiIGNvbnRlbnQ9IndpZHRoPWRldmljZS13aWR0aCwgaW5pdGlhbC1zY2FsZT0xLjAiPgo8dGl0bGU+U3F1YWJiaXQgU2NvcmVjYXJkPC90aXRsZT4KPGxpbmsgcmVsPSJwcmVjb25uZWN0IiBocmVmPSJodHRwczovL2ZvbnRzLmdvb2dsZWFwaXMuY29tIj4KPGxpbmsgaHJlZj0iaHR0cHM6Ly9mb250cy5nb29nbGVhcGlzLmNvbS9jc3MyP2ZhbWlseT1GcmF1bmNlczpvcHN6LHdnaHRAOS4uMTQ0LDQwMDs5Li4xNDQsNjAwOzkuLjE0NCw3MDAmZmFtaWx5PVNwYWNlK01vbm86d2dodEA0MDA7NzAwJmZhbWlseT1JbnRlcjp3Z2h0QDQwMDs1MDA7NjAwOzcwMCZkaXNwbGF5PXN3YXAiIHJlbD0ic3R5bGVzaGVldCI+CjxzdHlsZT4KICA6cm9vdHsKICAgIC0tcGFwZXI6ICNGNUYxRTY7CiAgICAtLXBhcGVyLWxpbmU6ICNEQ0QzQjg7CiAgICAtLWZhaXJ3YXk6ICMxRjNCMkM7CiAgICAtLWZhaXJ3YXktbGlnaHQ6ICMyRTU1NDA7CiAgICAtLWJyYXNzOiAjQTk4MTJGOwogICAgLS1icmFzcy1saWdodDogI0M5QTI0QTsKICAgIC0taW5rOiAjMjMyMDE5OwogICAgLS1pbmstc29mdDogIzZiNjQ1NTsKICAgIC0tY2xheTogIzlDNEEzNDsKICAgIC0td2hpdGU6ICNGRkZERjg7CiAgfQogICp7Ym94LXNpemluZzpib3JkZXItYm94O30KICBib2R5ewogICAgbWFyZ2luOjA7CiAgICBiYWNrZ3JvdW5kOnZhcigtLXBhcGVyKTsKICAgIGNvbG9yOnZhcigtLWluayk7CiAgICBmb250LWZhbWlseTonSW50ZXInLHNhbnMtc2VyaWY7CiAgICBwYWRkaW5nOjI4cHggMTZweCA2MHB4OwogIH0KICAud3JhcHttYXgtd2lkdGg6MTE4MHB4O21hcmdpbjowIGF1dG87fQogIGhlYWRlcnsKICAgIGRpc3BsYXk6ZmxleDsgYWxpZ24taXRlbXM6ZmxleC1lbmQ7IGp1c3RpZnktY29udGVudDpzcGFjZS1iZXR3ZWVuOyBmbGV4LXdyYXA6d3JhcDsgZ2FwOjE2cHg7CiAgICBib3JkZXItYm90dG9tOjNweCBzb2xpZCB2YXIoLS1mYWlyd2F5KTsgcGFkZGluZy1ib3R0b206MTRweDsgbWFyZ2luLWJvdHRvbToyMnB4OwogIH0KICAuYnJhbmQtZXllYnJvd3sgZm9udC1mYW1pbHk6J1NwYWNlIE1vbm8nLG1vbm9zcGFjZTsgZm9udC1zaXplOjExcHg7IGxldHRlci1zcGFjaW5nOi4xNGVtOyB0ZXh0LXRyYW5zZm9ybTp1cHBlcmNhc2U7IGNvbG9yOnZhcigtLWJyYXNzKTsgZm9udC13ZWlnaHQ6NzAwOyBtYXJnaW4tYm90dG9tOjRweDsgfQogIGgxeyBmb250LWZhbWlseTonRnJhdW5jZXMnLHNlcmlmOyBmb250LXdlaWdodDo3MDA7IGZvbnQtc2l6ZTozNHB4OyBtYXJnaW46MDsgY29sb3I6dmFyKC0tZmFpcndheSk7IGxpbmUtaGVpZ2h0OjEuMDU7IH0KICAuc3ViaGVhZHsgZm9udC1zaXplOjEzcHg7IGNvbG9yOnZhcigtLWluay1zb2Z0KTsgbWFyZ2luLXRvcDo0cHg7IH0KCiAgI2NvbnRyb2xzeyBkaXNwbGF5OmZsZXg7IGFsaWduLWl0ZW1zOmNlbnRlcjsganVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47IGZsZXgtd3JhcDp3cmFwOyBnYXA6MTRweDsgbWFyZ2luLWJvdHRvbToyMnB4OyB9CiAgLnRhYnN7ZGlzcGxheTpmbGV4O2dhcDo2cHg7ZmxleC13cmFwOndyYXA7fQogIC50YWItYnRueyBmb250LWZhbWlseTonU3BhY2UgTW9ubycsbW9ub3NwYWNlOyBmb250LXNpemU6MTEuNXB4OyBwYWRkaW5nOjlweCAxNHB4OyBiYWNrZ3JvdW5kOnZhcigtLXdoaXRlKTsgYm9yZGVyOjFweCBzb2xpZCB2YXIoLS1wYXBlci1saW5lKTsgYm9yZGVyLXJhZGl1czozcHg7IGNvbG9yOnZhcigtLWluay1zb2Z0KTsgY3Vyc29yOnBvaW50ZXI7IH0KICAudGFiLWJ0bi5hY3RpdmV7IGJhY2tncm91bmQ6dmFyKC0tZmFpcndheSk7IGJvcmRlci1jb2xvcjp2YXIoLS1mYWlyd2F5KTsgY29sb3I6dmFyKC0td2hpdGUpOyB9CiAgLnJpZ2h0LWNvbnRyb2xze2Rpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjE0cHg7ZmxleC13cmFwOndyYXA7fQogIC50b2dnbGUtbGFiZWx7IGRpc3BsYXk6ZmxleDthbGlnbi1pdGVtczpjZW50ZXI7Z2FwOjhweDsgZm9udC1zaXplOjEyLjVweDtjb2xvcjp2YXIoLS1pbmstc29mdCk7IGZvbnQtd2VpZ2h0OjUwMDsgdXNlci1zZWxlY3Q6bm9uZTsgY3Vyc29yOnBvaW50ZXI7IH0KICAuc3dpdGNoeyBwb3NpdGlvbjpyZWxhdGl2ZTt3aWR0aDozNnB4O2hlaWdodDoyMHB4O2JhY2tncm91bmQ6I0NGQzVBODtib3JkZXItcmFkaXVzOjIwcHg7dHJhbnNpdGlvbjpiYWNrZ3JvdW5kIC4xNXM7IH0KICAuc3dpdGNoOjphZnRlcnsgY29udGVudDonJztwb3NpdGlvbjphYnNvbHV0ZTt0b3A6MnB4O2xlZnQ6MnB4O3dpZHRoOjE2cHg7aGVpZ2h0OjE2cHg7YmFja2dyb3VuZDp2YXIoLS13aGl0ZSk7Ym9yZGVyLXJhZGl1czo1MCU7dHJhbnNpdGlvbjpsZWZ0IC4xNXM7IH0KICBpbnB1dC5zd2l0Y2gtaW5wdXR7ZGlzcGxheTpub25lO30KICBpbnB1dC5zd2l0Y2gtaW5wdXQ6Y2hlY2tlZCArIC5zd2l0Y2h7YmFja2dyb3VuZDp2YXIoLS1mYWlyd2F5KTt9CiAgaW5wdXQuc3dpdGNoLWlucHV0OmNoZWNrZWQgKyAuc3dpdGNoOjphZnRlcntsZWZ0OjE4cHg7fQogIC5wcmludC1idG57IGZvbnQtZmFtaWx5OidTcGFjZSBNb25vJyxtb25vc3BhY2U7IGZvbnQtc2l6ZToxMXB4OyBjb2xvcjp2YXIoLS13aGl0ZSk7IGJhY2tncm91bmQ6dmFyKC0tZmFpcndheSk7IGJvcmRlcjoxcHggc29saWQgdmFyKC0tZmFpcndheSk7IGJvcmRlci1yYWRpdXM6M3B4OyBwYWRkaW5nOjhweCAxMnB4OyBjdXJzb3I6cG9pbnRlcjsgfQogIC5wcmludC1idG4uc2NvcmVkeyBiYWNrZ3JvdW5kOnZhcigtLWJyYXNzKTsgYm9yZGVyLWNvbG9yOnZhcigtLWJyYXNzKTsgfQoKICAubGVnZW5keyBkaXNwbGF5OmZsZXg7IGFsaWduLWl0ZW1zOmNlbnRlcjsgZ2FwOjE4cHg7IGZsZXgtd3JhcDp3cmFwOyBmb250LXNpemU6MTEuNXB4OyBjb2xvcjp2YXIoLS1pbmstc29mdCk7IG1hcmdpbjotNnB4IDAgMjBweDsgcGFkZGluZzoxMHB4IDE0cHg7IGJhY2tncm91bmQ6dmFyKC0td2hpdGUpOyBib3JkZXI6MXB4IHNvbGlkIHZhcigtLXBhcGVyLWxpbmUpOyBib3JkZXItcmFkaXVzOjNweDsgfQogIC5sZWdlbmQgLml0ZW17ZGlzcGxheTpmbGV4O2FsaWduLWl0ZW1zOmNlbnRlcjtnYXA6N3B4O30KICAubGVnZW5kIC5zd2F0Y2h7d2lkdGg6MjZweDtoZWlnaHQ6MjZweDtib3JkZXI6MXB4IHNvbGlkIHZhcigtLXBhcGVyLWxpbmUpO2JvcmRlci1yYWRpdXM6MnB4O3Bvc2l0aW9uOnJlbGF0aXZlO2JhY2tncm91bmQ6dmFyKC0td2hpdGUpO30KICAubGVnZW5kIC5kb3R7cG9zaXRpb246YWJzb2x1dGU7dG9wOjJweDtyaWdodDoycHg7d2lkdGg6NnB4O2hlaWdodDo2cHg7Ym9yZGVyLXJhZGl1czo1MCU7YmFja2dyb3VuZDp2YXIoLS1icmFzcyk7Ym94LXNoYWRvdzotNHB4IDAgMCB2YXIoLS1icmFzcyk7fQogIC5sZWdlbmQgLm5ldC1udW17Y29sb3I6dmFyKC0tZmFpcndheS1saWdodCk7Zm9udC13ZWlnaHQ6NzAwO30KCiAgLnJvdW5kLWJsb2NreyBkaXNwbGF5Om5vbmU7IGJhY2tncm91bmQ6dmFyKC0td2hpdGUpOyBib3JkZXI6MXB4IHNvbGlkIHZhcigtLXBhcGVyLWxpbmUpOyBib3JkZXItcmFkaXVzOjRweDsgb3ZlcmZsb3c6aGlkZGVuOyBtYXJnaW4tYm90dG9tOjI2cHg7IGJveC1zaGFkb3c6MCAxcHggMnB4IHJnYmEoMCwwLDAsMC4wNCk7IH0KICAucm91bmQtYmxvY2suYWN0aXZle2Rpc3BsYXk6YmxvY2s7fQogIC5yb3VuZC10aXRsZS1iYXJ7IGJhY2tncm91bmQ6dmFyKC0tZmFpcndheSk7IGNvbG9yOnZhcigtLXdoaXRlKTsgcGFkZGluZzoxNHB4IDIwcHg7IGRpc3BsYXk6ZmxleDsganVzdGlmeS1jb250ZW50OnNwYWNlLWJldHdlZW47IGFsaWduLWl0ZW1zOmJhc2VsaW5lOyBmbGV4LXdyYXA6d3JhcDsgZ2FwOjhweDsgfQogIC5yb3VuZC10aXRsZS1iYXIgLmNvdXJzZXsgZm9udC1mYW1pbHk6J0ZyYXVuY2VzJyxzZXJpZjsgZm9udC13ZWlnaHQ6NjAwOyBmb250LXNpemU6MThweDsgfQogIC5yb3VuZC10aXRsZS1iYXIgLnRpbWV7IGZvbnQtZmFtaWx5OidTcGFjZSBNb25vJyxtb25vc3BhY2U7IGZvbnQtc2l6ZToxMnB4OyBjb2xvcjojRDlDRkE5OyB9CgogIC5jYXJkLXNjcm9sbHtvdmVyZmxvdy14OmF1dG87fQogIHRhYmxlLnNjb3JlY2FyZHsgYm9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlOyB3aWR0aDoxMDAlOyBtaW4td2lkdGg6OTIwcHg7IGZvbnQtZmFtaWx5OidTcGFjZSBNb25vJyxtb25vc3BhY2U7IH0KICB0YWJsZS5zY29yZWNhcmQgdGgsIHRhYmxlLnNjb3JlY2FyZCB0ZHsgYm9yZGVyOjFweCBzb2xpZCB2YXIoLS1wYXBlci1saW5lKTsgdGV4dC1hbGlnbjpjZW50ZXI7IHBhZGRpbmc6MDsgZm9udC12YXJpYW50LW51bWVyaWM6dGFidWxhci1udW1zOyB9CiAgdGFibGUuc2NvcmVjYXJkIHRoLnJvd2xhYmVsLCB0YWJsZS5zY29yZWNhcmQgdGQucm93bGFiZWx7IHRleHQtYWxpZ246bGVmdDsgcGFkZGluZy1sZWZ0OjEycHg7IGZvbnQtZmFtaWx5OidJbnRlcicsc2Fucy1zZXJpZjsgfQogIC5ob2xlLWhlYWRlciB0aHsgYmFja2dyb3VuZDojRUZFOUQ2OyBjb2xvcjp2YXIoLS1pbmstc29mdCk7IGZvbnQtc2l6ZToxMXB4OyBwYWRkaW5nOjdweCA0cHg7IGZvbnQtd2VpZ2h0OjcwMDsgfQogIC5ob2xlLWhlYWRlciB0aC5vdXQtaW57YmFja2dyb3VuZDojRTNEQUI5O2NvbG9yOnZhcigtLWZhaXJ3YXkpO30KICAuaG9sZS1oZWFkZXIgdGguY3RwLWhvbGV7IGJhY2tncm91bmQ6I0Y0Qzk1RDsgY29sb3I6dmFyKC0tZmFpcndheSk7IH0KICAucm93LXNpIHRkLCAucm93LXNpIHRoeyBiYWNrZ3JvdW5kOiNGQUY3RUU7IGNvbG9yOnZhcigtLWJyYXNzKTsgZm9udC1zaXplOjEwLjVweDsgcGFkZGluZzo0cHggMnB4OyB9CiAgLnJvdy1wYXIgdGQsIC5yb3ctcGFyIHRoeyBiYWNrZ3JvdW5kOiNGMkVFRTA7IGNvbG9yOnZhcigtLWluay1zb2Z0KTsgZm9udC1zaXplOjExcHg7IHBhZGRpbmc6NXB4IDJweDsgZm9udC13ZWlnaHQ6NzAwOyB9CiAgLnBsYXllci1ncm91cHtib3JkZXItdG9wOjJweCBzb2xpZCB2YXIoLS1mYWlyd2F5KTt9CiAgLnBsYXllci1ncm91cDpmaXJzdC1vZi10eXBle2JvcmRlci10b3A6bm9uZTt9CiAgLnJvdy1ncm9zcyB0ZC5yb3dsYWJlbHsgZm9udC13ZWlnaHQ6NzAwOyBjb2xvcjp2YXIoLS1mYWlyd2F5KTsgZm9udC1zaXplOjEzLjVweDsgcGFkZGluZy10b3A6MTBweDsgfQogIC5yb3ctZ3Jvc3MgLm1ldGF7IGRpc3BsYXk6YmxvY2s7IGZvbnQtZmFtaWx5OidTcGFjZSBNb25vJyxtb25vc3BhY2U7IGZvbnQtd2VpZ2h0OjQwMDsgZm9udC1zaXplOjEwLjVweDsgY29sb3I6dmFyKC0taW5rLXNvZnQpOyBtYXJnaW4tdG9wOjFweDsgfQogIC5yb3ctZ3Jvc3MgdGQsIC5yb3ctZ3Jvc3MgdGh7cGFkZGluZy10b3A6MTBweDt9CiAgLnJvdy1uZXQgdGQucm93bGFiZWwsIC5yb3ctbmV0IHRoLnJvd2xhYmVseyBjb2xvcjp2YXIoLS1pbmstc29mdCk7IGZvbnQtc2l6ZToxMC41cHg7IHBhZGRpbmctYm90dG9tOjEwcHg7IH0KICAucm93LW5ldCB0ZCwgLnJvdy1uZXQgdGh7cGFkZGluZy1ib3R0b206MTBweDt9CiAgLnNjb3JlLWNlbGx7IHBvc2l0aW9uOnJlbGF0aXZlOyBmb250LXNpemU6MTMuNXB4OyBjb2xvcjp2YXIoLS1pbmspOyBtaW4td2lkdGg6MzRweDsgfQogIC5zY29yZS1jZWxsIC5kb3RzeyBwb3NpdGlvbjphYnNvbHV0ZTsgdG9wOjNweDtyaWdodDozcHg7IGRpc3BsYXk6ZmxleDtnYXA6MnB4OyB9CiAgLnNjb3JlLWNlbGwgLmRvdHMgc3Bhbnsgd2lkdGg6NXB4O2hlaWdodDo1cHg7Ym9yZGVyLXJhZGl1czo1MCU7IGJhY2tncm91bmQ6dmFyKC0tYnJhc3MtbGlnaHQpOyBkaXNwbGF5OmlubGluZS1ibG9jazsgfQogIC5zY29yZS1jZWxsLmJpcmRpZTo6YmVmb3JleyBjb250ZW50OicnOyBwb3NpdGlvbjphYnNvbHV0ZTsgaW5zZXQ6NXB4OyBib3JkZXI6MS41cHggc29saWQgdmFyKC0tZmFpcndheS1saWdodCk7IGJvcmRlci1yYWRpdXM6NTAlOyB9CiAgLnNjb3JlLWNlbGwuYm9nZXk6OmJlZm9yZXsgY29udGVudDonJzsgcG9zaXRpb246YWJzb2x1dGU7IGluc2V0OjZweDsgYm9yZGVyOjEuNXB4IHNvbGlkIHZhcigtLWNsYXkpOyB9CiAgLm91dC1pbi1jZWxseyBmb250LXdlaWdodDo3MDA7IGJhY2tncm91bmQ6I0ZCRjhFRDsgfQogIC50b3RhbC1jZWxseyBmb250LXdlaWdodDo3MDA7IGJhY2tncm91bmQ6dmFyKC0tZmFpcndheSk7IGNvbG9yOnZhcigtLXdoaXRlKTsgfQogIC5uZXQtdmFse2NvbG9yOnZhcigtLWZhaXJ3YXktbGlnaHQpO2ZvbnQtd2VpZ2h0OjcwMDt9CiAgLm5ldC12YWwudW5kZXJ7Y29sb3I6dmFyKC0tY2xheSk7fQogIC5uZXQtdG90YWx7Zm9udC13ZWlnaHQ6NzAwO2NvbG9yOnZhcigtLWZhaXJ3YXktbGlnaHQpO2JhY2tncm91bmQ6I0VBRjFFQzt9CiAgLmN1c3RvbS1zaS10YWd7Y29sb3I6dmFyKC0tYnJhc3MpO30KICAuY3RwLWZvb3Rlci1ub3RleyBmb250LXNpemU6MTJweDsgY29sb3I6dmFyKC0taW5rLXNvZnQpOyBtYXJnaW4tdG9wOjZweDsgcGFkZGluZzo4cHggNHB4IDA7IH0KICAuY3RwLWZvb3Rlci1ub3RlIHN0cm9uZ3sgY29sb3I6dmFyKC0tZmFpcndheSk7IH0KICAudmlldy1zd2l0Y2h7IGRpc3BsYXk6ZmxleDsgZ2FwOjZweDsgcGFkZGluZzoxMHB4IDE0cHg7IGJhY2tncm91bmQ6I0Y2RjJFNDsgYm9yZGVyLWJvdHRvbToxcHggc29saWQgdmFyKC0tcGFwZXItbGluZSk7IH0KICAudnMtYnRueyBmb250LWZhbWlseTonU3BhY2UgTW9ubycsbW9ub3NwYWNlOyBmb250LXNpemU6MTFweDsgcGFkZGluZzo2cHggMTJweDsgYmFja2dyb3VuZDp2YXIoLS13aGl0ZSk7IGJvcmRlcjoxcHggc29saWQgdmFyKC0tcGFwZXItbGluZSk7IGJvcmRlci1yYWRpdXM6M3B4OyBjb2xvcjp2YXIoLS1pbmstc29mdCk7IGN1cnNvcjpwb2ludGVyOyB9CiAgLnZzLWJ0bi5hY3RpdmV7IGJhY2tncm91bmQ6dmFyKC0tZmFpcndheSk7IGJvcmRlci1jb2xvcjp2YXIoLS1mYWlyd2F5KTsgY29sb3I6dmFyKC0td2hpdGUpOyB9CiAgLnNjb3JlLWNlbGwucHRzLTB7IGNvbG9yOiNiM2FiOTU7IH0KICAuc2NvcmUtY2VsbC5wdHMtNHsgY29sb3I6dmFyKC0tZmFpcndheS1saWdodCk7IGZvbnQtd2VpZ2h0OjcwMDsgYmFja2dyb3VuZDojRUFGMUVDOyB9CiAgLnNjb3JlLWNlbGwucHRzLTh7IGNvbG9yOnZhcigtLXdoaXRlKTsgZm9udC13ZWlnaHQ6NzAwOyBiYWNrZ3JvdW5kOnZhcigtLWJyYXNzKTsgfQogIC5wbS1jZWxseyBmb250LXdlaWdodDo3MDA7IGJhY2tncm91bmQ6I0ZCRjhFRDsgbWluLXdpZHRoOjQ2cHg7IH0KICAucG0tY2VsbC5wbS1wb3N7IGNvbG9yOnZhcigtLWZhaXJ3YXktbGlnaHQpOyB9CiAgLnBtLWNlbGwucG0tbmVneyBjb2xvcjp2YXIoLS1jbGF5KTsgfQoKICBmb290ZXJ7IHRleHQtYWxpZ246Y2VudGVyOyBmb250LXNpemU6MTFweDsgY29sb3I6dmFyKC0taW5rLXNvZnQpOyBtYXJnaW4tdG9wOjMwcHg7IGZvbnQtZmFtaWx5OidTcGFjZSBNb25vJyxtb25vc3BhY2U7IH0KCiAgLyogLS0tLSBQcmludGFibGUgY2FyZHMgLS0tLSAqLwogICNwcmludEFyZWF7IGRpc3BsYXk6bm9uZTsgfQogIEBwYWdlIHsgc2l6ZTogbGFuZHNjYXBlOyBtYXJnaW46IDAuNWluOyB9CiAgI3ByaW50QXJlYSAucGFnZXsgcGFnZS1icmVhay1hZnRlcjogYWx3YXlzOyBwYWRkaW5nOiA0cHggMnB4OyBtYXgtd2lkdGg6IDcuNWluOyBmb250LWZhbWlseTogR2VvcmdpYSwgJ1RpbWVzIE5ldyBSb21hbicsIHNlcmlmOyBjb2xvcjojMTExOyB9CiAgI3ByaW50QXJlYSAucGFnZTpsYXN0LWNoaWxkeyBwYWdlLWJyZWFrLWFmdGVyOiBhdXRvOyB9CiAgI3ByaW50QXJlYSAucGFnZXRvcHsgZGlzcGxheTpmbGV4OyBqdXN0aWZ5LWNvbnRlbnQ6c3BhY2UtYmV0d2VlbjsgYWxpZ24taXRlbXM6YmFzZWxpbmU7IG1hcmdpbi1ib3R0b206NHB4OyB9CiAgI3ByaW50QXJlYSAucGFnZWhlYWRpbmd7IGZvbnQtc2l6ZTo5LjVweDsgY29sb3I6Izc3NzsgdGV4dC10cmFuc2Zvcm06dXBwZXJjYXNlOyBsZXR0ZXItc3BhY2luZzouMDVlbTsgdGV4dC1hbGlnbjpyaWdodDsgd2hpdGUtc3BhY2U6bm93cmFwOyB9CiAgI3ByaW50QXJlYSAuY2FyZGhlYWR7IGZvbnQtc2l6ZToxMnB4OyBmb250LXdlaWdodDo3MDA7IH0KICAjcHJpbnRBcmVhIHRhYmxlLmNhcmR0YWJsZXsgYm9yZGVyLWNvbGxhcHNlOmNvbGxhcHNlOyB3aWR0aDoxMDAlOyB0YWJsZS1sYXlvdXQ6Zml4ZWQ7IH0KICAjcHJpbnRBcmVhIC5uYW1lY29seyB3aWR0aDoxNTBweDsgfQogICNwcmludEFyZWEgLnR1cm5jb2x7IHdpZHRoOjI2cHg7IH0KICAjcHJpbnRBcmVhIC50aHsgYm9yZGVyOjFweCBzb2xpZCAjOTk5OyBiYWNrZ3JvdW5kOiNlZWU7IGZvbnQtd2VpZ2h0OjcwMDsgZm9udC1zaXplOjlweDsgcGFkZGluZzoycHggMXB4OyB0ZXh0LWFsaWduOmNlbnRlcjsgfQogICNwcmludEFyZWEgLnRoLmN0cC1ob2xleyBiYWNrZ3JvdW5kOiNGNEM5NUQ7IH0KICAjcHJpbnRBcmVhIC50aC50dXJueyBiYWNrZ3JvdW5kOiNkOGQ4ZDg7IH0KICAjcHJpbnRBcmVhIC5uYW1lSGVhZHsgdGV4dC1hbGlnbjpsZWZ0OyBwYWRkaW5nLWxlZnQ6NXB4OyB9CiAgI3ByaW50QXJlYSAucG5hbWV7IGJvcmRlcjoxcHggc29saWQgIzk5OTsgZm9udC1zaXplOjguNXB4OyBmb250LXdlaWdodDo3MDA7IHRleHQtYWxpZ246bGVmdDsgcGFkZGluZzoycHggNXB4OyB3aGl0ZS1zcGFjZTpub3dyYXA7IHZlcnRpY2FsLWFsaWduOm1pZGRsZTsgfQogICNwcmludEFyZWEgLnBtZXRheyBmb250LXdlaWdodDo0MDA7IGNvbG9yOiM1NTU7IH0KICAjcHJpbnRBcmVhIC5uZXRsYWJlbHsgZm9udC13ZWlnaHQ6NDAwOyBmb250LXN0eWxlOml0YWxpYzsgY29sb3I6IzY2NjsgZm9udC1zaXplOjcuNXB4OyB9CiAgI3ByaW50QXJlYSAuYmxhbmtib3h7IGJvcmRlcjoxcHggc29saWQgIzk5OTsgZm9udC1zaXplOjlweDsgcGFkZGluZzo0cHggMXB4OyB0ZXh0LWFsaWduOmNlbnRlcjsgaGVpZ2h0OjM0cHg7IHBvc2l0aW9uOnJlbGF0aXZlOyB9CiAgI3ByaW50QXJlYSAuYmxhbmtib3guc3VteyBiYWNrZ3JvdW5kOiNmNGY0ZjQ7IGZvbnQtd2VpZ2h0OjcwMDsgfQogICNwcmludEFyZWEgLmJsYW5rYm94LnRvdHsgYmFja2dyb3VuZDojZTJlMmUyOyBmb250LXdlaWdodDo3MDA7IH0KICAjcHJpbnRBcmVhIC5ibGFua2JveC5iaXJkaWU6OmFmdGVyeyBjb250ZW50OicnOyBwb3NpdGlvbjphYnNvbHV0ZTsgaW5zZXQ6MnB4OyBib3JkZXI6MXB4IHNvbGlkICMyRTU1NDA7IGJvcmRlci1yYWRpdXM6NTAlOyBwb2ludGVyLWV2ZW50czpub25lOyB9CiAgI3ByaW50QXJlYSAuYmxhbmtib3guYm9nZXk6OmFmdGVyeyBjb250ZW50OicnOyBwb3NpdGlvbjphYnNvbHV0ZTsgaW5zZXQ6M3B4OyBib3JkZXI6MXB4IHNvbGlkICM5QzRBMzQ7IHBvaW50ZXItZXZlbnRzOm5vbmU7IH0KICAjcHJpbnRBcmVhIC5uZXRyb3cgLm5ldGJveHsgYm9yZGVyOjFweCBzb2xpZCAjY2NjOyBmb250LXNpemU6Ny41cHg7IHBhZGRpbmc6MXB4OyB0ZXh0LWFsaWduOmNlbnRlcjsgY29sb3I6IzJFNTU0MDsgYmFja2dyb3VuZDojRjdGQUY4OyB9CiAgI3ByaW50QXJlYSAubmV0cm93IC5uZXRib3guc3VtLCAjcHJpbnRBcmVhIC5uZXRyb3cgLm5ldGJveC50b3R7IGZvbnQtd2VpZ2h0OjcwMDsgYmFja2dyb3VuZDojRUFGMUVDOyB9CiAgI3ByaW50QXJlYSAubmV0cm93IC5wbmFtZXsgYm9yZGVyLWxlZnQ6MXB4IHNvbGlkICM5OTk7IGJvcmRlci1yaWdodDoxcHggc29saWQgIzk5OTsgYm9yZGVyLWJvdHRvbToxcHggc29saWQgIzk5OTsgYm9yZGVyLXRvcDpub25lOyB9CiAgI3ByaW50QXJlYSAucGRvdHN7IHBvc2l0aW9uOmFic29sdXRlOyB0b3A6MnB4OyByaWdodDoycHg7IGRpc3BsYXk6ZmxleDsgZ2FwOjFweDsgfQogICNwcmludEFyZWEgLnBkb3RzIGl7IHdpZHRoOjNweDsgaGVpZ2h0OjNweDsgYm9yZGVyLXJhZGl1czo1MCU7IGJhY2tncm91bmQ6IzMzMzsgYm9yZGVyOjAuNHB4IHNvbGlkICMzMzM7IGRpc3BsYXk6aW5saW5lLWJsb2NrOyB9CiAgI3ByaW50QXJlYSAuY2FyZGtleXsgZm9udC1zaXplOjcuNXB4OyBjb2xvcjojNTU1OyBtYXJnaW4tdG9wOjNweDsgfQogICNwcmludEFyZWEgLmZvcm1hdGZvb3RlcnsgZm9udC1zaXplOjcuNXB4OyBjb2xvcjojNTU1OyBtYXJnaW4tdG9wOjJweDsgfQogICNwcmludEFyZWEgLnRlZWZvb3RlcnsgZm9udC1zaXplOjcuNXB4OyBjb2xvcjojNTU1OyBtYXJnaW4tdG9wOjJweDsgfQogICNwcmludEFyZWEgLnRlYW1zZm9vdGVyeyBmb250LXNpemU6OHB4OyBjb2xvcjojMzMzOyBtYXJnaW4tdG9wOjNweDsgfQogICNwcmludEFyZWEgLnRlYW1zZm9vdGVyIHN0cm9uZ3sgY29sb3I6IzExMTsgfQogICNwcmludEFyZWEgLmluaXRjb2x7IHdpZHRoOjMwcHg7IH0KICAjcHJpbnRBcmVhIC5ibGFua2JveC5pbml0eyBmb250LXdlaWdodDo3MDA7IGZvbnQtc2l6ZTo5cHg7IGJhY2tncm91bmQ6I2ZmZjsgfQogICNwcmludEFyZWEgLnBtY29seyB3aWR0aDozNHB4OyB9CiAgI3ByaW50QXJlYSAucHRzcm93IC5uZXRib3h7IGZvbnQtc2l6ZTo4LjVweDsgZm9udC13ZWlnaHQ6NzAwOyBjb2xvcjojMTExOyBiYWNrZ3JvdW5kOiNGNkY2RjY7IGJvcmRlcjoxcHggc29saWQgI2JiYjsgfQogICNwcmludEFyZWEgLnB0c3JvdyAubmV0Ym94LnB0MHsgY29sb3I6I2FhYTsgZm9udC13ZWlnaHQ6NDAwOyB9CiAgI3ByaW50QXJlYSAucHRzcm93IC5uZXRib3gucHQ0eyBiYWNrZ3JvdW5kOiNFMkVCRTU7IH0KICAjcHJpbnRBcmVhIC5wdHNyb3cgLm5ldGJveC5zdW17IGJhY2tncm91bmQ6I0VBRUFFQTsgfQogICNwcmludEFyZWEgLnB0c3JvdyAubmV0Ym94LnBteyBmb250LXNpemU6MTBweDsgYmFja2dyb3VuZDojZmZmOyB9CiAgI3ByaW50QXJlYSAucHRzcm93IC5uZXRib3gucG0ucG9zeyBjb2xvcjojMUY1QzNBOyB9CiAgI3ByaW50QXJlYSAucHRzcm93IC5uZXRib3gucG0ubmVneyBjb2xvcjojOUM0QTM0OyB9CiAgI3ByaW50QXJlYSAuYmxhbmtib3guZGlhZ3sgYmFja2dyb3VuZC1pbWFnZTpsaW5lYXItZ3JhZGllbnQodG8gdG9wIGxlZnQsIHRyYW5zcGFyZW50IGNhbGMoNTAlIC0gMC42cHgpLCAjOGM4YzhjIGNhbGMoNTAlIC0gMC42cHgpLCAjOGM4YzhjIGNhbGMoNTAlICsgMC42cHgpLCB0cmFuc3BhcmVudCBjYWxjKDUwJSArIDAuNnB4KSk7IH0KICAjcHJpbnRBcmVhIC5ibGFua2JveC5kaWFnIC5wZG90c3sgbGVmdDoycHg7IHJpZ2h0OmF1dG87IH0KICAjcHJpbnRBcmVhIC5ibGFua2JveCAuc2N7IHBvc2l0aW9uOmFic29sdXRlOyByaWdodDozcHg7IGJvdHRvbTozcHg7IHdpZHRoOjE1cHg7IGhlaWdodDoxNXB4OyBsaW5lLWhlaWdodDoxNXB4OyB0ZXh0LWFsaWduOmNlbnRlcjsgZm9udC1zaXplOjlweDsgfQogICNwcmludEFyZWEgLmJsYW5rYm94IC5zYy5iaXJkaWU6OmFmdGVyeyBjb250ZW50OicnOyBwb3NpdGlvbjphYnNvbHV0ZTsgdG9wOjA7IGxlZnQ6MDsgcmlnaHQ6MDsgYm90dG9tOjA7IGJvcmRlcjoxcHggc29saWQgIzJFNTU0MDsgYm9yZGVyLXJhZGl1czo1MCU7IH0KICAjcHJpbnRBcmVhIC5ibGFua2JveCAuc2MuYm9nZXk6OmFmdGVyeyBjb250ZW50OicnOyBwb3NpdGlvbjphYnNvbHV0ZTsgdG9wOjA7IGxlZnQ6MDsgcmlnaHQ6MDsgYm90dG9tOjA7IGJvcmRlcjoxcHggc29saWQgIzlDNEEzNDsgfQogICNwcmludEFyZWEgLnN0ZG1zZ3sgbWFyZ2luLXRvcDo4cHg7IHBhZGRpbmc6NXB4IDhweDsgYm9yZGVyOjEuNXB4IHNvbGlkICMxMTE7IGZvbnQtc2l6ZToxM3B4OyBmb250LXdlaWdodDo3MDA7IGNvbG9yOiMxMTE7IHRleHQtYWxpZ246Y2VudGVyOyB9CiAgI3ByaW50QXJlYSAuZ2FtZWRldGFpbHN7IGZvbnQtc2l6ZTo4cHg7IGNvbG9yOiMzMzM7IG1hcmdpbi10b3A6M3B4OyBib3JkZXItdG9wOjFweCBzb2xpZCAjY2NjOyBwYWRkaW5nLXRvcDozcHg7IHdoaXRlLXNwYWNlOnByZS13cmFwOyB9CiAgI3ByaW50QXJlYSAuY3RwZm9vdGVyeyBmb250LXNpemU6OHB4OyBjb2xvcjojMzMzOyBtYXJnaW4tdG9wOjNweDsgfQogICNwcmludEFyZWEgLmN0cGZvb3RlciBzdHJvbmd7IGNvbG9yOiMxMTE7IH0KCiAgQG1lZGlhIHByaW50ewogICAgKnsgLXdlYmtpdC1wcmludC1jb2xvci1hZGp1c3Q6IGV4YWN0OyBwcmludC1jb2xvci1hZGp1c3Q6IGV4YWN0OyBjb2xvci1hZGp1c3Q6IGV4YWN0OyB9CiAgICBib2R5e2JhY2tncm91bmQ6I2ZmZjtwYWRkaW5nOjA7bWFyZ2luOjA7fQogICAgYm9keSA+ICp7IGRpc3BsYXk6bm9uZSAhaW1wb3J0YW50OyB9CiAgICAjcHJpbnRBcmVheyBkaXNwbGF5OmJsb2NrICFpbXBvcnRhbnQ7IH0KICAgICNwcmludEFyZWEgLnBhZ2V7IGRpc3BsYXk6YmxvY2sgIWltcG9ydGFudDsgfQogIH0KPC9zdHlsZT4KPC9oZWFkPgo8Ym9keT4KPGRpdiBjbGFzcz0id3JhcCI+CiAgPGhlYWRlcj4KICAgIDxkaXY+CiAgICAgIDxkaXYgY2xhc3M9ImJyYW5kLWV5ZWJyb3ciPlNxdWFiYml0PC9kaXY+CiAgICAgIDxoMT5TY29yZWNhcmQ8L2gxPgogICAgICA8ZGl2IGNsYXNzPSJzdWJoZWFkIiBpZD0iZXZlbnRTdWJoZWFkIj7igJQ8L2Rpdj4KICAgIDwvZGl2PgogIDwvaGVhZGVyPgoKICA8ZGl2IGlkPSJjb250cm9scyI+CiAgICA8ZGl2IGNsYXNzPSJ0YWJzIiBpZD0icm91bmRUYWJzIj48L2Rpdj4KICAgIDxkaXYgY2xhc3M9InJpZ2h0LWNvbnRyb2xzIj4KICAgICAgPGxhYmVsIGNsYXNzPSJ0b2dnbGUtbGFiZWwiPgogICAgICAgIDxpbnB1dCB0eXBlPSJjaGVja2JveCIgY2xhc3M9InN3aXRjaC1pbnB1dCIgaWQ9Im5ldFRvZ2dsZSIgY2hlY2tlZD4KICAgICAgICA8c3BhbiBjbGFzcz0ic3dpdGNoIj48L3NwYW4+CiAgICAgICAgU2hvdyBuZXQgc3Ryb2tlcwogICAgICA8L2xhYmVsPgogICAgICA8YnV0dG9uIGNsYXNzPSJwcmludC1idG4iIGlkPSJwcmludEJsYW5rQnRuIj5QcmludCBibGFuayBjYXJkczwvYnV0dG9uPgogICAgICA8YnV0dG9uIGNsYXNzPSJwcmludC1idG4gc2NvcmVkIiBpZD0icHJpbnRTY29yZWRCdG4iPlByaW50IHNjb3JlY2FyZHMgKHdpdGggc2NvcmVzKTwvYnV0dG9uPgogICAgPC9kaXY+CiAgPC9kaXY+CgogIDxkaXYgY2xhc3M9ImxlZ2VuZCIgaWQ9ImxlZ2VuZCI+CiAgICA8ZGl2IGNsYXNzPSJpdGVtIj48ZGl2IGNsYXNzPSJzd2F0Y2giPjxzcGFuIGNsYXNzPSJkb3RzIiBzdHlsZT0icG9zaXRpb246YWJzb2x1dGU7dG9wOjJweDtyaWdodDoycHg7Ij48c3BhbiBzdHlsZT0id2lkdGg6NXB4O2hlaWdodDo1cHg7Ym9yZGVyLXJhZGl1czo1MCU7YmFja2dyb3VuZDojQzlBMjRBO2Rpc3BsYXk6aW5saW5lLWJsb2NrOyI+PC9zcGFuPjwvc3Bhbj48L2Rpdj4gMSBzdHJva2UgaG9sZTwvZGl2PgogICAgPGRpdiBjbGFzcz0iaXRlbSI+PGRpdiBjbGFzcz0ic3dhdGNoIj48c3BhbiBzdHlsZT0icG9zaXRpb246YWJzb2x1dGU7dG9wOjJweDtyaWdodDoycHg7ZGlzcGxheTpmbGV4O2dhcDoycHg7Ij48c3BhbiBzdHlsZT0id2lkdGg6NXB4O2hlaWdodDo1cHg7Ym9yZGVyLXJhZGl1czo1MCU7YmFja2dyb3VuZDojQzlBMjRBO2Rpc3BsYXk6aW5saW5lLWJsb2NrOyI+PC9zcGFuPjxzcGFuIHN0eWxlPSJ3aWR0aDo1cHg7aGVpZ2h0OjVweDtib3JkZXItcmFkaXVzOjUwJTtiYWNrZ3JvdW5kOiNDOUEyNEE7ZGlzcGxheTppbmxpbmUtYmxvY2s7Ij48L3NwYW4+PC9zcGFuPjwvZGl2PiAyIHN0cm9rZSBob2xlPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJpdGVtIj48ZGl2IGNsYXNzPSJzd2F0Y2giIHN0eWxlPSJkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpjZW50ZXI7Ij48c3BhbiBzdHlsZT0id2lkdGg6MTZweDtoZWlnaHQ6MTZweDtib3JkZXI6MS41cHggc29saWQgIzJFNTU0MDtib3JkZXItcmFkaXVzOjUwJTsiPjwvc3Bhbj48L2Rpdj4gQmlyZGllIG9yIGJldHRlciAoZ3Jvc3MpPC9kaXY+CiAgICA8ZGl2IGNsYXNzPSJpdGVtIj48ZGl2IGNsYXNzPSJzd2F0Y2giIHN0eWxlPSJkaXNwbGF5OmZsZXg7YWxpZ24taXRlbXM6Y2VudGVyO2p1c3RpZnktY29udGVudDpjZW50ZXI7Ij48c3BhbiBzdHlsZT0id2lkdGg6MTZweDtoZWlnaHQ6MTZweDtib3JkZXI6MS41cHggc29saWQgIzlDNEEzNDsiPjwvc3Bhbj48L2Rpdj4gQm9nZXkgb3Igd29yc2UgKGdyb3NzKTwvZGl2PgogICAgPGRpdiBjbGFzcz0iaXRlbSI+PHNwYW4gY2xhc3M9Im5ldC1udW0iPkdyZWVuPC9zcGFuPiA9IG5ldCBzY29yZSByb3c8L2Rpdj4KICAgIDxkaXYgY2xhc3M9Iml0ZW0iPjxkaXYgY2xhc3M9InN3YXRjaCIgc3R5bGU9ImJhY2tncm91bmQ6I0Y0Qzk1RDsiPjwvZGl2PiBTaGFkZWQgaG9sZSA9IGNsb3Nlc3QgdG8gcGluPC9kaXY+CiAgPC9kaXY+CgogIDxkaXYgaWQ9InJvdW5kc0NvbnRhaW5lciI+PC9kaXY+CgogIDxmb290ZXI+UmVhZC1vbmx5IHNjb3JlY2FyZCDigJQgYXNrIHlvdXIgbGVhZ3VlIGFkbWluIHRvIHVwZGF0ZSBpdCBpZiBhbnl0aGluZyBsb29rcyBvdXQgb2YgZGF0ZTwvZm9vdGVyPgo8L2Rpdj4KCjxkaXYgaWQ9InByaW50QXJlYSI+PC9kaXY+Cgo8c2NyaXB0Pgp3aW5kb3cuX19TQ09SRUNBUkRfREFUQV9fID0gLypfX0RBVEFfUExBQ0VIT0xERVJfXyove30vKl9fRU5EX0RBVEFfUExBQ0VIT0xERVJfXyovOwo8L3NjcmlwdD4KPHNjcmlwdD4KKGZ1bmN0aW9uKCl7CiAgY29uc3QgREFUQSA9IHdpbmRvdy5fX1NDT1JFQ0FSRF9EQVRBX187CiAgY29uc3QgZXZlbnRTdWJoZWFkID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2V2ZW50U3ViaGVhZCcpOwogIGNvbnN0IHJvdW5kVGFicyA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyb3VuZFRhYnMnKTsKICBjb25zdCByb3VuZHNDb250YWluZXIgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncm91bmRzQ29udGFpbmVyJyk7CiAgY29uc3QgbmV0VG9nZ2xlID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ25ldFRvZ2dsZScpOwogIGNvbnN0IHByaW50QmxhbmtCdG4gPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncHJpbnRCbGFua0J0bicpOwogIGNvbnN0IHByaW50U2NvcmVkQnRuID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3ByaW50U2NvcmVkQnRuJyk7CgogIGxldCBhY3RpdmVSb3VuZEluZGV4ID0gMDsKCiAgZnVuY3Rpb24gZXNjYXBlSHRtbChzdHIpewogICAgcmV0dXJuIFN0cmluZyhzdHIpLnJlcGxhY2UoL1smPD4iJ10vZywgbSA9PiAoewogICAgICAnJic6JyZhbXA7JywgJzwnOicmbHQ7JywgJz4nOicmZ3Q7JywgJyInOicmcXVvdDsnLCAiJyI6JyYjMzk7JwogICAgfVttXSkpOwogIH0KCiAgZnVuY3Rpb24gZGlzdGluY3RUZWVzKHJvdW5kKXsKICAgIGNvbnN0IHNlZW4gPSBbXTsKICAgIHJvdW5kLnBsYXllcnMuZm9yRWFjaChwID0+IHsKICAgICAgY29uc3QgdCA9IHAudGVlIHx8ICdEZWZhdWx0JzsKICAgICAgaWYgKCFzZWVuLmluY2x1ZGVzKHQpKSBzZWVuLnB1c2godCk7CiAgICB9KTsKICAgIHJldHVybiBzZWVuOwogIH0KCiAgZnVuY3Rpb24gb3ZlcnJpZGVLZXkoY291cnNlLCB0ZWUpeyByZXR1cm4gY291cnNlICsgJzo6JyArICh0ZWUgfHwgJ0RlZmF1bHQnKTsgfQogIGZ1bmN0aW9uIGVmZmVjdGl2ZVNpKHJvdW5kLCB0ZWUpewogICAgY29uc3Qga2V5ID0gb3ZlcnJpZGVLZXkocm91bmQuY291cnNlTmFtZSwgdGVlKTsKICAgIGNvbnN0IG92ID0gKERBVEEuc2lPdmVycmlkZXMgfHwge30pW2tleV07CiAgICBpZiAob3YgJiYgb3YubGVuZ3RoID09PSByb3VuZC5udW1Ib2xlcykgcmV0dXJuIG92OwogICAgcmV0dXJuIHJvdW5kLnNpOwogIH0KICBmdW5jdGlvbiBoYXNPdmVycmlkZShyb3VuZCwgdGVlKXsKICAgIGNvbnN0IG92ID0gKERBVEEuc2lPdmVycmlkZXMgfHwge30pW292ZXJyaWRlS2V5KHJvdW5kLmNvdXJzZU5hbWUsIHRlZSldOwogICAgcmV0dXJuICEhKG92ICYmIG92Lmxlbmd0aCA9PT0gcm91bmQubnVtSG9sZXMpOwogIH0KCiAgZnVuY3Rpb24gY29tcHV0ZVNpUm93R3JvdXBzKHJvdW5kLCB0ZWVzSW5Sb3VuZCl7CiAgICBjb25zdCBhcnJheXNFcXVhbCA9IChhLCBiKSA9PiBhLmxlbmd0aCA9PT0gYi5sZW5ndGggJiYgYS5ldmVyeSgodiwgaSkgPT4gdiA9PT0gYltpXSk7CiAgICBjb25zdCBiYXNlbGluZSA9IHJvdW5kLnNpOwogICAgY29uc3QgbWF0Y2hpbmcgPSBbXTsKICAgIGNvbnN0IGRpZmZHcm91cHMgPSB7fTsKICAgIHRlZXNJblJvdW5kLmZvckVhY2godGVlID0+IHsKICAgICAgY29uc3Qgc2kgPSBlZmZlY3RpdmVTaShyb3VuZCwgdGVlKTsKICAgICAgaWYgKGFycmF5c0VxdWFsKHNpLCBiYXNlbGluZSkpewogICAgICAgIG1hdGNoaW5nLnB1c2godGVlKTsKICAgICAgfSBlbHNlIHsKICAgICAgICBjb25zdCBrZXkgPSBzaS5qb2luKCcsJyk7CiAgICAgICAgaWYgKCFkaWZmR3JvdXBzW2tleV0pIGRpZmZHcm91cHNba2V5XSA9IHsgc2ksIHRlZXM6IFtdIH07CiAgICAgICAgZGlmZkdyb3Vwc1trZXldLnRlZXMucHVzaCh0ZWUpOwogICAgICB9CiAgICB9KTsKICAgIGNvbnN0IHJvd3MgPSBbXTsKICAgIGlmIChtYXRjaGluZy5sZW5ndGggPiAwIHx8IE9iamVjdC5rZXlzKGRpZmZHcm91cHMpLmxlbmd0aCA9PT0gMCl7CiAgICAgIHJvd3MucHVzaCh7IGxhYmVsOiAnTWVucyBIQ1AnLCBzaTogYmFzZWxpbmUgfSk7CiAgICB9CiAgICBPYmplY3QudmFsdWVzKGRpZmZHcm91cHMpLmZvckVhY2goZyA9PiB7CiAgICAgIHJvd3MucHVzaCh7IGxhYmVsOiBnLnRlZXMuam9pbignIC8gJyksIHNpOiBnLnNpIH0pOwogICAgfSk7CiAgICByZXR1cm4gcm93czsKICB9CgogIGZ1bmN0aW9uIGlzQ3RwSG9sZShjb3Vyc2VOYW1lLCBob2xlTGFiZWwpewogICAgcmV0dXJuICgoREFUQS5jdHBIb2xlcyB8fCB7fSlbY291cnNlTmFtZV0gfHwgW10pLmluY2x1ZGVzKGhvbGVMYWJlbCk7CiAgfQoKICBmdW5jdGlvbiB0ZWFtc0Zvb3RlclRleHQocm91bmQpewogICAgY29uc3QgdGVhbXMgPSBEQVRBLnRlYW1zIHx8IFtdOwogICAgY29uc3QgbGFiZWxzID0gW107CiAgICByb3VuZC5wbGF5ZXJzLmZvckVhY2gocCA9PiB7CiAgICAgIGNvbnN0IHQgPSB0ZWFtcy5maW5kKHQgPT4gdC5tZW1iZXJzLmluY2x1ZGVzKHAubmFtZSkpOwogICAgICBpZiAodCAmJiAhbGFiZWxzLmluY2x1ZGVzKHQubGFiZWwpKSBsYWJlbHMucHVzaCh0LmxhYmVsKTsKICAgIH0pOwogICAgcmV0dXJuIGxhYmVscy5qb2luKCcgXHUwMGI3ICcpOwogIH0KCiAgZnVuY3Rpb24gdGVlUmF0aW5nRm9vdGVyVGV4dChyb3VuZCl7CiAgICBjb25zdCBwYXJ0cyA9IFtdOwogICAgZGlzdGluY3RUZWVzKHJvdW5kKS5mb3JFYWNoKHRlZSA9PiB7CiAgICAgIGNvbnN0IHIgPSAoREFUQS50ZWVSYXRpbmdzIHx8IHt9KVtvdmVycmlkZUtleShyb3VuZC5jb3Vyc2VOYW1lLCB0ZWUpXTsKICAgICAgaWYgKHIgJiYgci5yYXRpbmcgJiYgci5zbG9wZSkgcGFydHMucHVzaCh0ZWUgKyAnICcgKyByLnJhdGluZyArICcvJyArIHIuc2xvcGUpOwogICAgfSk7CiAgICByZXR1cm4gcGFydHMubGVuZ3RoID8gJ1RlZXM6ICcgKyBwYXJ0cy5qb2luKCcgXHUwMGI3ICcpIDogJyc7CiAgfQoKICBmdW5jdGlvbiBzdHJva2VzRm9ySG9sZShoYW5kaWNhcCwgc3Ryb2tlSW5kZXgsIG51bUhvbGVzKXsKICAgIGNvbnN0IGggPSBNYXRoLnJvdW5kKGhhbmRpY2FwKTsKICAgIGlmIChoIDw9IDApIHJldHVybiAwOwogICAgY29uc3QgYmFzZSA9IE1hdGguZmxvb3IoaCAvIG51bUhvbGVzKTsKICAgIGNvbnN0IHJlbWFpbmRlciA9IGggLSBiYXNlICogbnVtSG9sZXM7CiAgICByZXR1cm4gYmFzZSArIChzdHJva2VJbmRleCA8PSByZW1haW5kZXIgPyAxIDogMCk7CiAgfQoKICAvLyAtLS0tLS0tLS0tIERpZ2l0YWwgc2NvcmVjYXJkIHJlbmRlcmluZyAtLS0tLS0tLS0tCiAgLy8gLS0tLS0tLS0tLSBRdW90YSBwb2ludHMgdmlldyAoUXVvdGEgLyBUZWFtIFF1b3RhIHJvdW5kcykgLS0tLS0tLS0tLQogIC8vIFBvaW50cyBwZXIgaG9sZSBmcm9tIHRoZSBncm9zcyBzY29yZSB2cyBwYXI6IGVhZ2xlIG9yIGJldHRlciA4LCBiaXJkaWUgNCwgcGFyIDIsIGJvZ2V5IDEsIGRvdWJsZSBib2dleSBvciB3b3JzZSAwCiAgZnVuY3Rpb24gcXVvdGFQb2ludHMoc2NvcmUsIHBhcil7CiAgICBpZiAoc2NvcmUgPT09IG51bGwgfHwgc2NvcmUgPT09IHVuZGVmaW5lZCB8fCAhcGFyKSByZXR1cm4gbnVsbDsKICAgIGNvbnN0IGQgPSBzY29yZSAtIHBhcjsKICAgIGlmIChkIDw9IC0yKSByZXR1cm4gODsKICAgIGlmIChkID09PSAtMSkgcmV0dXJuIDQ7CiAgICBpZiAoZCA9PT0gMCkgcmV0dXJuIDI7CiAgICBpZiAoZCA9PT0gMSkgcmV0dXJuIDE7CiAgICByZXR1cm4gMDsKICB9CgogIGNvbnN0IHZpZXdNb2RlQnlJZCA9IHt9OyAgIC8vIHJlbWVtYmVycyBTY29yZXMgLyBQb2ludHMgcGVyIHJvdW5kIGFjcm9zcyByZS1yZW5kZXJzCiAgcm91bmRzQ29udGFpbmVyLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgZSA9PiB7CiAgICBjb25zdCBidG4gPSBlLnRhcmdldCAmJiBlLnRhcmdldC5jbG9zZXN0ID8gZS50YXJnZXQuY2xvc2VzdCgnLnZzLWJ0bicpIDogbnVsbDsKICAgIGlmICghYnRuKSByZXR1cm47CiAgICBjb25zdCBibG9jayA9IGJ0bi5jbG9zZXN0KCcucm91bmQtYmxvY2snKTsKICAgIGlmICghYmxvY2spIHJldHVybjsKICAgIGNvbnN0IHZpZXcgPSBidG4uZ2V0QXR0cmlidXRlKCdkYXRhLXZpZXcnKTsKICAgIHZpZXdNb2RlQnlJZFtibG9jay5nZXRBdHRyaWJ1dGUoJ2RhdGEtcm91bmRpZCcpXSA9IHZpZXc7CiAgICBibG9jay5xdWVyeVNlbGVjdG9yQWxsKCcudnMtYnRuJykuZm9yRWFjaChiID0+IGIuY2xhc3NMaXN0LnRvZ2dsZSgnYWN0aXZlJywgYiA9PT0gYnRuKSk7CiAgICBibG9jay5xdWVyeVNlbGVjdG9yKCcudmlldy1zY29yZXMnKS5zdHlsZS5kaXNwbGF5ID0gdmlldyA9PT0gJ3Njb3JlcycgPyAnJyA6ICdub25lJzsKICAgIGJsb2NrLnF1ZXJ5U2VsZWN0b3IoJy52aWV3LXBvaW50cycpLnN0eWxlLmRpc3BsYXkgPSB2aWV3ID09PSAncG9pbnRzJyA/ICdibG9jaycgOiAnbm9uZSc7CiAgfSk7CgogIGZ1bmN0aW9uIHZpZXdTd2l0Y2hIdG1sKHJvdW5kKXsKICAgIGNvbnN0IHB0cyA9IHZpZXdNb2RlQnlJZFtyb3VuZC5pZF0gPT09ICdwb2ludHMnOwogICAgcmV0dXJuIGA8ZGl2IGNsYXNzPSJ2aWV3LXN3aXRjaCI+PGJ1dHRvbiB0eXBlPSJidXR0b24iIGNsYXNzPSJ2cy1idG4ke3B0cyA/ICcnIDogJyBhY3RpdmUnfSIgZGF0YS12aWV3PSJzY29yZXMiPlNjb3JlczwvYnV0dG9uPjxidXR0b24gdHlwZT0iYnV0dG9uIiBjbGFzcz0idnMtYnRuJHtwdHMgPyAnIGFjdGl2ZScgOiAnJ30iIGRhdGEtdmlldz0icG9pbnRzIj5Qb2ludHM8L2J1dHRvbj48L2Rpdj5gOwogIH0KCiAgZnVuY3Rpb24gcmVuZGVyUG9pbnRzVmlldyhyb3VuZCwgaXNBY3RpdmUpewogICAgY29uc3QgY29scyA9IHJvdW5kLmhvbGVDb2xzOwogICAgY29uc3QgaXMxOCA9IHJvdW5kLm51bUhvbGVzID09PSAxODsKICAgIGxldCBodG1sID0gYDxkaXYgY2xhc3M9InZpZXctcG9pbnRzIiBzdHlsZT0iZGlzcGxheToke2lzQWN0aXZlID8gJ2Jsb2NrJyA6ICdub25lJ30iPjxkaXYgY2xhc3M9ImNhcmQtc2Nyb2xsIj48dGFibGUgY2xhc3M9InNjb3JlY2FyZCI+PHRoZWFkPjx0ciBjbGFzcz0iaG9sZS1oZWFkZXIiPjx0aCBjbGFzcz0icm93bGFiZWwiPlBsYXllcjwvdGg+YDsKICAgIGNvbHMuZm9yRWFjaChjID0+IHsKICAgICAgY29uc3QgY3RwID0gaXNDdHBIb2xlKHJvdW5kLmNvdXJzZU5hbWUsIGMubGFiZWwpID8gJyBjbGFzcz0iY3RwLWhvbGUiIHRpdGxlPSJDbG9zZXN0IHRvIHBpbiInIDogJyc7CiAgICAgIGh0bWwgKz0gYDx0aCR7Y3RwfT4ke2MubGFiZWx9PC90aD5gOwogICAgICBpZiAoaXMxOCAmJiBwYXJzZUludChjLmxhYmVsLDEwKSA9PT0gOSkgaHRtbCArPSBgPHRoIGNsYXNzPSJvdXQtaW4iPk9VVDwvdGg+YDsKICAgIH0pOwogICAgaWYgKGlzMTgpIGh0bWwgKz0gYDx0aCBjbGFzcz0ib3V0LWluIj5JTjwvdGg+YDsKICAgIGh0bWwgKz0gYDx0aCBjbGFzcz0ib3V0LWluIj5UT1Q8L3RoPjx0aCBjbGFzcz0ib3V0LWluIj4rLy08L3RoPjwvdHI+YDsKICAgIGh0bWwgKz0gYDx0ciBjbGFzcz0icm93LXBhciI+PHRoIGNsYXNzPSJyb3dsYWJlbCI+UGFyPC90aD5gOwogICAgbGV0IG91dFBhciA9IDAsIGluUGFyID0gMDsKICAgIHJvdW5kLnBhci5mb3JFYWNoKChwdiwgaSkgPT4gewogICAgICBodG1sICs9IGA8dGQ+JHtwdn08L3RkPmA7CiAgICAgIGNvbnN0IGggPSBwYXJzZUludChjb2xzW2ldLmxhYmVsLDEwKTsKICAgICAgaWYgKGlzMTggJiYgaCA8PSA5KSBvdXRQYXIgKz0gcHY7IGVsc2UgaW5QYXIgKz0gcHY7CiAgICAgIGlmIChpczE4ICYmIGggPT09IDkpIGh0bWwgKz0gYDx0ZCBjbGFzcz0ib3V0LWluLWNlbGwiPiR7b3V0UGFyfTwvdGQ+YDsKICAgIH0pOwogICAgaWYgKGlzMTgpIGh0bWwgKz0gYDx0ZCBjbGFzcz0ib3V0LWluLWNlbGwiPiR7aW5QYXJ9PC90ZD5gOwogICAgaHRtbCArPSBgPHRkIGNsYXNzPSJvdXQtaW4tY2VsbCI+JHtvdXRQYXIgKyBpblBhcn08L3RkPjx0ZCBjbGFzcz0ib3V0LWluLWNlbGwiPjwvdGQ+PC90cj48L3RoZWFkPjx0Ym9keT5gOwogICAgcm91bmQucGxheWVycy5mb3JFYWNoKHAgPT4gewogICAgICBjb25zdCBxdW90YSA9IE1hdGgucm91bmQoMzYgLSBwLmhhbmRpY2FwKTsKICAgICAgaHRtbCArPSBgPHRyIGNsYXNzPSJwbGF5ZXItZ3JvdXAgcm93LWdyb3NzIj48dGQgY2xhc3M9InJvd2xhYmVsIj4ke2VzY2FwZUh0bWwocC5uYW1lKX08c3BhbiBjbGFzcz0ibWV0YSI+JHtlc2NhcGVIdG1sKHAudGVlIHx8ICcnKX0gwrcgUXVvdGEgJHtxdW90YX08L3NwYW4+PC90ZD5gOwogICAgICBsZXQgb3V0UHRzID0gMCwgaW5QdHMgPSAwLCBuT3V0ID0gMCwgbkluID0gMCwgbkFsbCA9IDA7CiAgICAgIHAuZ3Jvc3MuZm9yRWFjaCgoc2NvcmUsIGkpID0+IHsKICAgICAgICBjb25zdCBwdHMgPSBxdW90YVBvaW50cyhzY29yZSwgcm91bmQucGFyW2ldKTsKICAgICAgICBjb25zdCBoID0gcGFyc2VJbnQoY29sc1tpXS5sYWJlbCwxMCk7CiAgICAgICAgaHRtbCArPSBgPHRkIGNsYXNzPSJzY29yZS1jZWxsJHtwdHMgPT09IG51bGwgPyAnJyA6ICcgcHRzLScgKyBwdHN9Ij4ke3B0cyA9PT0gbnVsbCA/ICfigJMnIDogcHRzfTwvdGQ+YDsKICAgICAgICBpZiAocHRzICE9PSBudWxsKXsKICAgICAgICAgIG5BbGwrKzsKICAgICAgICAgIGlmIChpczE4ICYmIGggPD0gOSl7IG91dFB0cyArPSBwdHM7IG5PdXQrKzsgfSBlbHNlIHsgaW5QdHMgKz0gcHRzOyBuSW4rKzsgfQogICAgICAgIH0KICAgICAgICBpZiAoaXMxOCAmJiBoID09PSA5KSBodG1sICs9IGA8dGQgY2xhc3M9Im91dC1pbi1jZWxsIj4ke25PdXQgPyBvdXRQdHMgOiAn4oCTJ308L3RkPmA7CiAgICAgIH0pOwogICAgICBpZiAoaXMxOCkgaHRtbCArPSBgPHRkIGNsYXNzPSJvdXQtaW4tY2VsbCI+JHtuSW4gPyBpblB0cyA6ICfigJMnfTwvdGQ+YDsKICAgICAgY29uc3QgdG90YWwgPSBvdXRQdHMgKyBpblB0czsKICAgICAgaHRtbCArPSBgPHRkIGNsYXNzPSJ0b3RhbC1jZWxsIj4ke25BbGwgPyB0b3RhbCA6ICfigJMnfTwvdGQ+YDsKICAgICAgaWYgKG5BbGwgPT09IHJvdW5kLm51bUhvbGVzKXsKICAgICAgICBjb25zdCBkaWZmID0gdG90YWwgLSBxdW90YTsKICAgICAgICBodG1sICs9IGA8dGQgY2xhc3M9InBtLWNlbGwgJHtkaWZmID4gMCA/ICdwbS1wb3MnIDogZGlmZiA8IDAgPyAncG0tbmVnJyA6ICcnfSI+JHtkaWZmID4gMCA/ICcrJyArIGRpZmYgOiAoZGlmZiA9PT0gMCA/ICdFJyA6IGRpZmYpfTwvdGQ+YDsKICAgICAgfSBlbHNlIHsKICAgICAgICBodG1sICs9IGA8dGQgY2xhc3M9InBtLWNlbGwiIHRpdGxlPSJTaG93biBvbmNlIGV2ZXJ5IGhvbGUgaGFzIGEgc2NvcmUiPuKAkzwvdGQ+YDsKICAgICAgfQogICAgICBodG1sICs9IGA8L3RyPmA7CiAgICB9KTsKICAgIGh0bWwgKz0gYDwvdGJvZHk+PC90YWJsZT48L2Rpdj48ZGl2IGNsYXNzPSJjdHAtZm9vdGVyLW5vdGUiPlBvaW50cyBwZXIgaG9sZTogZWFnbGUgb3IgYmV0dGVyIDggJm1pZGRvdDsgYmlyZGllIDQgJm1pZGRvdDsgcGFyIDIgJm1pZGRvdDsgYm9nZXkgMSAmbWlkZG90OyBkb3VibGUgYm9nZXkgb3Igd29yc2UgMC4gKy8tIGlzIHRvdGFsIHBvaW50cyBtaW51cyBxdW90YSwgc2hvd24gb25jZSBldmVyeSBob2xlIGhhcyBhIHNjb3JlLjwvZGl2PjwvZGl2PmA7CiAgICByZXR1cm4gaHRtbDsKICB9CgogIGZ1bmN0aW9uIHJlbmRlclJvdW5kVGFibGUocm91bmQpewogICAgY29uc3QgY29scyA9IHJvdW5kLmhvbGVDb2xzOwoKICAgIGxldCBodG1sID0gYDxkaXYgY2xhc3M9InJvdW5kLXRpdGxlLWJhciI+CiAgICAgIDxkaXYgY2xhc3M9ImNvdXJzZSI+JHtlc2NhcGVIdG1sKHJvdW5kLmNvdXJzZU5hbWUpfTwvZGl2PgogICAgICA8ZGl2IGNsYXNzPSJ0aW1lIj4ke2VzY2FwZUh0bWwocm91bmQudGVlVGltZSl9PC9kaXY+CiAgICA8L2Rpdj4KICAgICR7cm91bmQuaXNRdW90YSA/IHZpZXdTd2l0Y2hIdG1sKHJvdW5kKSA6ICcnfTxkaXYgY2xhc3M9InZpZXctc2NvcmVzIiR7cm91bmQuaXNRdW90YSAmJiB2aWV3TW9kZUJ5SWRbcm91bmQuaWRdID09PSAncG9pbnRzJyA/ICcgc3R5bGU9ImRpc3BsYXk6bm9uZSInIDogJyd9PgogICAgPGRpdiBjbGFzcz0iY2FyZC1zY3JvbGwiPgogICAgPHRhYmxlIGNsYXNzPSJzY29yZWNhcmQiPgogICAgPHRoZWFkPgogICAgPHRyIGNsYXNzPSJob2xlLWhlYWRlciI+CiAgICAgIDx0aCBjbGFzcz0icm93bGFiZWwiPlBsYXllcjwvdGg+YDsKICAgIGNvbHMuZm9yRWFjaCgoYywgaSkgPT4gewogICAgICBjb25zdCBjdHBDbGFzcyA9IGlzQ3RwSG9sZShyb3VuZC5jb3Vyc2VOYW1lLCBjLmxhYmVsKSA/ICcgY2xhc3M9ImN0cC1ob2xlIiB0aXRsZT0iQ2xvc2VzdCB0byBwaW4iJyA6ICcnOwogICAgICBodG1sICs9IGA8dGgke2N0cENsYXNzfT4ke2MubGFiZWx9PC90aD5gOwogICAgICBpZiAocm91bmQubnVtSG9sZXMgPT09IDE4ICYmIHBhcnNlSW50KGMubGFiZWwsMTApID09PSA5KSBodG1sICs9IGA8dGggY2xhc3M9Im91dC1pbiI+T1VUPC90aD5gOwogICAgfSk7CiAgICBpZiAocm91bmQubnVtSG9sZXMgPT09IDE4KSBodG1sICs9IGA8dGggY2xhc3M9Im91dC1pbiI+SU48L3RoPmA7CiAgICBodG1sICs9IGA8dGggY2xhc3M9Im91dC1pbiI+VE9UPC90aD48L3RyPgpgOwoKICAgIGNvbnN0IHRlZXNJblJvdW5kID0gZGlzdGluY3RUZWVzKHJvdW5kKTsKICAgIGNvbnN0IHNpUm93c1RvUmVuZGVyID0gY29tcHV0ZVNpUm93R3JvdXBzKHJvdW5kLCB0ZWVzSW5Sb3VuZCk7CiAgICBzaVJvd3NUb1JlbmRlci5mb3JFYWNoKHQgPT4gewogICAgICBodG1sICs9IGA8dHIgY2xhc3M9InJvdy1zaSI+PHRoIGNsYXNzPSJyb3dsYWJlbCI+JHtlc2NhcGVIdG1sKHQubGFiZWwpfTwvdGg+YDsKICAgICAgdC5zaS5mb3JFYWNoKCh2LCBpKSA9PiB7CiAgICAgICAgaHRtbCArPSBgPHRkPiR7dn08L3RkPmA7CiAgICAgICAgaWYgKHJvdW5kLm51bUhvbGVzID09PSAxOCAmJiBwYXJzZUludChjb2xzW2ldLmxhYmVsLDEwKSA9PT0gOSkgaHRtbCArPSBgPHRkPjwvdGQ+YDsKICAgICAgfSk7CiAgICAgIGlmIChyb3VuZC5udW1Ib2xlcyA9PT0gMTgpIGh0bWwgKz0gYDx0ZD48L3RkPmA7CiAgICAgIGh0bWwgKz0gYDx0ZD48L3RkPjwvdHI+XG5gOwogICAgfSk7CgogICAgaHRtbCArPSBgCiAgICA8dHIgY2xhc3M9InJvdy1wYXIiPgogICAgICA8dGggY2xhc3M9InJvd2xhYmVsIj5QYXI8L3RoPmA7CiAgICBsZXQgb3V0UGFyID0gMCwgaW5QYXIgPSAwOwogICAgcm91bmQucGFyLmZvckVhY2goKHYsIGkpID0+IHsKICAgICAgaHRtbCArPSBgPHRkPiR7dn08L3RkPmA7CiAgICAgIGNvbnN0IGhvbGVOdW0gPSBwYXJzZUludChjb2xzW2ldLmxhYmVsLDEwKTsKICAgICAgaWYgKHJvdW5kLm51bUhvbGVzID09PSAxOCAmJiBob2xlTnVtIDw9IDkpIG91dFBhciArPSB2OyBlbHNlIGluUGFyICs9IHY7CiAgICAgIGlmIChyb3VuZC5udW1Ib2xlcyA9PT0gMTggJiYgaG9sZU51bSA9PT0gOSkgaHRtbCArPSBgPHRkIGNsYXNzPSJvdXQtaW4tY2VsbCI+JHtvdXRQYXJ9PC90ZD5gOwogICAgfSk7CiAgICBpZiAocm91bmQubnVtSG9sZXMgPT09IDE4KSBodG1sICs9IGA8dGQgY2xhc3M9Im91dC1pbi1jZWxsIj4ke2luUGFyfTwvdGQ+YDsKICAgIGh0bWwgKz0gYDx0ZCBjbGFzcz0ib3V0LWluLWNlbGwiPiR7b3V0UGFyICsgaW5QYXJ9PC90ZD48L3RyPgogICAgPC90aGVhZD48dGJvZHk+YDsKCiAgICByb3VuZC5wbGF5ZXJzLmZvckVhY2gocCA9PiB7CiAgICAgIGNvbnN0IHBsYXllclNpID0gZWZmZWN0aXZlU2kocm91bmQsIHAudGVlKTsKICAgICAgY29uc3QgdXNlc0N1c3RvbVNpID0gaGFzT3ZlcnJpZGUocm91bmQsIHAudGVlKTsKICAgICAgY29uc3QgaGNwT3JRdW90YSA9IHJvdW5kLmlzUXVvdGEKICAgICAgICA/IGBRdW90YSAke01hdGgucm91bmQoMzYgLSBwLmhhbmRpY2FwKX1gCiAgICAgICAgOiBgSGNwICR7cC5oYW5kaWNhcH1gOwogICAgICBodG1sICs9IGA8dHIgY2xhc3M9InBsYXllci1ncm91cCByb3ctZ3Jvc3MiPgogICAgICAgIDx0ZCBjbGFzcz0icm93bGFiZWwiPiR7ZXNjYXBlSHRtbChwLm5hbWUpfTxzcGFuIGNsYXNzPSJtZXRhIj4ke2VzY2FwZUh0bWwocC50ZWUgfHwgJycpfSDCtyAke2hjcE9yUXVvdGF9JHt1c2VzQ3VzdG9tU2kgPyAnIMK3IDxzcGFuIGNsYXNzPSJjdXN0b20tc2ktdGFnIj5jdXN0b20gUy5JLjwvc3Bhbj4nIDogJyd9PC9zcGFuPjwvdGQ+YDsKCiAgICAgIGxldCBncm9zc091dFJ1biA9IDAsIGdyb3NzSW5SdW4gPSAwOwogICAgICBsZXQgZ3Jvc3NPdXRDb3VudCA9IDAsIGdyb3NzSW5Db3VudCA9IDA7CgogICAgICBwLmdyb3NzLmZvckVhY2goKHNjb3JlLCBpKSA9PiB7CiAgICAgICAgY29uc3QgcGFyVmFsID0gcm91bmQucGFyW2ldOwogICAgICAgIGNvbnN0IHNpVmFsID0gcGxheWVyU2lbaV07CiAgICAgICAgY29uc3Qgc3Ryb2tlcyA9IHN0cm9rZXNGb3JIb2xlKHAuaGFuZGljYXAsIHNpVmFsLCByb3VuZC5udW1Ib2xlcyk7CiAgICAgICAgY29uc3QgaG9sZU51bSA9IHBhcnNlSW50KGNvbHNbaV0ubGFiZWwsMTApOwogICAgICAgIGxldCBjZWxsQ2xhc3MgPSAnc2NvcmUtY2VsbCc7CiAgICAgICAgaWYgKHNjb3JlICE9PSBudWxsICYmIHBhclZhbCl7CiAgICAgICAgICBpZiAoc2NvcmUgPD0gcGFyVmFsIC0gMSkgY2VsbENsYXNzICs9ICcgYmlyZGllJzsKICAgICAgICAgIGVsc2UgaWYgKHNjb3JlID49IHBhclZhbCArIDEpIGNlbGxDbGFzcyArPSAnIGJvZ2V5JzsKICAgICAgICB9CiAgICAgICAgY29uc3QgZG90cyA9IChzdHJva2VzID4gMCAmJiAhcm91bmQuaXNRdW90YSkKICAgICAgICAgID8gYDxzcGFuIGNsYXNzPSJkb3RzIj4keyc8c3Bhbj48L3NwYW4+Jy5yZXBlYXQoTWF0aC5taW4oc3Ryb2tlcywyKSl9PC9zcGFuPmAKICAgICAgICAgIDogJyc7CiAgICAgICAgaHRtbCArPSBgPHRkIGNsYXNzPSIke2NlbGxDbGFzc30iPiR7c2NvcmUgIT09IG51bGwgPyBzY29yZSA6ICfigJMnfSR7ZG90c308L3RkPmA7CgogICAgICAgIGlmIChzY29yZSAhPT0gbnVsbCl7CiAgICAgICAgICBpZiAocm91bmQubnVtSG9sZXMgPT09IDE4ICYmIGhvbGVOdW0gPD0gOSkgeyBncm9zc091dFJ1biArPSBzY29yZTsgZ3Jvc3NPdXRDb3VudCsrOyB9CiAgICAgICAgICBlbHNlIHsgZ3Jvc3NJblJ1biArPSBzY29yZTsgZ3Jvc3NJbkNvdW50Kys7IH0KICAgICAgICB9CiAgICAgICAgaWYgKHJvdW5kLm51bUhvbGVzID09PSAxOCAmJiBob2xlTnVtID09PSA5KXsKICAgICAgICAgIGNvbnN0IG91dFZhbCA9IHAuZ3Jvc3NPdXQgIT09IG51bGwgPyBwLmdyb3NzT3V0IDogKGdyb3NzT3V0Q291bnQgPiAwID8gZ3Jvc3NPdXRSdW4gOiBudWxsKTsKICAgICAgICAgIGh0bWwgKz0gYDx0ZCBjbGFzcz0ib3V0LWluLWNlbGwiPiR7b3V0VmFsICE9PSBudWxsID8gb3V0VmFsIDogJ+KAkyd9PC90ZD5gOwogICAgICAgIH0KICAgICAgfSk7CiAgICAgIGNvbnN0IGluVmFsID0gcC5ncm9zc0luICE9PSBudWxsID8gcC5ncm9zc0luIDogKGdyb3NzSW5Db3VudCA+IDAgPyBncm9zc0luUnVuIDogbnVsbCk7CiAgICAgIGNvbnN0IHRvdGFsVmFsID0gcC5ncm9zc1RvdGFsICE9PSBudWxsID8gcC5ncm9zc1RvdGFsIDogKChncm9zc091dENvdW50ICsgZ3Jvc3NJbkNvdW50KSA+IDAgPyAoZ3Jvc3NPdXRSdW4gKyBncm9zc0luUnVuKSA6IG51bGwpOwogICAgICBpZiAocm91bmQubnVtSG9sZXMgPT09IDE4KSBodG1sICs9IGA8dGQgY2xhc3M9Im91dC1pbi1jZWxsIj4ke2luVmFsICE9PSBudWxsID8gaW5WYWwgOiAn4oCTJ308L3RkPmA7CiAgICAgIGh0bWwgKz0gYDx0ZCBjbGFzcz0idG90YWwtY2VsbCI+JHt0b3RhbFZhbCAhPT0gbnVsbCA/IHRvdGFsVmFsIDogJ+KAkyd9PC90ZD48L3RyPmA7CgogICAgICBpZiAocm91bmQuaXNRdW90YSkgcmV0dXJuOwoKICAgICAgaHRtbCArPSBgPHRyIGNsYXNzPSJyb3ctbmV0Ij48dGggY2xhc3M9InJvd2xhYmVsIj5uZXQ8L3RoPmA7CiAgICAgIGxldCBuZXRPdXRSdW4gPSAwLCBuZXRJblJ1biA9IDA7CiAgICAgIGxldCBuZXRPdXRDb3VudCA9IDAsIG5ldEluQ291bnQgPSAwOwogICAgICBwLmdyb3NzLmZvckVhY2goKHNjb3JlLCBpKSA9PiB7CiAgICAgICAgY29uc3Qgc2lWYWwgPSBwbGF5ZXJTaVtpXTsKICAgICAgICBjb25zdCBzdHJva2VzID0gc3Ryb2tlc0ZvckhvbGUocC5oYW5kaWNhcCwgc2lWYWwsIHJvdW5kLm51bUhvbGVzKTsKICAgICAgICBjb25zdCBob2xlTnVtID0gcGFyc2VJbnQoY29sc1tpXS5sYWJlbCwxMCk7CiAgICAgICAgY29uc3QgbmV0ID0gc2NvcmUgIT09IG51bGwgPyBzY29yZSAtIHN0cm9rZXMgOiBudWxsOwogICAgICAgIGNvbnN0IHBhclZhbCA9IHJvdW5kLnBhcltpXTsKICAgICAgICBsZXQgY2xzID0gJ25ldC12YWwnOwogICAgICAgIGlmIChuZXQgIT09IG51bGwgJiYgcGFyVmFsICYmIG5ldCA8IHBhclZhbCkgY2xzICs9ICcgdW5kZXInOwogICAgICAgIGh0bWwgKz0gYDx0ZCBjbGFzcz0iJHtjbHN9Ij4ke25ldCAhPT0gbnVsbCA/IG5ldCA6ICfigJMnfTwvdGQ+YDsKICAgICAgICBpZiAobmV0ICE9PSBudWxsKXsKICAgICAgICAgIGlmIChyb3VuZC5udW1Ib2xlcyA9PT0gMTggJiYgaG9sZU51bSA8PSA5KSB7IG5ldE91dFJ1biArPSBuZXQ7IG5ldE91dENvdW50Kys7IH0KICAgICAgICAgIGVsc2UgeyBuZXRJblJ1biArPSBuZXQ7IG5ldEluQ291bnQrKzsgfQogICAgICAgIH0KICAgICAgICBpZiAocm91bmQubnVtSG9sZXMgPT09IDE4ICYmIGhvbGVOdW0gPT09IDkpIGh0bWwgKz0gYDx0ZCBjbGFzcz0ibmV0LXRvdGFsIj4ke25ldE91dENvdW50ID4gMCA/IG5ldE91dFJ1biA6ICfigJMnfTwvdGQ+YDsKICAgICAgfSk7CiAgICAgIGlmIChyb3VuZC5udW1Ib2xlcyA9PT0gMTgpIGh0bWwgKz0gYDx0ZCBjbGFzcz0ibmV0LXRvdGFsIj4ke25ldEluQ291bnQgPiAwID8gbmV0SW5SdW4gOiAn4oCTJ308L3RkPmA7CiAgICAgIGh0bWwgKz0gYDx0ZCBjbGFzcz0ibmV0LXRvdGFsIj4keyhuZXRPdXRDb3VudCArIG5ldEluQ291bnQpID4gMCA/IChuZXRPdXRSdW4gKyBuZXRJblJ1bikgOiAn4oCTJ308L3RkPjwvdHI+YDsKICAgIH0pOwoKICAgIGh0bWwgKz0gYDwvdGJvZHk+PC90YWJsZT48L2Rpdj48L2Rpdj5gOwogICAgaWYgKHJvdW5kLmlzUXVvdGEpIGh0bWwgKz0gcmVuZGVyUG9pbnRzVmlldyhyb3VuZCwgdmlld01vZGVCeUlkW3JvdW5kLmlkXSA9PT0gJ3BvaW50cycpOwoKICAgIGh0bWwgKz0gYDxkaXYgY2xhc3M9ImN0cC1mb290ZXItbm90ZSI+Rm9ybWF0OiA8c3Ryb25nPiR7ZXNjYXBlSHRtbChyb3VuZC5mb3JtYXROYW1lIHx8ICdOb3Qgc3BlY2lmaWVkJyl9PC9zdHJvbmc+PC9kaXY+YDsKCiAgICBjb25zdCB0ZWVMaW5lVGV4dCA9IHRlZVJhdGluZ0Zvb3RlclRleHQocm91bmQpOwogICAgaWYgKHRlZUxpbmVUZXh0KXsKICAgICAgaHRtbCArPSBgPGRpdiBjbGFzcz0iY3RwLWZvb3Rlci1ub3RlIj48c3Ryb25nPiR7ZXNjYXBlSHRtbCh0ZWVMaW5lVGV4dC5zcGxpdCgnOiAnKVswXSl9Ojwvc3Ryb25nPiAke2VzY2FwZUh0bWwodGVlTGluZVRleHQuc3BsaXQoJzogJykuc2xpY2UoMSkuam9pbignOiAnKSl9PC9kaXY+YDsKICAgIH0KCiAgICBjb25zdCB0ZWFtc0xpbmVUZXh0ID0gdGVhbXNGb290ZXJUZXh0KHJvdW5kKTsKICAgIGlmICh0ZWFtc0xpbmVUZXh0KXsKICAgICAgaHRtbCArPSBgPGRpdiBjbGFzcz0iY3RwLWZvb3Rlci1ub3RlIj48c3Ryb25nPlRlYW1zOjwvc3Ryb25nPiAke2VzY2FwZUh0bWwodGVhbXNMaW5lVGV4dCl9PC9kaXY+YDsKICAgIH0KCiAgICBjb25zdCBjdHBIb2xlc1RoaXNSb3VuZCA9IGNvbHMubWFwKGMgPT4gYy5sYWJlbCkuZmlsdGVyKGxhYmVsID0+IGlzQ3RwSG9sZShyb3VuZC5jb3Vyc2VOYW1lLCBsYWJlbCkpOwogICAgaWYgKGN0cEhvbGVzVGhpc1JvdW5kLmxlbmd0aCl7CiAgICAgIGh0bWwgKz0gYDxkaXYgY2xhc3M9ImN0cC1mb290ZXItbm90ZSI+PHN0cm9uZz5DbG9zZXN0IHRvIHBpbjo8L3N0cm9uZz4gSG9sZSAke2N0cEhvbGVzVGhpc1JvdW5kLmpvaW4oJywgSG9sZSAnKX0gJm5kYXNoOyBHcm9zcyBwYXIgcmVxdWlyZWQgdG8gdmFsaWRhdGU8L2Rpdj5gOwogICAgfQoKICAgIHJldHVybiBodG1sOwogIH0KCiAgLy8gLS0tLS0tLS0tLSBQcmludGFibGUgY2FyZCByZW5kZXJpbmcgLS0tLS0tLS0tLQogIGZ1bmN0aW9uIGJ1aWxkQ29tcGFjdENhcmRIdG1sKHJvdW5kLCBwYWdlSGVhZGluZ1RleHQsIGdhbWVEZXRhaWxzVGV4dCwgbW9kZSl7CiAgICBtb2RlID0gbW9kZSB8fCAnYmxhbmsnOwogICAgY29uc3Qgc2NvcmVkID0gbW9kZSA9PT0gJ3Njb3JlZCc7CiAgICBjb25zdCBudW1Ib2xlcyA9IHJvdW5kLm51bUhvbGVzOwogICAgY29uc3QgY29scyA9IHJvdW5kLmhvbGVDb2xzOwogICAgY29uc3QgaXNFaWdodGVlbiA9IG51bUhvbGVzID09PSAxODsKICAgIGNvbnN0IHR1cm4gPSBpc0VpZ2h0ZWVuID8gOSA6IG51bUhvbGVzOwogICAgY29uc3QgdGVlc0luUm91bmQgPSBkaXN0aW5jdFRlZXMocm91bmQpOwogICAgY29uc3QgaGFzUG0gPSBzY29yZWQgJiYgcm91bmQuaXNRdW90YTsgICAvLyBwb2ludHMgcm93ICsgKy8tIGNvbHVtbiBvbiBzY29yZWQgUXVvdGEgY2FyZHMKCiAgICAvLyAiTmVhbCBIb2FyIiAtPiAiTkgiOyBpZ25vcmVzIEpyLi9Tci4vSUktSVYgc3VmZml4ZXM7IHNpbmdsZSBuYW1lcyBnaXZlIG9uZSBsZXR0ZXIuCiAgICBmdW5jdGlvbiBwbGF5ZXJJbml0aWFscyhuYW1lKXsKICAgICAgY29uc3QgdG9rcyA9IFN0cmluZyhuYW1lIHx8ICcnKS50cmltKCkuc3BsaXQoL1xzKy8pLmZpbHRlcihCb29sZWFuKTsKICAgICAgd2hpbGUgKHRva3MubGVuZ3RoID4gMiAmJiAvXihqclwuP3xzclwuP3xpaXxpaWl8aXYpJC9pLnRlc3QodG9rc1t0b2tzLmxlbmd0aCAtIDFdKSkgdG9rcy5wb3AoKTsKICAgICAgaWYgKCF0b2tzLmxlbmd0aCkgcmV0dXJuICcnOwogICAgICBjb25zdCBmaXJzdCA9IHRva3NbMF1bMF07CiAgICAgIGNvbnN0IGxhc3QgPSB0b2tzLmxlbmd0aCA+IDEgPyB0b2tzW3Rva3MubGVuZ3RoIC0gMV1bMF0gOiAnJzsKICAgICAgcmV0dXJuIChmaXJzdCArIGxhc3QpLnRvVXBwZXJDYXNlKCk7CiAgICB9CiAgICBmdW5jdGlvbiBwbGF5ZXJHcm9zc1N1bXMocCl7CiAgICAgIGxldCBvdXRSdW4gPSAwLCBpblJ1biA9IDAsIG91dENvdW50ID0gMCwgaW5Db3VudCA9IDA7CiAgICAgIHAuZ3Jvc3MuZm9yRWFjaCgoc2NvcmUsIGkpID0+IHsKICAgICAgICBpZiAoc2NvcmUgPT09IG51bGwpIHJldHVybjsKICAgICAgICBjb25zdCBob2xlTnVtID0gcGFyc2VJbnQoY29sc1tpXS5sYWJlbCwxMCk7CiAgICAgICAgaWYgKGlzRWlnaHRlZW4gJiYgaG9sZU51bSA8PSB0dXJuKSB7IG91dFJ1biArPSBzY29yZTsgb3V0Q291bnQrKzsgfQogICAgICAgIGVsc2UgeyBpblJ1biArPSBzY29yZTsgaW5Db3VudCsrOyB9CiAgICAgIH0pOwogICAgICBjb25zdCBvdXQgPSBwLmdyb3NzT3V0ICE9PSBudWxsICYmIHAuZ3Jvc3NPdXQgIT09IHVuZGVmaW5lZCA/IHAuZ3Jvc3NPdXQgOiAob3V0Q291bnQgPiAwID8gb3V0UnVuIDogbnVsbCk7CiAgICAgIGNvbnN0IGlubiA9IHAuZ3Jvc3NJbiAhPT0gbnVsbCAmJiBwLmdyb3NzSW4gIT09IHVuZGVmaW5lZCA/IHAuZ3Jvc3NJbiA6IChpbkNvdW50ID4gMCA/IGluUnVuIDogbnVsbCk7CiAgICAgIGNvbnN0IHRvdCA9IHAuZ3Jvc3NUb3RhbCAhPT0gbnVsbCAmJiBwLmdyb3NzVG90YWwgIT09IHVuZGVmaW5lZCA/IHAuZ3Jvc3NUb3RhbCA6ICgob3V0Q291bnQgKyBpbkNvdW50KSA+IDAgPyAob3V0UnVuICsgaW5SdW4pIDogbnVsbCk7CiAgICAgIHJldHVybiB7IG91dCwgaW5uLCB0b3QgfTsKICAgIH0KICAgIGZ1bmN0aW9uIHBsYXllck5ldFN1bXMocCwgcGxheWVyU2kpewogICAgICBsZXQgb3V0UnVuID0gMCwgaW5SdW4gPSAwLCBvdXRDb3VudCA9IDAsIGluQ291bnQgPSAwOwogICAgICBjb25zdCBuZXRWYWxzID0gcC5ncm9zcy5tYXAoKHNjb3JlLCBpKSA9PiB7CiAgICAgICAgaWYgKHNjb3JlID09PSBudWxsKSByZXR1cm4gbnVsbDsKICAgICAgICBjb25zdCBzdHJva2VzID0gc3Ryb2tlc0ZvckhvbGUocC5oYW5kaWNhcCwgcGxheWVyU2lbaV0sIG51bUhvbGVzKTsKICAgICAgICBjb25zdCBuZXQgPSBzY29yZSAtIHN0cm9rZXM7CiAgICAgICAgY29uc3QgaG9sZU51bSA9IHBhcnNlSW50KGNvbHNbaV0ubGFiZWwsMTApOwogICAgICAgIGlmIChpc0VpZ2h0ZWVuICYmIGhvbGVOdW0gPD0gdHVybikgeyBvdXRSdW4gKz0gbmV0OyBvdXRDb3VudCsrOyB9CiAgICAgICAgZWxzZSB7IGluUnVuICs9IG5ldDsgaW5Db3VudCsrOyB9CiAgICAgICAgcmV0dXJuIG5ldDsKICAgICAgfSk7CiAgICAgIGNvbnN0IG91dCA9IG91dENvdW50ID4gMCA/IG91dFJ1biA6IG51bGw7CiAgICAgIGNvbnN0IGlubiA9IGluQ291bnQgPiAwID8gaW5SdW4gOiBudWxsOwogICAgICBjb25zdCB0b3QgPSAob3V0Q291bnQgKyBpbkNvdW50KSA+IDAgPyAob3V0UnVuICsgaW5SdW4pIDogbnVsbDsKICAgICAgcmV0dXJuIHsgbmV0VmFscywgb3V0LCBpbm4sIHRvdCB9OwogICAgfQoKICAgIGZ1bmN0aW9uIGhvbGVPbmx5Q2VsbHMoZ2V0VmFsKXsKICAgICAgbGV0IG91dCA9ICcnOwogICAgICBjb2xzLmZvckVhY2goKGMsIGkpID0+IHsKICAgICAgICBvdXQgKz0gYDx0ZCBjbGFzcz0idGgiPiR7Z2V0VmFsKGkpfTwvdGQ+YDsKICAgICAgICBpZiAoaXNFaWdodGVlbiAmJiBwYXJzZUludChjLmxhYmVsLDEwKSA9PT0gdHVybikgb3V0ICs9IGA8dGQgY2xhc3M9InRoIHR1cm4iPjwvdGQ+PHRkIGNsYXNzPSJ0aCBpbml0Ij48L3RkPmA7CiAgICAgIH0pOwogICAgICBpZiAoaXNFaWdodGVlbikgb3V0ICs9IGA8dGQgY2xhc3M9InRoIHR1cm4iPjwvdGQ+YDsKICAgICAgb3V0ICs9IGA8dGQgY2xhc3M9InRoIHR1cm4iPjwvdGQ+YDsKICAgICAgaWYgKGhhc1BtKSBvdXQgKz0gYDx0ZCBjbGFzcz0idGggdHVybiI+PC90ZD5gOwogICAgICByZXR1cm4gb3V0OwogICAgfQoKICAgIGZ1bmN0aW9uIGhvbGVIZWFkZXJDZWxscyhnZXRWYWwpewogICAgICBsZXQgb3V0ID0gJyc7CiAgICAgIGNvbHMuZm9yRWFjaCgoYywgaSkgPT4gewogICAgICAgIGNvbnN0IGN0cENsYXNzID0gaXNDdHBIb2xlKHJvdW5kLmNvdXJzZU5hbWUsIGMubGFiZWwpID8gJyBjdHAtaG9sZScgOiAnJzsKICAgICAgICBvdXQgKz0gYDx0ZCBjbGFzcz0idGgke2N0cENsYXNzfSI+JHtnZXRWYWwoaSl9PC90ZD5gOwogICAgICAgIGlmIChpc0VpZ2h0ZWVuICYmIHBhcnNlSW50KGMubGFiZWwsMTApID09PSB0dXJuKSBvdXQgKz0gYDx0ZCBjbGFzcz0idGggdHVybiI+T1VUPC90ZD48dGQgY2xhc3M9InRoIGluaXQiPklOSVQ8L3RkPmA7CiAgICAgIH0pOwogICAgICBpZiAoaXNFaWdodGVlbikgb3V0ICs9IGA8dGQgY2xhc3M9InRoIHR1cm4iPklOPC90ZD5gOwogICAgICBvdXQgKz0gYDx0ZCBjbGFzcz0idGggdHVybiI+VE9UPC90ZD5gOwogICAgICBpZiAoaGFzUG0pIG91dCArPSBgPHRkIGNsYXNzPSJ0aCB0dXJuIj4rLy08L3RkPmA7CiAgICAgIHJldHVybiBvdXQ7CiAgICB9CgogICAgbGV0IGZyb250UGFyID0gMCwgYmFja1BhciA9IDA7CiAgICByb3VuZC5wYXIuZm9yRWFjaCgodiwgaSkgPT4gewogICAgICBjb25zdCBob2xlTnVtID0gcGFyc2VJbnQoY29sc1tpXS5sYWJlbCwxMCk7CiAgICAgIGlmIChpc0VpZ2h0ZWVuICYmIGhvbGVOdW0gPD0gdHVybikgZnJvbnRQYXIgKz0gdjsgZWxzZSBiYWNrUGFyICs9IHY7CiAgICB9KTsKICAgIGZ1bmN0aW9uIHBhclJvd0NlbGxzKCl7CiAgICAgIGxldCBvdXQgPSAnJzsKICAgICAgY29scy5mb3JFYWNoKChjLCBpKSA9PiB7CiAgICAgICAgb3V0ICs9IGA8dGQgY2xhc3M9InRoIj4ke3JvdW5kLnBhcltpXX08L3RkPmA7CiAgICAgICAgaWYgKGlzRWlnaHRlZW4gJiYgcGFyc2VJbnQoYy5sYWJlbCwxMCkgPT09IHR1cm4pIG91dCArPSBgPHRkIGNsYXNzPSJ0aCB0dXJuIj4ke2Zyb250UGFyfTwvdGQ+PHRkIGNsYXNzPSJ0aCBpbml0Ij48L3RkPmA7CiAgICAgIH0pOwogICAgICBpZiAoaXNFaWdodGVlbikgb3V0ICs9IGA8dGQgY2xhc3M9InRoIHR1cm4iPiR7YmFja1Bhcn08L3RkPmA7CiAgICAgIG91dCArPSBgPHRkIGNsYXNzPSJ0aCB0dXJuIj4ke2Zyb250UGFyICsgYmFja1Bhcn08L3RkPmA7CiAgICAgIGlmIChoYXNQbSkgb3V0ICs9IGA8dGQgY2xhc3M9InRoIHR1cm4iPjwvdGQ+YDsKICAgICAgcmV0dXJuIG91dDsKICAgIH0KCiAgICBmdW5jdGlvbiBibGFua1NwYWNlclJvdygpewogICAgICBsZXQgY2VsbHMgPSAnJzsKICAgICAgY29scy5mb3JFYWNoKChjKSA9PiB7CiAgICAgICAgY2VsbHMgKz0gYDx0ZCBjbGFzcz0iYmxhbmtib3giPjwvdGQ+YDsKICAgICAgICBpZiAoaXNFaWdodGVlbiAmJiBwYXJzZUludChjLmxhYmVsLDEwKSA9PT0gdHVybikgY2VsbHMgKz0gYDx0ZCBjbGFzcz0iYmxhbmtib3ggc3VtIj48L3RkPjx0ZCBjbGFzcz0iYmxhbmtib3ggaW5pdCI+PC90ZD5gOwogICAgICB9KTsKICAgICAgaWYgKGlzRWlnaHRlZW4pIGNlbGxzICs9IGA8dGQgY2xhc3M9ImJsYW5rYm94IHN1bSI+PC90ZD5gOwogICAgICBjZWxscyArPSBgPHRkIGNsYXNzPSJibGFua2JveCBzdW0gdG90Ij48L3RkPmA7CiAgICAgIGlmIChoYXNQbSkgY2VsbHMgKz0gYDx0ZCBjbGFzcz0iYmxhbmtib3ggc3VtIj48L3RkPmA7CiAgICAgIHJldHVybiBgPHRyPjx0ZCBjbGFzcz0icG5hbWUiPiZuYnNwOzwvdGQ+JHtjZWxsc308L3RyPmA7CiAgICB9CgogICAgY29uc3Qgc2lSb3dHcm91cHMgPSBjb21wdXRlU2lSb3dHcm91cHMocm91bmQsIHRlZXNJblJvdW5kKTsKICAgIGNvbnN0IHNpUm93cyA9IHNpUm93R3JvdXBzLm1hcChnID0+CiAgICAgIGA8dHI+PHRoIGNsYXNzPSJ0aCBuYW1lSGVhZCI+JHtlc2NhcGVIdG1sKGcubGFiZWwpfTwvdGg+JHtob2xlT25seUNlbGxzKGkgPT4gZy5zaVtpXSl9PC90cj5gCiAgICApLmpvaW4oJycpOwoKICAgIGNvbnN0IHBsYXllclJvd3MgPSByb3VuZC5wbGF5ZXJzLm1hcChwID0+IHsKICAgICAgY29uc3QgcGxheWVyU2kgPSBlZmZlY3RpdmVTaShyb3VuZCwgcC50ZWUpOwogICAgICBsZXQgaG9sZUNlbGxzID0gJyc7CiAgICAgIGNvbHMuZm9yRWFjaCgoYywgaSkgPT4gewogICAgICAgIGNvbnN0IHN0cm9rZXMgPSBzdHJva2VzRm9ySG9sZShwLmhhbmRpY2FwLCBwbGF5ZXJTaVtpXSwgbnVtSG9sZXMpOwogICAgICAgIGNvbnN0IGRvdHMgPSAoc3Ryb2tlcyA+IDAgJiYgIXJvdW5kLmlzUXVvdGEpCiAgICAgICAgICA/IGA8c3BhbiBjbGFzcz0icGRvdHMiPiR7JzxpPjwvaT4nLnJlcGVhdChNYXRoLm1pbihzdHJva2VzLDIpKX08L3NwYW4+YAogICAgICAgICAgOiAnJzsKICAgICAgICBjb25zdCBzY29yZSA9IHAuZ3Jvc3NbaV07CiAgICAgICAgY29uc3QgcGFyVmFsID0gcm91bmQucGFyW2ldOwogICAgICAgIC8vIGRpYWdvbmFsIGxpbmUgdGhyb3VnaCB0aGUgYm94OyBhIHNjb3JlZCBudW1iZXIgc2l0cyBpbiB0aGUgbG93ZXItcmlnaHQgaGFsZiwgcmluZ2VkIG9yIGJveGVkIGZvciBiaXJkaWVzIC8gYm9nZXlzCiAgICAgICAgbGV0IHNjQ2xhc3MgPSAnc2MnOwogICAgICAgIGlmIChzY29yZWQgJiYgc2NvcmUgIT09IG51bGwgJiYgcGFyVmFsKXsKICAgICAgICAgIGlmIChzY29yZSA8PSBwYXJWYWwgLSAxKSBzY0NsYXNzICs9ICcgYmlyZGllJzsKICAgICAgICAgIGVsc2UgaWYgKHNjb3JlID49IHBhclZhbCArIDEpIHNjQ2xhc3MgKz0gJyBib2dleSc7CiAgICAgICAgfQogICAgICAgIGNvbnN0IGNlbGxDb250ZW50ID0gc2NvcmVkID8gYDxzcGFuIGNsYXNzPSIke3NjQ2xhc3N9Ij4ke3Njb3JlICE9PSBudWxsID8gc2NvcmUgOiAnJm5kYXNoOyd9PC9zcGFuPmAgOiAnJzsKICAgICAgICBob2xlQ2VsbHMgKz0gYDx0ZCBjbGFzcz0iYmxhbmtib3ggZGlhZyI+JHtjZWxsQ29udGVudH0ke2RvdHN9PC90ZD5gOwogICAgICAgIGlmIChpc0VpZ2h0ZWVuICYmIHBhcnNlSW50KGMubGFiZWwsMTApID09PSB0dXJuKXsKICAgICAgICAgIGNvbnN0IHN1bXMgPSBzY29yZWQgPyBwbGF5ZXJHcm9zc1N1bXMocCkgOiBudWxsOwogICAgICAgICAgaG9sZUNlbGxzICs9IGA8dGQgY2xhc3M9ImJsYW5rYm94IHN1bSI+JHtzY29yZWQgPyAoc3Vtcy5vdXQgIT09IG51bGwgPyBzdW1zLm91dCA6ICcmbmRhc2g7JykgOiAnJ308L3RkPjx0ZCBjbGFzcz0iYmxhbmtib3ggaW5pdCI+JHtlc2NhcGVIdG1sKHBsYXllckluaXRpYWxzKHAubmFtZSkpfTwvdGQ+YDsKICAgICAgICB9CiAgICAgIH0pOwogICAgICBjb25zdCBmaW5hbFN1bXMgPSBzY29yZWQgPyBwbGF5ZXJHcm9zc1N1bXMocCkgOiBudWxsOwogICAgICBpZiAoaXNFaWdodGVlbikgaG9sZUNlbGxzICs9IGA8dGQgY2xhc3M9ImJsYW5rYm94IHN1bSI+JHtzY29yZWQgPyAoZmluYWxTdW1zLmlubiAhPT0gbnVsbCA/IGZpbmFsU3Vtcy5pbm4gOiAnJm5kYXNoOycpIDogJyd9PC90ZD5gOwogICAgICBob2xlQ2VsbHMgKz0gYDx0ZCBjbGFzcz0iYmxhbmtib3ggc3VtIHRvdCI+JHtzY29yZWQgPyAoZmluYWxTdW1zLnRvdCAhPT0gbnVsbCA/IGZpbmFsU3Vtcy50b3QgOiAnJm5kYXNoOycpIDogJyd9PC90ZD5gOwogICAgICBpZiAoaGFzUG0pIGhvbGVDZWxscyArPSBgPHRkIGNsYXNzPSJibGFua2JveCBzdW0gcG1ibGFuayI+PC90ZD5gOwogICAgICBjb25zdCBoY3BPclF1b3RhID0gcm91bmQuaXNRdW90YSA/IGBRdW90YSAke01hdGgucm91bmQoMzYgLSBwLmhhbmRpY2FwKX1gIDogcC5oYW5kaWNhcDsKICAgICAgbGV0IHJvd0h0bWwgPSBgPHRyPjx0ZCBjbGFzcz0icG5hbWUiPiR7ZXNjYXBlSHRtbChwLm5hbWUpfSA8c3BhbiBjbGFzcz0icG1ldGEiPiR7ZXNjYXBlSHRtbCgocC50ZWV8fCcnKS5yZXBsYWNlKC9ccypcYnRlZSQvaSwgJycpKX0mbWlkZG90OyR7aGNwT3JRdW90YX08L3NwYW4+PC90ZD4ke2hvbGVDZWxsc308L3RyPmA7CgogICAgICBpZiAoc2NvcmVkICYmICFyb3VuZC5pc1F1b3RhKXsKICAgICAgICBjb25zdCBuZXREYXRhID0gcGxheWVyTmV0U3VtcyhwLCBwbGF5ZXJTaSk7CiAgICAgICAgbGV0IG5ldENlbGxzID0gJyc7CiAgICAgICAgY29scy5mb3JFYWNoKChjLCBpKSA9PiB7CiAgICAgICAgICBjb25zdCBudiA9IG5ldERhdGEubmV0VmFsc1tpXTsKICAgICAgICAgIG5ldENlbGxzICs9IGA8dGQgY2xhc3M9Im5ldGJveCI+JHtudiAhPT0gbnVsbCA/IG52IDogJyZuZGFzaDsnfTwvdGQ+YDsKICAgICAgICAgIGlmIChpc0VpZ2h0ZWVuICYmIHBhcnNlSW50KGMubGFiZWwsMTApID09PSB0dXJuKXsKICAgICAgICAgICAgbmV0Q2VsbHMgKz0gYDx0ZCBjbGFzcz0ibmV0Ym94IHN1bSI+JHtuZXREYXRhLm91dCAhPT0gbnVsbCA/IG5ldERhdGEub3V0IDogJyZuZGFzaDsnfTwvdGQ+PHRkIGNsYXNzPSJuZXRib3ggaW5pdCI+PC90ZD5gOwogICAgICAgICAgfQogICAgICAgIH0pOwogICAgICAgIGlmIChpc0VpZ2h0ZWVuKSBuZXRDZWxscyArPSBgPHRkIGNsYXNzPSJuZXRib3ggc3VtIj4ke25ldERhdGEuaW5uICE9PSBudWxsID8gbmV0RGF0YS5pbm4gOiAnJm5kYXNoOyd9PC90ZD5gOwogICAgICAgIG5ldENlbGxzICs9IGA8dGQgY2xhc3M9Im5ldGJveCBzdW0gdG90Ij4ke25ldERhdGEudG90ICE9PSBudWxsID8gbmV0RGF0YS50b3QgOiAnJm5kYXNoOyd9PC90ZD5gOwogICAgICAgIHJvd0h0bWwgKz0gYDx0ciBjbGFzcz0ibmV0cm93Ij48dGQgY2xhc3M9InBuYW1lIG5ldGxhYmVsIj5uZXQ8L3RkPiR7bmV0Q2VsbHN9PC90cj5gOwogICAgICB9CiAgICAgIGlmIChoYXNQbSl7CiAgICAgICAgY29uc3QgcXVvdGEgPSBNYXRoLnJvdW5kKDM2IC0gcC5oYW5kaWNhcCk7CiAgICAgICAgbGV0IG91dFAgPSAwLCBpblAgPSAwLCBuT3V0ID0gMCwgbkluID0gMCwgbkFsbCA9IDA7CiAgICAgICAgbGV0IHB0c0NlbGxzID0gJyc7CiAgICAgICAgY29scy5mb3JFYWNoKChjLCBpKSA9PiB7CiAgICAgICAgICBjb25zdCBwdHMgPSBxdW90YVBvaW50cyhwLmdyb3NzW2ldLCByb3VuZC5wYXJbaV0pOwogICAgICAgICAgY29uc3QgaG9sZU51bSA9IHBhcnNlSW50KGMubGFiZWwsMTApOwogICAgICAgICAgcHRzQ2VsbHMgKz0gYDx0ZCBjbGFzcz0ibmV0Ym94JHtwdHMgPT09IDAgPyAnIHB0MCcgOiAocHRzID49IDQgPyAnIHB0NCcgOiAnJyl9Ij4ke3B0cyA9PT0gbnVsbCA/ICcmbmRhc2g7JyA6IHB0c308L3RkPmA7CiAgICAgICAgICBpZiAocHRzICE9PSBudWxsKXsKICAgICAgICAgICAgbkFsbCsrOwogICAgICAgICAgICBpZiAoaXNFaWdodGVlbiAmJiBob2xlTnVtIDw9IHR1cm4peyBvdXRQICs9IHB0czsgbk91dCsrOyB9IGVsc2UgeyBpblAgKz0gcHRzOyBuSW4rKzsgfQogICAgICAgICAgfQogICAgICAgICAgaWYgKGlzRWlnaHRlZW4gJiYgaG9sZU51bSA9PT0gdHVybikgcHRzQ2VsbHMgKz0gYDx0ZCBjbGFzcz0ibmV0Ym94IHN1bSI+JHtuT3V0ID8gb3V0UCA6ICcmbmRhc2g7J308L3RkPjx0ZCBjbGFzcz0ibmV0Ym94IGluaXQiPjwvdGQ+YDsKICAgICAgICB9KTsKICAgICAgICBpZiAoaXNFaWdodGVlbikgcHRzQ2VsbHMgKz0gYDx0ZCBjbGFzcz0ibmV0Ym94IHN1bSI+JHtuSW4gPyBpblAgOiAnJm5kYXNoOyd9PC90ZD5gOwogICAgICAgIHB0c0NlbGxzICs9IGA8dGQgY2xhc3M9Im5ldGJveCBzdW0gdG90Ij4ke25BbGwgPyAob3V0UCArIGluUCkgOiAnJm5kYXNoOyd9PC90ZD5gOwogICAgICAgIGxldCBwbVRleHQgPSAnJm5kYXNoOycsIHBtQ2xhc3MgPSAnJzsKICAgICAgICBpZiAobkFsbCA9PT0gbnVtSG9sZXMpeyAgIC8vIG9ubHkgb25jZSBldmVyeSBob2xlIGhhcyBhIHNjb3JlCiAgICAgICAgICBjb25zdCBkaWZmID0gKG91dFAgKyBpblApIC0gcXVvdGE7CiAgICAgICAgICBwbVRleHQgPSBkaWZmID4gMCA/ICcrJyArIGRpZmYgOiAoZGlmZiA9PT0gMCA/ICdFJyA6IFN0cmluZyhkaWZmKSk7CiAgICAgICAgICBwbUNsYXNzID0gZGlmZiA+IDAgPyAnIHBvcycgOiAoZGlmZiA8IDAgPyAnIG5lZycgOiAnJyk7CiAgICAgICAgfQogICAgICAgIHB0c0NlbGxzICs9IGA8dGQgY2xhc3M9Im5ldGJveCBzdW0gcG0ke3BtQ2xhc3N9Ij4ke3BtVGV4dH08L3RkPmA7CiAgICAgICAgcm93SHRtbCArPSBgPHRyIGNsYXNzPSJuZXRyb3cgcHRzcm93Ij48dGQgY2xhc3M9InBuYW1lIG5ldGxhYmVsIj5wdHM8L3RkPiR7cHRzQ2VsbHN9PC90cj5gOwogICAgICB9CiAgICAgIHJldHVybiByb3dIdG1sOwogICAgfSk7CgogICAgY29uc3QgcGFyUm93ID0gYDx0cj48dGQgY2xhc3M9InBuYW1lIj48c3Ryb25nPlBhcjwvc3Ryb25nPjwvdGQ+JHtwYXJSb3dDZWxscygpfTwvdHI+YDsKCiAgICBsZXQgYm9keVJvd3M7CiAgICBpZiAocGxheWVyUm93cy5sZW5ndGggPj0gMyl7CiAgICAgIGJvZHlSb3dzID0gWwogICAgICAgIC4uLnBsYXllclJvd3Muc2xpY2UoMCwgMiksCiAgICAgICAgYmxhbmtTcGFjZXJSb3coKSwKICAgICAgICBwYXJSb3csCiAgICAgICAgYmxhbmtTcGFjZXJSb3coKSwKICAgICAgICAuLi5wbGF5ZXJSb3dzLnNsaWNlKDIpCiAgICAgIF07CiAgICB9IGVsc2UgewogICAgICBib2R5Um93cyA9IFsuLi5wbGF5ZXJSb3dzLCBibGFua1NwYWNlclJvdygpLCBwYXJSb3csIGJsYW5rU3BhY2VyUm93KCldOwogICAgfQoKICAgIGNvbnN0IGNvbGdyb3VwID0gKCgpID0+IHsKICAgICAgbGV0IGcgPSAnPGNvbCBjbGFzcz0ibmFtZWNvbCI+JzsKICAgICAgY29scy5mb3JFYWNoKGMgPT4gewogICAgICAgIGcgKz0gJzxjb2w+JzsKICAgICAgICBpZiAoaXNFaWdodGVlbiAmJiBwYXJzZUludChjLmxhYmVsLDEwKSA9PT0gdHVybikgZyArPSAnPGNvbCBjbGFzcz0idHVybmNvbCI+PGNvbCBjbGFzcz0iaW5pdGNvbCI+JzsKICAgICAgfSk7CiAgICAgIGlmIChpc0VpZ2h0ZWVuKSBnICs9ICc8Y29sIGNsYXNzPSJ0dXJuY29sIj4nOwogICAgICBnICs9ICc8Y29sIGNsYXNzPSJ0dXJuY29sIj4nOwogICAgICBpZiAoaGFzUG0pIGcgKz0gJzxjb2wgY2xhc3M9InBtY29sIj4nOwogICAgICByZXR1cm4gYDxjb2xncm91cD4ke2d9PC9jb2xncm91cD5gOwogICAgfSkoKTsKCiAgICByZXR1cm4gYAogICAgICA8ZGl2IGNsYXNzPSJwYWdldG9wIj4KICAgICAgICA8ZGl2IGNsYXNzPSJjYXJkaGVhZCI+JHtlc2NhcGVIdG1sKHJvdW5kLmNvdXJzZU5hbWUpfSAmbmRhc2g7ICR7ZXNjYXBlSHRtbChyb3VuZC50ZWVUaW1lKX08L2Rpdj4KICAgICAgICA8ZGl2IGNsYXNzPSJwYWdlaGVhZGluZyI+JHtwYWdlSGVhZGluZ1RleHQgfHwgJyd9PC9kaXY+CiAgICAgIDwvZGl2PgogICAgICA8dGFibGUgY2xhc3M9ImNhcmR0YWJsZSI+CiAgICAgICAgJHtjb2xncm91cH0KICAgICAgICA8dGhlYWQ+CiAgICAgICAgICA8dHI+PHRoIGNsYXNzPSJ0aCBuYW1lSGVhZCI+SG9sZTwvdGg+JHtob2xlSGVhZGVyQ2VsbHMoaSA9PiBjb2xzW2ldLmxhYmVsKX08L3RyPgogICAgICAgIDwvdGhlYWQ+CiAgICAgICAgPHRib2R5PgogICAgICAgICAgJHtib2R5Um93cy5qb2luKCcnKX0KICAgICAgICAgICR7YmxhbmtTcGFjZXJSb3coKX0KICAgICAgICAgICR7c2lSb3dzfQogICAgICAgIDwvdGJvZHk+CiAgICAgIDwvdGFibGU+CiAgICAgICR7aGFzUG0gPyBgPGRpdiBjbGFzcz0iY2FyZGtleSI+cHRzID0gcG9pbnRzIHBlciBob2xlIChlYWdsZSBvciBiZXR0ZXIgOCwgYmlyZGllIDQsIHBhciAyLCBib2dleSAxLCBkb3VibGUgYm9nZXkgb3Igd29yc2UgMCkgJm5ic3A7Jm5ic3A7ICsvLSA9IHRvdGFsIHBvaW50cyBtaW51cyBxdW90YTwvZGl2PmAgOiAoKHJvdW5kLmlzUXVvdGEgfHwgIXNjb3JlZCkgPyAnJyA6IGA8ZGl2IGNsYXNzPSJjYXJka2V5Ij4mIzk2Nzk7IDEgc3Ryb2tlICZuYnNwOyZuYnNwOyAmIzk2Nzk7JiM5Njc5OyAyIHN0cm9rZXMgJm5ic3A7Jm5ic3A7IHN0cm9rZXMgc2hvd24gcGVyIHBsYXllcidzIHRlZSAmbmJzcDsmbmJzcDsgbmV0IHNjb3JlIHNob3duIGJlbG93IGVhY2ggcGxheWVyJ3MgZ3Jvc3MgbGluZTwvZGl2PmApfQogICAgICA8ZGl2IGNsYXNzPSJmb3JtYXRmb290ZXIiPkZvcm1hdDogJHtlc2NhcGVIdG1sKHJvdW5kLmZvcm1hdE5hbWUgfHwgJ05vdCBzcGVjaWZpZWQnKX08L2Rpdj4KICAgICAgJHsoKCkgPT4geyBjb25zdCB0ID0gdGVlUmF0aW5nRm9vdGVyVGV4dChyb3VuZCk7IHJldHVybiB0ID8gYDxkaXYgY2xhc3M9InRlZWZvb3RlciI+JHtlc2NhcGVIdG1sKHQpfTwvZGl2PmAgOiAnJzsgfSkoKX0KICAgICAgJHsoKCkgPT4geyBjb25zdCB0ID0gdGVhbXNGb290ZXJUZXh0KHJvdW5kKTsgcmV0dXJuIHQgPyBgPGRpdiBjbGFzcz0idGVhbXNmb290ZXIiPjxzdHJvbmc+VGVhbXM6PC9zdHJvbmc+ICR7ZXNjYXBlSHRtbCh0KX08L2Rpdj5gIDogJyc7IH0pKCl9CiAgICAgICR7KCgpID0+IHsKICAgICAgICBjb25zdCBjdHBIb2xlc1RoaXNDYXJkID0gY29scy5tYXAoYyA9PiBjLmxhYmVsKS5maWx0ZXIobGFiZWwgPT4gaXNDdHBIb2xlKHJvdW5kLmNvdXJzZU5hbWUsIGxhYmVsKSk7CiAgICAgICAgcmV0dXJuIGN0cEhvbGVzVGhpc0NhcmQubGVuZ3RoID8gYDxkaXYgY2xhc3M9ImN0cGZvb3RlciI+PHN0cm9uZz5DbG9zZXN0IHRvIHBpbjo8L3N0cm9uZz4gSG9sZSAke2N0cEhvbGVzVGhpc0NhcmQuam9pbignLCBIb2xlICcpfSAmbmRhc2g7IEdyb3NzIHBhciByZXF1aXJlZCB0byB2YWxpZGF0ZTwvZGl2PmAgOiAnJzsKICAgICAgfSkoKX0KICAgICAgJHtnYW1lRGV0YWlsc1RleHQgPyBgPGRpdiBjbGFzcz0iZ2FtZWRldGFpbHMiPiR7Z2FtZURldGFpbHNUZXh0fTwvZGl2PmAgOiAnJ30KICAgICAgPGRpdiBjbGFzcz0ic3RkbXNnIj5Db21wbGV0ZSBzY29yZWNhcmQgZm9yIGFsbCBwbGF5ZXJzIGFuZCBjb25maXJtIGdyb3NzIHRvdGFscyBtYXRjaCBTcXVhYmJpdDwvZGl2PgogICAgYDsKICB9CgogIGZ1bmN0aW9uIHJlbmRlckFuZFByaW50KHBhZ2VzSHRtbCl7CiAgICBjb25zdCBwcmludEFyZWEgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgncHJpbnRBcmVhJyk7CiAgICBwcmludEFyZWEuaW5uZXJIVE1MID0gcGFnZXNIdG1sOwogICAgcmVxdWVzdEFuaW1hdGlvbkZyYW1lKCgpID0+IHsKICAgICAgcmVxdWVzdEFuaW1hdGlvbkZyYW1lKCgpID0+IHsgd2luZG93LnByaW50KCk7IH0pOwogICAgfSk7CiAgfQoKICBwcmludEJsYW5rQnRuLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgKCkgPT4gewogICAgY29uc3QgcGFnZUhlYWRpbmdUZXh0ID0gREFUQS5jdXN0b21IZWFkaW5nID8gZXNjYXBlSHRtbChEQVRBLmN1c3RvbUhlYWRpbmcpIDogJyc7CiAgICBjb25zdCBnYW1lRGV0YWlsc1RleHQgPSBEQVRBLmdhbWVEZXRhaWxzID8gZXNjYXBlSHRtbChEQVRBLmdhbWVEZXRhaWxzKSA6ICcnOwogICAgY29uc3QgcGFnZXMgPSBEQVRBLnJvdW5kcy5tYXAocm91bmQgPT4KICAgICAgYDxkaXYgY2xhc3M9InBhZ2UiPiR7YnVpbGRDb21wYWN0Q2FyZEh0bWwocm91bmQsIHBhZ2VIZWFkaW5nVGV4dCwgZ2FtZURldGFpbHNUZXh0LCAnYmxhbmsnKX08L2Rpdj5gCiAgICApLmpvaW4oJycpOwogICAgcmVuZGVyQW5kUHJpbnQocGFnZXMpOwogIH0pOwoKICBwcmludFNjb3JlZEJ0bi5hZGRFdmVudExpc3RlbmVyKCdjbGljaycsICgpID0+IHsKICAgIGNvbnN0IHBhZ2VIZWFkaW5nVGV4dCA9IERBVEEuY3VzdG9tSGVhZGluZyA/IGVzY2FwZUh0bWwoREFUQS5jdXN0b21IZWFkaW5nKSA6ICcnOwogICAgY29uc3QgZ2FtZURldGFpbHNUZXh0ID0gREFUQS5nYW1lRGV0YWlscyA/IGVzY2FwZUh0bWwoREFUQS5nYW1lRGV0YWlscykgOiAnJzsKICAgIGNvbnN0IHBhZ2VzID0gREFUQS5yb3VuZHMubWFwKHJvdW5kID0+CiAgICAgIGA8ZGl2IGNsYXNzPSJwYWdlIj4ke2J1aWxkQ29tcGFjdENhcmRIdG1sKHJvdW5kLCBwYWdlSGVhZGluZ1RleHQsIGdhbWVEZXRhaWxzVGV4dCwgJ3Njb3JlZCcpfTwvZGl2PmAKICAgICkuam9pbignJyk7CiAgICByZW5kZXJBbmRQcmludChwYWdlcyk7CiAgfSk7CgogIG5ldFRvZ2dsZS5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLCAoKSA9PiB7CiAgICBkb2N1bWVudC5xdWVyeVNlbGVjdG9yQWxsKCcucm93LW5ldCcpLmZvckVhY2gociA9PiB7CiAgICAgIHIuc3R5bGUuZGlzcGxheSA9IG5ldFRvZ2dsZS5jaGVja2VkID8gJycgOiAnbm9uZSc7CiAgICB9KTsKICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy5zY29yZS1jZWxsIC5kb3RzJykuZm9yRWFjaChkID0+IHsKICAgICAgZC5zdHlsZS5kaXNwbGF5ID0gbmV0VG9nZ2xlLmNoZWNrZWQgPyAnZmxleCcgOiAnbm9uZSc7CiAgICB9KTsKICB9KTsKCiAgZnVuY3Rpb24gcmVuZGVyKCl7CiAgICBldmVudFN1YmhlYWQudGV4dENvbnRlbnQgPSBEQVRBLmV2ZW50TGFiZWwgPyBEQVRBLmV2ZW50TGFiZWwgOiAnU3F1YWJiaXQgZXZlbnQnOwogICAgcm91bmRUYWJzLmlubmVySFRNTCA9ICcnOwogICAgcm91bmRzQ29udGFpbmVyLmlubmVySFRNTCA9ICcnOwogICAgREFUQS5yb3VuZHMuZm9yRWFjaCgocm91bmQsIGlkeCkgPT4gewogICAgICBjb25zdCB0YWJCdG4gPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KCdidXR0b24nKTsKICAgICAgdGFiQnRuLmNsYXNzTmFtZSA9ICd0YWItYnRuJyArIChpZHggPT09IDAgPyAnIGFjdGl2ZScgOiAnJyk7CiAgICAgIHRhYkJ0bi50ZXh0Q29udGVudCA9IHJvdW5kLnRlZVRpbWUgPyByb3VuZC50ZWVUaW1lLnJlcGxhY2UoL15bQS1aYS16XSsgXGQrLCBcZCsgLywgJycpIDogKCdSb3VuZCAnICsgKGlkeCArIDEpKTsKICAgICAgdGFiQnRuLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgKCkgPT4gewogICAgICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy50YWItYnRuJykuZm9yRWFjaChiID0+IGIuY2xhc3NMaXN0LnJlbW92ZSgnYWN0aXZlJykpOwogICAgICAgIGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3JBbGwoJy5yb3VuZC1ibG9jaycpLmZvckVhY2goYiA9PiBiLmNsYXNzTGlzdC5yZW1vdmUoJ2FjdGl2ZScpKTsKICAgICAgICB0YWJCdG4uY2xhc3NMaXN0LmFkZCgnYWN0aXZlJyk7CiAgICAgICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2Jsb2NrLScgKyBpZHgpLmNsYXNzTGlzdC5hZGQoJ2FjdGl2ZScpOwogICAgICAgIGFjdGl2ZVJvdW5kSW5kZXggPSBpZHg7CiAgICAgIH0pOwogICAgICByb3VuZFRhYnMuYXBwZW5kQ2hpbGQodGFiQnRuKTsKCiAgICAgIGNvbnN0IGJsb2NrID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnZGl2Jyk7CiAgICAgIGJsb2NrLmNsYXNzTmFtZSA9ICdyb3VuZC1ibG9jaycgKyAoaWR4ID09PSAwID8gJyBhY3RpdmUnIDogJycpOwogICAgICBibG9jay5pZCA9ICdibG9jay0nICsgaWR4OwogICAgICBibG9jay5zZXRBdHRyaWJ1dGUoJ2RhdGEtcm91bmRpZCcsIHJvdW5kLmlkKTsKICAgICAgYmxvY2suaW5uZXJIVE1MID0gcmVuZGVyUm91bmRUYWJsZShyb3VuZCk7CiAgICAgIHJvdW5kc0NvbnRhaW5lci5hcHBlbmRDaGlsZChibG9jayk7CiAgICB9KTsKICB9CgogIHJlbmRlcigpOwp9KSgpOwo8L3NjcmlwdD4KPC9ib2R5Pgo8L2h0bWw+Cg==";
+
+  function b64ToUtf8(b64str){
+    return decodeURIComponent(Array.prototype.map.call(atob(b64str), c =>
+      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+    ).join(''));
+  }
+
+  function exportPlayerView(){
+    if (!currentData || !currentData.rounds.length){
+      alert('Load a Squabbit CSV first.');
+      return;
+    }
+    const payload = {
+      eventLabel: currentData.eventLabel,
+      rounds: currentData.rounds,
+      siOverrides: siOverrides,
+      ctpHoles: ctpHoles,
+      teeRatings: teeRatings,
+      teams: currentData.teams || [],
+      customHeading: customHeadingInput.value || '',
+      gameDetails: gameDetailsInput.value || ''
+    };
+    const templateHtml = b64ToUtf8(VIEWER_TEMPLATE_B64);
+    const marker = '/*__DATA_PLACEHOLDER__*/{}/*__END_DATA_PLACEHOLDER__*/';
+    const finalHtml = templateHtml.replace(marker, JSON.stringify(payload));
+    const blob = new Blob([finalHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const safeLabel = (currentData.eventLabel || 'scorecard').replace(/[^\w-]+/g, '_');
+    a.href = url;
+    a.download = safeLabel + '-player-view.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function buildCompactCardHtml(round, pageHeadingText, gameDetailsText, mode){
+    mode = mode || 'blank';
+    const scored = mode === 'scored';
+    const numHoles = round.numHoles;
+    const cols = round.holeCols;
+    const isEighteen = numHoles === 18;
+    const turn = isEighteen ? 9 : numHoles;
+    const teesInRound = distinctTees(round);
+    const hasPm = scored && round.isQuota;   // points row + +/- column on scored Quota cards
+
+    // Null-safe running sum: real CSV Out/In/Total win if present; otherwise sum only
+    // the holes that actually have a score, and show a dash if nothing's been scored yet.
+    // "Neal Hoar" -> "NH"; ignores Jr./Sr./II-IV suffixes; single names give one letter.
+    function playerInitials(name){
+      const toks = String(name || '').trim().split(/\s+/).filter(Boolean);
+      while (toks.length > 2 && /^(jr\.?|sr\.?|ii|iii|iv)$/i.test(toks[toks.length - 1])) toks.pop();
+      if (!toks.length) return '';
+      const first = toks[0][0];
+      const last = toks.length > 1 ? toks[toks.length - 1][0] : '';
+      return (first + last).toUpperCase();
+    }
+    function playerGrossSums(p){
+      let outRun = 0, inRun = 0, outCount = 0, inCount = 0;
+      p.gross.forEach((score, i) => {
+        if (score === null) return;
+        const holeNum = parseInt(cols[i].label,10);
+        if (isEighteen && holeNum <= turn) { outRun += score; outCount++; }
+        else { inRun += score; inCount++; }
+      });
+      const out = p.grossOut !== null && p.grossOut !== undefined ? p.grossOut : (outCount > 0 ? outRun : null);
+      const inn = p.grossIn !== null && p.grossIn !== undefined ? p.grossIn : (inCount > 0 ? inRun : null);
+      const tot = p.grossTotal !== null && p.grossTotal !== undefined ? p.grossTotal : ((outCount + inCount) > 0 ? (outRun + inRun) : null);
+      return { out, inn, tot };
+    }
+    function playerNetSums(p, playerSi){
+      let outRun = 0, inRun = 0, outCount = 0, inCount = 0;
+      const netVals = p.gross.map((score, i) => {
+        if (score === null) return null;
+        const strokes = strokesForHole(p.handicap, playerSi[i], numHoles);
+        const net = score - strokes;
+        const holeNum = parseInt(cols[i].label,10);
+        if (isEighteen && holeNum <= turn) { outRun += net; outCount++; }
+        else { inRun += net; inCount++; }
+        return net;
+      });
+      const out = outCount > 0 ? outRun : null;
+      const inn = inCount > 0 ? inRun : null;
+      const tot = (outCount + inCount) > 0 ? (outRun + inRun) : null;
+      return { netVals, out, inn, tot };
+    }
+
+    // Same as headerCells but leaves the OUT/IN/TOT columns blank — used for S.I. rows,
+    // where a running total doesn't mean anything.
+    function holeOnlyCells(getVal){
+      let out = '';
+      cols.forEach((c, i) => {
+        out += `<td class="th">${getVal(i)}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) out += `<td class="th turn"></td><td class="th init"></td>`;
+      });
+      if (isEighteen) out += `<td class="th turn"></td>`;
+      out += `<td class="th turn"></td>`;
+      if (hasPm) out += `<td class="th turn"></td>`;
+      return out;
+    }
+
+    // Hole-number header row.
+    function holeHeaderCells(getVal){
+      let out = '';
+      cols.forEach((c, i) => {
+        const ctpClass = isCtpHole(round.courseName, c.label) ? ' ctp-hole' : '';
+        out += `<td class="th${ctpClass}">${getVal(i)}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) out += `<td class="th turn">OUT</td><td class="th init">INIT</td>`;
+      });
+      if (isEighteen) out += `<td class="th turn">IN</td>`;
+      out += `<td class="th turn">TOT</td>`;
+      if (hasPm) out += `<td class="th turn">+/-</td>`;
+      return out;
+    }
+
+    // Par row: hole values plus real front-9 / back-9 / total sums (not text labels).
+    let frontPar = 0, backPar = 0;
+    round.par.forEach((v, i) => {
+      const holeNum = parseInt(cols[i].label,10);
+      if (isEighteen && holeNum <= turn) frontPar += v; else backPar += v;
+    });
+    function parRowCells(){
+      let out = '';
+      cols.forEach((c, i) => {
+        out += `<td class="th">${round.par[i]}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) out += `<td class="th turn">${frontPar}</td><td class="th init"></td>`;
+      });
+      if (isEighteen) out += `<td class="th turn">${backPar}</td>`;
+      out += `<td class="th turn">${frontPar + backPar}</td>`;
+      if (hasPm) out += `<td class="th turn"></td>`;
+      return out;
+    }
+
+    function blankSpacerRow(){
+      let cells = '';
+      cols.forEach((c) => {
+        cells += `<td class="blankbox"></td>`;
+        if (isEighteen && parseInt(c.label,10) === turn) cells += `<td class="blankbox sum"></td><td class="blankbox init"></td>`;
+      });
+      if (isEighteen) cells += `<td class="blankbox sum"></td>`;
+      cells += `<td class="blankbox sum tot"></td>`;
+      if (hasPm) cells += `<td class="blankbox sum"></td>`;
+      return `<tr><td class="pname">&nbsp;</td>${cells}</tr>`;
+    }
+
+    const siRowGroups = computeSiRowGroups(round, teesInRound);
+    const siRows = siRowGroups.map(g =>
+      `<tr><th class="th nameHead">${escapeHtml(g.label)}</th>${holeOnlyCells(i => g.si[i])}</tr>`
+    ).join('');
+
+    const playerRows = round.players.map(p => {
+      const playerSi = effectiveSi(round, p.tee);
+      let holeCells = '';
+      cols.forEach((c, i) => {
+        const strokes = strokesForHole(p.handicap, playerSi[i], numHoles);
+        const dots = (strokes > 0 && !round.isQuota)
+          ? `<span class="pdots">${'<i></i>'.repeat(Math.min(strokes,2))}</span>`
+          : '';
+        const score = p.gross[i];
+        const parVal = round.par[i];
+        // diagonal line through the box; a scored number sits in the lower-right half, ringed or boxed for birdies / bogeys
+        let scClass = 'sc';
+        if (scored && score !== null && parVal){
+          if (score <= parVal - 1) scClass += ' birdie';
+          else if (score >= parVal + 1) scClass += ' bogey';
+        }
+        const cellContent = scored ? `<span class="${scClass}">${score !== null ? score : '&ndash;'}</span>` : '';
+        holeCells += `<td class="blankbox diag">${cellContent}${dots}</td>`;
+        if (isEighteen && parseInt(c.label,10) === turn){
+          const sums = scored ? playerGrossSums(p) : null;
+          holeCells += `<td class="blankbox sum">${scored ? (sums.out !== null ? sums.out : '&ndash;') : ''}</td><td class="blankbox init">${escapeHtml(playerInitials(p.name))}</td>`;
+        }
+      });
+      const finalSums = scored ? playerGrossSums(p) : null;
+      if (isEighteen) holeCells += `<td class="blankbox sum">${scored ? (finalSums.inn !== null ? finalSums.inn : '&ndash;') : ''}</td>`;
+      holeCells += `<td class="blankbox sum tot">${scored ? (finalSums.tot !== null ? finalSums.tot : '&ndash;') : ''}</td>`;
+      if (hasPm) holeCells += `<td class="blankbox sum pmblank"></td>`;
+      const hcpOrQuota = round.isQuota ? `Quota ${Math.round(36 - p.handicap)}` : p.handicap;
+      let rowHtml = `<tr><td class="pname">${escapeHtml(p.name)} <span class="pmeta">${escapeHtml((p.tee||'').replace(/\s*\btee$/i, ''))}&middot;${hcpOrQuota}</span></td>${holeCells}</tr>`;
+
+      if (scored && !round.isQuota){
+        const netData = playerNetSums(p, playerSi);
+        let netCells = '';
+        cols.forEach((c, i) => {
+          const nv = netData.netVals[i];
+          netCells += `<td class="netbox">${nv !== null ? nv : '&ndash;'}</td>`;
+          if (isEighteen && parseInt(c.label,10) === turn){
+            netCells += `<td class="netbox sum">${netData.out !== null ? netData.out : '&ndash;'}</td><td class="netbox init"></td>`;
+          }
+        });
+        if (isEighteen) netCells += `<td class="netbox sum">${netData.inn !== null ? netData.inn : '&ndash;'}</td>`;
+        netCells += `<td class="netbox sum tot">${netData.tot !== null ? netData.tot : '&ndash;'}</td>`;
+        rowHtml += `<tr class="netrow"><td class="pname netlabel">net</td>${netCells}</tr>`;
+      }
+      if (hasPm){
+        const quota = Math.round(36 - p.handicap);
+        let outP = 0, inP = 0, nOut = 0, nIn = 0, nAll = 0;
+        let ptsCells = '';
+        cols.forEach((c, i) => {
+          const pts = quotaPoints(p.gross[i], round.par[i]);
+          const holeNum = parseInt(c.label,10);
+          ptsCells += `<td class="netbox${pts === 0 ? ' pt0' : (pts >= 4 ? ' pt4' : '')}">${pts === null ? '&ndash;' : pts}</td>`;
+          if (pts !== null){
+            nAll++;
+            if (isEighteen && holeNum <= turn){ outP += pts; nOut++; } else { inP += pts; nIn++; }
+          }
+          if (isEighteen && holeNum === turn) ptsCells += `<td class="netbox sum">${nOut ? outP : '&ndash;'}</td><td class="netbox init"></td>`;
+        });
+        if (isEighteen) ptsCells += `<td class="netbox sum">${nIn ? inP : '&ndash;'}</td>`;
+        ptsCells += `<td class="netbox sum tot">${nAll ? (outP + inP) : '&ndash;'}</td>`;
+        let pmText = '&ndash;', pmClass = '';
+        if (nAll === numHoles){   // only once every hole has a score
+          const diff = (outP + inP) - quota;
+          pmText = diff > 0 ? '+' + diff : (diff === 0 ? 'E' : String(diff));
+          pmClass = diff > 0 ? ' pos' : (diff < 0 ? ' neg' : '');
+        }
+        ptsCells += `<td class="netbox sum pm${pmClass}">${pmText}</td>`;
+        rowHtml += `<tr class="netrow ptsrow"><td class="pname netlabel">pts</td>${ptsCells}</tr>`;
+      }
+      return rowHtml;
+    });
+
+    const parRow = `<tr><td class="pname"><strong>Par</strong></td>${parRowCells()}</tr>`;
+
+    // Insert the Par row (flanked by two blank spacer rows) between the 2nd and 3rd player.
+    let bodyRows;
+    if (playerRows.length >= 3){
+      bodyRows = [
+        ...playerRows.slice(0, 2),
+        blankSpacerRow(),
+        parRow,
+        blankSpacerRow(),
+        ...playerRows.slice(2)
+      ];
+    } else {
+      bodyRows = [...playerRows, blankSpacerRow(), parRow, blankSpacerRow()];
+    }
+
+    const colgroup = (() => {
+      let g = '<col class="namecol">';
+      cols.forEach(c => {
+        g += '<col>';
+        if (isEighteen && parseInt(c.label,10) === turn) g += '<col class="turncol"><col class="initcol">';
+      });
+      if (isEighteen) g += '<col class="turncol">';
+      g += '<col class="turncol">';
+      if (hasPm) g += '<col class="pmcol">';
+      return `<colgroup>${g}</colgroup>`;
+    })();
+
+    return `
+      <div class="pagetop">
+        <div class="cardhead">${escapeHtml(round.courseName)} &ndash; ${escapeHtml(round.teeTime)}</div>
+        <div class="pageheading">${pageHeadingText || ''}</div>
+      </div>
+      <table class="cardtable">
+        ${colgroup}
+        <thead>
+          <tr><th class="th nameHead">Hole</th>${holeHeaderCells(i => cols[i].label)}</tr>
+        </thead>
+        <tbody>
+          ${bodyRows.join('')}
+          ${blankSpacerRow()}
+          ${siRows}
+        </tbody>
+      </table>
+      ${hasPm ? `<div class="cardkey">pts = points per hole (eagle or better 8, birdie 4, par 2, bogey 1, double bogey or worse 0) &nbsp;&nbsp; +/- = total points minus quota</div>` : ((round.isQuota || !scored) ? '' : `<div class="cardkey">&#9679; 1 stroke &nbsp;&nbsp; &#9679;&#9679; 2 strokes &nbsp;&nbsp; strokes shown per player's tee &nbsp;&nbsp; net score shown below each player's gross line</div>`)}
+      <div class="formatfooter">Format: ${escapeHtml(round.formatName || 'Not specified')}</div>
+      ${(() => { const t = teeRatingFooterText(round); return t ? `<div class="teefooter">${escapeHtml(t)}</div>` : ''; })()}
+      ${(() => { const t = teamsFooterText(round); return t ? `<div class="teamsfooter"><strong>Teams:</strong> ${escapeHtml(t)}</div>` : ''; })()}
+      ${(() => {
+        const ctpHolesThisCard = cols.map(c => c.label).filter(label => isCtpHole(round.courseName, label));
+        return ctpHolesThisCard.length ? `<div class="ctpfooter"><strong>Closest to pin:</strong> Hole ${ctpHolesThisCard.join(', Hole ')} &ndash; Gross par required to validate</div>` : '';
+      })()}
+      ${gameDetailsText ? `<div class="gamedetails">${gameDetailsText}</div>` : ''}
+      <div class="stdmsg">Complete scorecard for all players and confirm gross totals match Squabbit</div>
+    `;
+  }
+
+  function printAllBlankCards(){
+    if (!currentData || !currentData.rounds.length) return;
+    const customHeadingVal = (customHeadingInput.value || '').trim();
+    const pageHeadingText = customHeadingVal ? escapeHtml(customHeadingVal) : '';
+    const gameDetailsVal = (gameDetailsInput.value || '').trim();
+    const gameDetailsText = gameDetailsVal ? escapeHtml(gameDetailsVal) : '';
+    const pages = currentData.rounds.map(round =>
+      `<div class="page">${buildCompactCardHtml(round, pageHeadingText, gameDetailsText, 'blank')}</div>`
+    ).join('');
+    renderAndPrint(pages);
+  }
+
+  function printAllScoredCards(){
+    if (!currentData || !currentData.rounds.length) return;
+    const customHeadingVal = (customHeadingInput.value || '').trim();
+    const pageHeadingText = customHeadingVal ? escapeHtml(customHeadingVal) : '';
+    const gameDetailsVal = (gameDetailsInput.value || '').trim();
+    const gameDetailsText = gameDetailsVal ? escapeHtml(gameDetailsVal) : '';
+    const pages = currentData.rounds.map(round =>
+      `<div class="page">${buildCompactCardHtml(round, pageHeadingText, gameDetailsText, 'scored')}</div>`
+    ).join('');
+    renderAndPrint(pages);
+  }
+
+  // Prints from the current page directly (no new window/tab) — far more reliable than
+  // window.open on mobile browsers, which frequently block or silently swallow popups.
+  function renderAndPrint(pagesHtml){
+    const printArea = document.getElementById('printArea');
+    printArea.innerHTML = pagesHtml;
+    // Give the browser a paint frame to lay out the print content before invoking print.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        window.print();
+      });
+    });
+  }
+
+  function rerenderKeepingTab(){
+    const keep = activeRoundIndex;
+    render(currentData);
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const blocks = document.querySelectorAll('.round-block');
+    if (tabBtns[keep]){
+      tabBtns.forEach(b => b.classList.remove('active'));
+      blocks.forEach(b => b.classList.remove('active'));
+      tabBtns[keep].classList.add('active');
+      if (blocks[keep]) blocks[keep].classList.add('active');
+      activeRoundIndex = keep;
+    }
+  }
+
+  dropzone.addEventListener('click', () => fileInput.click());
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => {
+    if (e.target.files.length) handleFile(e.target.files[0]);
+  });
+  newFileBtn.addEventListener('click', () => {
+    fileInput.value = '';
+    dropzone.style.display = 'block';
+    controls.style.display = 'none';
+    legend.style.display = 'none';
+    roundsContainer.innerHTML = '';
+    eventSubhead.textContent = 'Upload a Squabbit event export to get started';
+    errBox.style.display = 'none';
+    lastFileBanner.style.display = 'none';
+  });
+  netToggle.addEventListener('change', () => {
+    document.querySelectorAll('.row-net').forEach(r => {
+      r.style.display = netToggle.checked ? '' : 'none';
+    });
+    document.querySelectorAll('.score-cell .dots').forEach(d => {
+      d.style.display = netToggle.checked ? 'flex' : 'none';
+    });
+  });
+
+  function showError(msg){
+    errBox.textContent = msg;
+    errBox.style.display = 'block';
+  }
+
+  // ---------- Last-file cache (so re-printing doesn't require a re-upload) ----------
+  const LAST_CSV_KEY = 'sgScorecardLastCsv';
+  const lastFileBanner = document.getElementById('lastFileBanner');
+
+  function saveLastCsv(filename, text){
+    try {
+      localStorage.setItem(LAST_CSV_KEY, JSON.stringify({ filename, text, savedAt: Date.now() }));
+    } catch (e) { /* storage full or unavailable — not fatal, just won't be cached */ }
+  }
+  function loadLastCsv(){
+    try { return JSON.parse(localStorage.getItem(LAST_CSV_KEY)); }
+    catch (e) { return null; }
+  }
+  function formatSavedAt(ts){
+    try { return new Date(ts).toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }); }
+    catch (e) { return ''; }
+  }
+
+  function tryLoadCachedFile(){
+    const cached = loadLastCsv();
+    if (!cached || !cached.text) return;
+    try {
+      const data = parseSquabbitCsv(cached.text);
+      if (!data.rounds.length) return;
+      parsedRounds = data.rounds;
+      render(data);
+      lastFileBanner.style.display = 'flex';
+      lastFileBanner.innerHTML = `<span>Showing last file: <strong>${escapeHtml(cached.filename || 'previous upload')}</strong> · uploaded ${escapeHtml(formatSavedAt(cached.savedAt))}</span>`;
+      const dismissBtn = document.createElement('button');
+      dismissBtn.textContent = 'Dismiss';
+      dismissBtn.addEventListener('click', () => { lastFileBanner.style.display = 'none'; });
+      lastFileBanner.appendChild(dismissBtn);
+    } catch (e) {
+      console.error('Could not reload cached file', e);
+    }
+  }
+
+  function handleFile(file){
+    errBox.style.display = 'none';
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const text = e.target.result;
+        const data = parseSquabbitCsv(text);
+        if (!data.rounds.length) {
+          showError("Couldn't find any hole-by-hole scorecard sections in this file. Make sure this is a Squabbit event details export.");
+          return;
+        }
+        parsedRounds = data.rounds;
+        render(data);
+        lastFileBanner.style.display = 'none';
+        saveLastCsv(file.name, text);
+      } catch (err) {
+        console.error(err);
+        showError("Something went wrong reading this file: " + err.message);
+      }
+    };
+    reader.onerror = () => showError('Could not read that file.');
+    reader.readAsText(file);
+  }
+
+  // ---------- CSV parsing ----------
+
+  // Parse a single CSV line respecting quoted fields, return array of trimmed cells.
+  function parseCsvLine(line){
+    const cells = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++){
+      const c = line[i];
+      if (inQuotes){
+        if (c === '"'){
+          if (line[i+1] === '"'){ cur += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          cur += c;
+        }
+      } else {
+        if (c === '"'){ inQuotes = true; }
+        else if (c === ','){ cells.push(cur); cur = ''; }
+        else { cur += c; }
+      }
+    }
+    cells.push(cur);
+    return cells.map(c => c.trim());
+  }
+
+  function isBlankRow(cells){
+    return cells.every(c => c === '');
+  }
+
+  // Team sections look like:  Team,Player,Round 1,Total / "Rodenhiser/Abney",,, / ,Alan Rodenhiser,, / ,Chad Abney,,
+  function parseTeams(rows){
+    const teams = [];
+    const assigned = {};
+    for (let i = 0; i < rows.length; i++){
+      const r = rows[i];
+      if (!(r[0] === 'Team' && r[1] === 'Player')) continue;
+      let j = i + 1;
+      let current = null;
+      while (j < rows.length && !isBlankRow(rows[j])){
+        const row = rows[j];
+        if (row[0]){
+          current = { label: row[0], members: [] };
+          teams.push(current);
+        } else if (row[1] && current){
+          if (!assigned[row[1]]){ current.members.push(row[1]); assigned[row[1]] = true; }
+        }
+        j++;
+      }
+      i = j;
+    }
+    return teams.filter(t => t.members.length);
+  }
+
+  function parseSquabbitCsv(text){
+    const rawLines = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+    const rows = rawLines.map(parseCsvLine);
+
+    // Event title: first non-blank row, typically "June 13,\"Jun 13, 2026\""
+    let eventLabel = '';
+    for (const r of rows){
+      if (!isBlankRow(r)){ eventLabel = r[1] || r[0] || ''; break; }
+    }
+
+    // Players section -> map name -> {handicap, tee}
+    const players = {};
+    const playersIdx = rows.findIndex(r => r[0] === 'Players');
+    if (playersIdx !== -1){
+      const header = rows[playersIdx + 1] || [];
+      const nameCol = header.indexOf('Name');
+      const hcpCol = header.indexOf('Handicap');
+      const teeCol = header.indexOf('Tee');
+      let i = playersIdx + 2;
+      while (i < rows.length && !isBlankRow(rows[i])){
+        const r = rows[i];
+        const name = r[nameCol];
+        if (name) players[name] = { handicap: parseFloat(r[hcpCol]) || 0, tee: r[teeCol] || '' };
+        i++;
+      }
+    }
+
+    // Round-detail blocks: identified by a header row containing "Handicap" in col index 2
+    // and "Hole 1" somewhere in the row.
+    const rounds = [];
+    for (let i = 0; i < rows.length; i++){
+      const r = rows[i];
+      if (r.length > 3 && r[2] === 'Handicap' && r.some(c => c === 'Hole 1')){
+        // The line above this header row is the course/time title row.
+        let titleRow = ['Round', ''];
+        for (let j = i - 1; j >= 0; j--){
+          if (!isBlankRow(rows[j])) { titleRow = rows[j]; break; }
+        }
+        const round = parseRoundBlock(rows, i, titleRow, players);
+        if (round) rounds.push(round);
+      }
+    }
+
+    // Ascending by tee time — parse each round's tee time into a real Date for a correct
+    // chronological sort. Rounds whose tee time doesn't parse fall back to file order.
+    rounds.sort((a, b) => {
+      const da = Date.parse(a.teeTime);
+      const db = Date.parse(b.teeTime);
+      if (isNaN(da) && isNaN(db)) return 0;
+      if (isNaN(da)) return 1;
+      if (isNaN(db)) return -1;
+      return da - db;
+    });
+
+    return { eventLabel, players, rounds, teams: parseTeams(rows) };
+  }
+
+  function parseRoundBlock(rows, headerIdx, titleRow, players){
+    const header = rows[headerIdx];
+    const holeCols = []; // {index, label}
+    let outCol = -1, inCol = -1, totalCol = -1;
+    header.forEach((cell, idx) => {
+      if (/^Hole \d+$/.test(cell)) holeCols.push({ index: idx, label: cell.replace('Hole ', '') });
+      else if (cell === 'Out') outCol = idx;
+      else if (cell === 'In') inCol = idx;
+      else if (cell === 'Total') totalCol = idx;
+    });
+    if (!holeCols.length) return null;
+
+    const siRow = rows[headerIdx + 1];
+    const parRow = rows[headerIdx + 2];
+    if (!siRow || siRow[0] !== 'S.I.' || !parRow || parRow[0] !== 'Par') return null;
+
+    const si = holeCols.map(h => parseInt(siRow[h.index], 10) || 0);
+    const par = holeCols.map(h => parseInt(parRow[h.index], 10) || 0);
+    const numHoles = holeCols.length;
+
+    const playersOut = [];
+    let i = headerIdx + 3;
+    while (i < rows.length){
+      const r = rows[i];
+      if (isBlankRow(r)) break;
+      // A player row has a name in col 0.
+      if (r[0]){
+        const name = r[0];
+        const tee = r[1] || (players[name] ? players[name].tee : '');
+        const gross = holeCols.map(h => {
+          const v = parseInt(r[h.index], 10);
+          return isNaN(v) ? null : v;
+        });
+        const grossOut = outCol !== -1 ? (parseInt(r[outCol], 10) || null) : null;
+        const grossIn = inCol !== -1 ? (parseInt(r[inCol], 10) || null) : null;
+        const grossTotal = totalCol !== -1 ? (parseInt(r[totalCol], 10) || null) : null;
+
+        // Next row (if present, blank col0) holds the format/net row — its 3rd column is
+        // the player's playing handicap for this round (used for net-score strokes, and
+        // for Quota/Team Quota, for deriving quota = 36 - playing handicap).
+        let playingHcp = players[name] ? players[name].handicap : 0;
+        let netRow = null;
+        let formatName = null;
+        const next = rows[i + 1];
+        if (next && next[0] === '' && next[1] && !isBlankRow(next)){
+          const numVal = parseFloat(next[2]);
+          formatName = next[1];
+          if (!isNaN(numVal)) playingHcp = numVal;
+          netRow = next;
+          i++;
+        }
+
+        playersOut.push({
+          name, tee,
+          handicap: playingHcp,
+          gross, grossOut, grossIn, grossTotal,
+          formatName
+        });
+      }
+      i++;
+    }
+
+    const courseName = titleRow[0] || 'Round';
+    const teeTime = titleRow[1] || '';
+
+    // Determine the round's game format (most common non-empty formatName among players).
+    const formatCounts = {};
+    playersOut.forEach(p => {
+      if (p.formatName) formatCounts[p.formatName] = (formatCounts[p.formatName] || 0) + 1;
+    });
+    let roundFormat = null, bestCount = 0;
+    Object.keys(formatCounts).forEach(f => {
+      if (formatCounts[f] > bestCount){ bestCount = formatCounts[f]; roundFormat = f; }
+    });
+    const isQuota = /quota/i.test(roundFormat || '');
+
+    return {
+      id: courseName + '__' + teeTime,
+      courseName, teeTime,
+      holeCols, si, par, numHoles,
+      outCol, inCol, totalCol,
+      players: playersOut,
+      formatName: roundFormat,
+      isQuota
+    };
+  }
+
+  // Standard handicap stroke allocation across a round's stroke-index array.
+  function strokesForHole(handicap, strokeIndex, numHoles){
+    const h = Math.round(handicap);
+    if (h <= 0) return 0;
+    const base = Math.floor(h / numHoles);
+    const remainder = h - base * numHoles;
+    return base + (strokeIndex <= remainder ? 1 : 0);
+  }
+
+  // ---------- Rendering ----------
+
+  function render(data){
+    currentData = data;
+    dropzone.style.display = 'none';
+    controls.style.display = 'flex';
+    legend.style.display = 'flex';
+    roundsContainer.innerHTML = '';
+    roundTabs.innerHTML = '';
+    eventSubhead.textContent = data.eventLabel ? data.eventLabel : 'Squabbit event export';
+
+    data.rounds.forEach((round, idx) => {
+      const tabBtn = document.createElement('button');
+      tabBtn.className = 'tab-btn' + (idx === 0 ? ' active' : '');
+      tabBtn.textContent = round.teeTime ? round.teeTime.replace(/^[A-Za-z]+ \d+, \d+ /, '') : ('Round ' + (idx + 1));
+      tabBtn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.round-block').forEach(b => b.classList.remove('active'));
+        tabBtn.classList.add('active');
+        document.getElementById('block-' + idx).classList.add('active');
+        activeRoundIndex = idx;
+      });
+      roundTabs.appendChild(tabBtn);
+
+      const block = document.createElement('div');
+      block.className = 'round-block' + (idx === 0 ? ' active' : '');
+      block.id = 'block-' + idx;
+      block.setAttribute('data-roundid', round.id);
+      block.innerHTML = renderRoundTable(round);
+      roundsContainer.appendChild(block);
+    });
+  }
+
+  // ---------- Quota points view (Quota / Team Quota rounds) ----------
+  // Points per hole from the gross score vs par: eagle or better 8, birdie 4, par 2, bogey 1, double bogey or worse 0
+  function quotaPoints(score, par){
+    if (score === null || score === undefined || !par) return null;
+    const d = score - par;
+    if (d <= -2) return 8;
+    if (d === -1) return 4;
+    if (d === 0) return 2;
+    if (d === 1) return 1;
+    return 0;
+  }
+
+  const viewModeById = {};   // remembers Scores / Points per round across re-renders
+  roundsContainer.addEventListener('click', e => {
+    const btn = e.target && e.target.closest ? e.target.closest('.vs-btn') : null;
+    if (!btn) return;
+    const block = btn.closest('.round-block');
+    if (!block) return;
+    const view = btn.getAttribute('data-view');
+    viewModeById[block.getAttribute('data-roundid')] = view;
+    block.querySelectorAll('.vs-btn').forEach(b => b.classList.toggle('active', b === btn));
+    block.querySelector('.view-scores').style.display = view === 'scores' ? '' : 'none';
+    block.querySelector('.view-points').style.display = view === 'points' ? 'block' : 'none';
+  });
+
+  function viewSwitchHtml(round){
+    const pts = viewModeById[round.id] === 'points';
+    return `<div class="view-switch"><button type="button" class="vs-btn${pts ? '' : ' active'}" data-view="scores">Scores</button><button type="button" class="vs-btn${pts ? ' active' : ''}" data-view="points">Points</button></div>`;
+  }
+
+  function renderPointsView(round, isActive){
+    const cols = round.holeCols;
+    const is18 = round.numHoles === 18;
+    let html = `<div class="view-points" style="display:${isActive ? 'block' : 'none'}"><div class="card-scroll"><table class="scorecard"><thead><tr class="hole-header"><th class="rowlabel">Player</th>`;
+    cols.forEach(c => {
+      const ctp = isCtpHole(round.courseName, c.label) ? ' class="ctp-hole" title="Closest to pin"' : '';
+      html += `<th${ctp}>${c.label}</th>`;
+      if (is18 && parseInt(c.label,10) === 9) html += `<th class="out-in">OUT</th>`;
+    });
+    if (is18) html += `<th class="out-in">IN</th>`;
+    html += `<th class="out-in">TOT</th><th class="out-in">+/-</th></tr>`;
+    html += `<tr class="row-par"><th class="rowlabel">Par</th>`;
+    let outPar = 0, inPar = 0;
+    round.par.forEach((pv, i) => {
+      html += `<td>${pv}</td>`;
+      const h = parseInt(cols[i].label,10);
+      if (is18 && h <= 9) outPar += pv; else inPar += pv;
+      if (is18 && h === 9) html += `<td class="out-in-cell">${outPar}</td>`;
+    });
+    if (is18) html += `<td class="out-in-cell">${inPar}</td>`;
+    html += `<td class="out-in-cell">${outPar + inPar}</td><td class="out-in-cell"></td></tr></thead><tbody>`;
+    round.players.forEach(p => {
+      const quota = Math.round(36 - p.handicap);
+      html += `<tr class="player-group row-gross"><td class="rowlabel">${escapeHtml(p.name)}<span class="meta">${escapeHtml(p.tee || '')} · Quota ${quota}</span></td>`;
+      let outPts = 0, inPts = 0, nOut = 0, nIn = 0, nAll = 0;
+      p.gross.forEach((score, i) => {
+        const pts = quotaPoints(score, round.par[i]);
+        const h = parseInt(cols[i].label,10);
+        html += `<td class="score-cell${pts === null ? '' : ' pts-' + pts}">${pts === null ? '–' : pts}</td>`;
+        if (pts !== null){
+          nAll++;
+          if (is18 && h <= 9){ outPts += pts; nOut++; } else { inPts += pts; nIn++; }
+        }
+        if (is18 && h === 9) html += `<td class="out-in-cell">${nOut ? outPts : '–'}</td>`;
+      });
+      if (is18) html += `<td class="out-in-cell">${nIn ? inPts : '–'}</td>`;
+      const total = outPts + inPts;
+      html += `<td class="total-cell">${nAll ? total : '–'}</td>`;
+      if (nAll === round.numHoles){
+        const diff = total - quota;
+        html += `<td class="pm-cell ${diff > 0 ? 'pm-pos' : diff < 0 ? 'pm-neg' : ''}">${diff > 0 ? '+' + diff : (diff === 0 ? 'E' : diff)}</td>`;
+      } else {
+        html += `<td class="pm-cell" title="Shown once every hole has a score">–</td>`;
+      }
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div><div class="ctp-footer-note">Points per hole: eagle or better 8 &middot; birdie 4 &middot; par 2 &middot; bogey 1 &middot; double bogey or worse 0. +/- is total points minus quota, shown once every hole has a score.</div></div>`;
+    return html;
+  }
+
+  function renderRoundTable(round){
+    const cols = round.holeCols;
+    const frontCols = cols.filter(c => parseInt(c.label,10) <= (round.numHoles === 18 ? 9 : round.numHoles));
+    const backCols = cols.filter(c => parseInt(c.label,10) > (round.numHoles === 18 ? 9 : round.numHoles));
+
+    let html = `<div class="round-title-bar">
+      <div class="course">${escapeHtml(round.courseName)}</div>
+      <div class="time">${escapeHtml(round.teeTime)}</div>
+    </div>
+    ${round.isQuota ? viewSwitchHtml(round) : ''}<div class="view-scores"${round.isQuota && viewModeById[round.id] === 'points' ? ' style="display:none"' : ''}>
+    <div class="card-scroll">
+    <table class="scorecard">
+    <thead>
+    <tr class="hole-header">
+      <th class="rowlabel">Player</th>`;
+    cols.forEach((c, i) => {
+      const ctpClass = isCtpHole(round.courseName, c.label) ? ' class="ctp-hole" title="Closest to pin"' : '';
+      html += `<th${ctpClass}>${c.label}</th>`;
+      if (round.numHoles === 18 && parseInt(c.label,10) === 9) html += `<th class="out-in">OUT</th>`;
+    });
+    if (round.numHoles === 18) html += `<th class="out-in">IN</th>`;
+    html += `<th class="out-in">TOT</th></tr>
+`;
+
+    const teesInRound = distinctTees(round);
+    const siRowsToRender = computeSiRowGroups(round, teesInRound);
+    siRowsToRender.forEach(t => {
+      html += `<tr class="row-si"><th class="rowlabel">${escapeHtml(t.label)}</th>`;
+      t.si.forEach((v, i) => {
+        html += `<td>${v}</td>`;
+        if (round.numHoles === 18 && parseInt(cols[i].label,10) === 9) html += `<td></td>`;
+      });
+      if (round.numHoles === 18) html += `<td></td>`;
+      html += `<td></td></tr>\n`;
+    });
+
+    html += `
+    <tr class="row-par">
+      <th class="rowlabel">Par</th>`;
+    let outPar = 0, inPar = 0;
+    round.par.forEach((v, i) => {
+      html += `<td>${v}</td>`;
+      const holeNum = parseInt(cols[i].label,10);
+      if (round.numHoles === 18 && holeNum <= 9) outPar += v; else inPar += v;
+      if (round.numHoles === 18 && holeNum === 9) html += `<td class="out-in-cell">${outPar}</td>`;
+    });
+    if (round.numHoles === 18) html += `<td class="out-in-cell">${inPar}</td>`;
+    html += `<td class="out-in-cell">${outPar + inPar}</td></tr>
+    </thead><tbody>`;
+
+    round.players.forEach(p => {
+      const playerSi = effectiveSi(round, p.tee);
+      const usesCustomSi = hasOverride(round, p.tee);
+      const hcpOrQuota = round.isQuota
+        ? `Quota ${Math.round(36 - p.handicap)}`
+        : `Hcp ${p.handicap}`;
+      html += `<tr class="player-group row-gross">
+        <td class="rowlabel">${escapeHtml(p.name)}<span class="meta">${escapeHtml(p.tee || '')} · ${hcpOrQuota}${usesCustomSi ? ' · <span class="custom-si-tag">custom S.I.</span>' : ''}</span></td>`;
+
+      let grossOutRun = 0, grossInRun = 0;
+      let grossOutCount = 0, grossInCount = 0;
+
+      p.gross.forEach((score, i) => {
+        const parVal = round.par[i];
+        const siVal = playerSi[i];
+        const strokes = strokesForHole(p.handicap, siVal, round.numHoles);
+        const holeNum = parseInt(cols[i].label,10);
+        let cellClass = 'score-cell';
+        if (score !== null && parVal){
+          if (score <= parVal - 1) cellClass += ' birdie';
+          else if (score >= parVal + 1) cellClass += ' bogey';
+        }
+        const dots = (strokes > 0 && !round.isQuota)
+          ? `<span class="dots">${'<span></span>'.repeat(Math.min(strokes,2))}</span>`
+          : '';
+        html += `<td class="${cellClass}">${score !== null ? score : '–'}${dots}</td>`;
+
+        if (score !== null){
+          if (round.numHoles === 18 && holeNum <= 9) { grossOutRun += score; grossOutCount++; }
+          else { grossInRun += score; grossInCount++; }
+        }
+        if (round.numHoles === 18 && holeNum === 9){
+          const outVal = p.grossOut !== null ? p.grossOut : (grossOutCount > 0 ? grossOutRun : null);
+          html += `<td class="out-in-cell">${outVal !== null ? outVal : '–'}</td>`;
+        }
+      });
+      const inVal = p.grossIn !== null ? p.grossIn : (grossInCount > 0 ? grossInRun : null);
+      const totalVal = p.grossTotal !== null ? p.grossTotal : ((grossOutCount + grossInCount) > 0 ? (grossOutRun + grossInRun) : null);
+      if (round.numHoles === 18) html += `<td class="out-in-cell">${inVal !== null ? inVal : '–'}</td>`;
+      html += `<td class="total-cell">${totalVal !== null ? totalVal : '–'}</td></tr>`;
+
+      if (round.isQuota) return; // Quota / Team Quota formats are scored on gross — no net row.
+
+      // Net row
+      html += `<tr class="row-net"><th class="rowlabel">net</th>`;
+      let netOutRun = 0, netInRun = 0;
+      let netOutCount = 0, netInCount = 0;
+      p.gross.forEach((score, i) => {
+        const siVal = playerSi[i];
+        const strokes = strokesForHole(p.handicap, siVal, round.numHoles);
+        const holeNum = parseInt(cols[i].label,10);
+        const net = score !== null ? score - strokes : null;
+        const parVal = round.par[i];
+        let cls = 'net-val';
+        if (net !== null && parVal && net < parVal) cls += ' under';
+        html += `<td class="${cls}">${net !== null ? net : '–'}</td>`;
+        if (net !== null){
+          if (round.numHoles === 18 && holeNum <= 9) { netOutRun += net; netOutCount++; }
+          else { netInRun += net; netInCount++; }
+        }
+        if (round.numHoles === 18 && holeNum === 9) html += `<td class="net-total">${netOutCount > 0 ? netOutRun : '–'}</td>`;
+      });
+      if (round.numHoles === 18) html += `<td class="net-total">${netInCount > 0 ? netInRun : '–'}</td>`;
+      html += `<td class="net-total">${(netOutCount + netInCount) > 0 ? (netOutRun + netInRun) : '–'}</td></tr>`;
+    });
+
+    html += `</tbody></table></div></div>`;
+    if (round.isQuota) html += renderPointsView(round, viewModeById[round.id] === 'points');
+
+    html += `<div class="ctp-footer-note">Format: <strong>${escapeHtml(round.formatName || 'Not specified')}</strong></div>`;
+
+    const teeLineText = teeRatingFooterText(round);
+    if (teeLineText){
+      html += `<div class="ctp-footer-note"><strong>${escapeHtml(teeLineText.split(': ')[0])}:</strong> ${escapeHtml(teeLineText.split(': ').slice(1).join(': '))}</div>`;
+    }
+
+    const teamsLineText = teamsFooterText(round);
+    if (teamsLineText){
+      html += `<div class="ctp-footer-note"><strong>Teams:</strong> ${escapeHtml(teamsLineText)}</div>`;
+    }
+
+    const ctpHolesThisRound = cols.map(c => c.label).filter(label => isCtpHole(round.courseName, label));
+    if (ctpHolesThisRound.length){
+      html += `<div class="ctp-footer-note"><strong>Closest to pin:</strong> Hole ${ctpHolesThisRound.join(', Hole ')} &ndash; Gross par required to validate</div>`;
+    }
+
+    return html;
+  }
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, m => ({
+      '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+    }[m]));
+  }
+
+  tryLoadCachedFile();
+})();
+</script>
+</body>
+</html>
